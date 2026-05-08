@@ -8,7 +8,6 @@ plugins {
 android {
     namespace = "com.example.soulfood_front"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
