@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DecideMeal UI 拆解</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="min-h-screen bg-[#F5F5F7] text-[#212121]">
+    <header class="border-b border-[#EAEAEA] bg-white/90 backdrop-blur">
+      <div class="mx-auto flex w-full max-w-[1600px] items-center justify-between px-6 py-4">
+        <div class="flex items-center gap-4">
+          <div class="grid h-12 w-12 place-items-center rounded-2xl bg-[#FFD54F] text-2xl">🍜</div>
+          <div>
+            <h1 class="text-2xl font-bold">DecideMeal</h1>
+            <p class="text-sm text-[#757575]">帮你更快决定吃什么 🙂</p>
+          </div>
+        </div>
+        <button id="resetBtn" class="rounded-full border border-[#E0E0E0] bg-white px-5 py-2 text-sm font-semibold text-[#212121] hover:bg-[#FAFAFA]">
+          重置到启动页
+        </button>
+      </div>
+    </header>
+
+    <main class="mx-auto grid w-full max-w-[1600px] grid-cols-1 gap-6 px-6 py-6 xl:grid-cols-[300px_minmax(380px,1fr)_300px]">
+      <aside class="rounded-3xl border border-[#EAEAEA] bg-white p-6">
+        <section>
+          <h2 class="text-2xl font-bold">设计规范</h2>
+          <h3 class="mt-6 text-lg font-semibold">颜色规范</h3>
+          <ul class="mt-4 grid grid-cols-4 gap-3 text-center text-xs">
+            <li><div class="mx-auto h-10 w-10 rounded-full bg-[#FFD54F]"></div><p class="mt-2">主色<br />#FFD54F</p></li>
+            <li><div class="mx-auto h-10 w-10 rounded-full bg-[#FFB74D]"></div><p class="mt-2">辅色<br />#FFB74D</p></li>
+            <li><div class="mx-auto h-10 w-10 rounded-full bg-[#4CAF50]"></div><p class="mt-2">点缀<br />#4CAF50</p></li>
+            <li><div class="mx-auto h-10 w-10 rounded-full bg-[#7C4DFF]"></div><p class="mt-2">高亮<br />#7C4DFF</p></li>
+          </ul>
+          <ul class="mt-4 grid grid-cols-4 gap-3 text-center text-xs">
+            <li><div class="mx-auto h-10 w-10 rounded-full bg-[#212121]"></div><p class="mt-2">文字主<br />#212121</p></li>
+            <li><div class="mx-auto h-10 w-10 rounded-full bg-[#757575]"></div><p class="mt-2">文字辅<br />#757575</p></li>
+            <li><div class="mx-auto h-10 w-10 rounded-full bg-[#EEEEEE]"></div><p class="mt-2">边框<br />#EEEEEE</p></li>
+            <li><div class="mx-auto h-10 w-10 rounded-full bg-[#F7F8FA]"></div><p class="mt-2">背景<br />#F7F8FA</p></li>
+          </ul>
+        </section>
+
+        <section class="mt-8">
+          <h3 class="text-lg font-semibold">字体规范</h3>
+          <ul class="mt-3 space-y-2 text-sm text-[#424242]">
+            <li>标题: 28 / 24 / 20 px</li>
+            <li>正文: 16 / 14 px</li>
+            <li>辅助: 12 px</li>
+          </ul>
+        </section>
+
+        <section class="mt-8">
+          <h3 class="text-lg font-semibold">圆角规范</h3>
+          <ul class="mt-3 grid grid-cols-3 gap-3 text-center text-xs">
+            <li><div class="mx-auto h-10 w-16 rounded-2xl bg-[#F5F5F5]"></div><p class="mt-2">卡片 16</p></li>
+            <li><div class="mx-auto h-10 w-16 rounded-[20px] bg-[#F5F5F5]"></div><p class="mt-2">按钮 20</p></li>
+            <li><div class="mx-auto h-10 w-16 rounded-xl bg-[#F5F5F5]"></div><p class="mt-2">标签 12</p></li>
+          </ul>
+        </section>
+      </aside>
+
+      <section class="flex flex-col items-center gap-4">
+        <div class="w-full max-w-[390px] rounded-[36px] border border-[#DADADA] bg-white p-3 shadow-sm">
+          <article class="overflow-hidden rounded-[30px] border border-[#EFEFEF]">
+            <header class="flex items-center justify-between px-5 pb-2 pt-4 text-xs text-[#424242]">
+              <span>9:53</span>
+              <span class="font-semibold">●●●</span>
+            </header>
+
+            <main class="min-h-[660px] bg-[#FAFAFA] px-4 pb-4">
+              <section data-screen="splash" class="screen flex min-h-[640px] flex-col items-center justify-center">
+                <div class="grid h-20 w-20 place-items-center rounded-3xl bg-[#FFD54F] text-4xl">🍜</div>
+                <h2 class="mt-4 text-4xl font-black">DecideMeal</h2>
+                <p class="mt-2 text-sm text-[#757575]">帮你更快决定吃什么 🙂</p>
+                <button data-go="home" class="mt-8 rounded-full bg-[#FFD54F] px-8 py-3 text-sm font-semibold">进入应用</button>
+              </section>
+
+              <section data-screen="home" class="screen hidden">
+                <h2 class="pt-2 text-4xl font-black leading-tight">帮我决定<br />吃什么</h2>
+                <div class="mt-4 grid grid-cols-3 gap-2">
+                  <button data-go="friends" class="rounded-2xl bg-white p-3 text-xs shadow-sm">和朋友一起决定</button>
+                  <button data-go="mode" class="rounded-2xl bg-white p-3 text-xs shadow-sm">做饭模式</button>
+                  <button data-go="vote" class="rounded-2xl bg-white p-3 text-xs shadow-sm">随便吃什么</button>
+                </div>
+                <div class="mt-2 grid grid-cols-3 gap-2">
+                  <button data-go="nearby" class="rounded-2xl bg-white p-3 text-xs shadow-sm">🍱 附近吃什么</button>
+                  <button data-go="dish" class="rounded-2xl bg-white p-3 text-xs shadow-sm">🍜 菜品详情</button>
+                  <button data-go="about" class="rounded-2xl bg-white p-3 text-xs shadow-sm">📖 关于应用</button>
+                </div>
+                <div class="mt-6 rounded-2xl bg-white p-4 shadow-sm">
+                  <p class="text-sm font-semibold">🍽️ 今日推荐</p>
+                  <p class="mt-2 text-xs text-[#757575]">🍅 番茄炒蛋 / 🥬 青菜鸡蛋面 / 🥔 土豆丝炒肉</p>
+                </div>
+              </section>
+
+              <section data-screen="friends" class="screen hidden">
+                <h2 class="pt-2 text-2xl font-bold">和朋友一起决定</h2>
+                <div class="mt-4 rounded-2xl bg-white p-4 shadow-sm">
+                  <p class="text-sm text-[#757575]">创建房间，邀请好友一起投票决定吃什么</p>
+                  <div class="mt-4 flex gap-2">
+                    <button data-go="vote" class="flex-1 rounded-full bg-[#FFD54F] py-2 text-sm font-semibold">创建房间</button>
+                    <button data-go="home" class="flex-1 rounded-full border border-[#EAEAEA] bg-white py-2 text-sm">加入房间</button>
+                  </div>
+                </div>
+              </section>
+
+              <section data-screen="vote" class="screen hidden">
+                <h2 class="pt-2 text-2xl font-bold">火锅还是烤肉？</h2>
+                <div class="mt-4 space-y-3">
+                  <article class="rounded-2xl bg-white p-3 shadow-sm">
+                    <div class="flex items-center justify-between">
+                      <p class="font-semibold">火锅</p><span class="text-sm text-[#757575]">3票</span>
+                    </div>
+                    <div class="mt-2 h-2 rounded-full bg-[#F1F1F1]"><div class="h-2 w-3/4 rounded-full bg-[#FFD54F]"></div></div>
+                  </article>
+                  <article class="rounded-2xl bg-white p-3 shadow-sm">
+                    <div class="flex items-center justify-between">
+                      <p class="font-semibold">烤肉</p><span class="text-sm text-[#757575]">1票</span>
+                    </div>
+                    <div class="mt-2 h-2 rounded-full bg-[#F1F1F1]"><div class="h-2 w-1/4 rounded-full bg-[#FFB74D]"></div></div>
+                  </article>
+                </div>
+                <button data-go="result" class="mt-4 w-full rounded-full bg-[#FFD54F] py-3 text-sm font-semibold">查看推荐菜谱</button>
+              </section>
+
+              <section data-screen="mode" class="screen hidden">
+                <h2 class="pt-2 text-2xl font-bold">做饭模式</h2>
+                <div class="mt-4 rounded-2xl bg-white p-4 shadow-sm">
+                  <p class="text-sm text-[#757575]">输入食材后生成菜谱建议</p>
+                  <form class="mt-3 flex gap-2" onsubmit="return false;">
+                    <input class="w-full rounded-full border border-[#EAEAEA] px-4 py-2 text-sm" placeholder="输入食材，如：鸡蛋、西红柿" />
+                    <button data-go="result" class="rounded-full bg-[#FFD54F] px-4 py-2 text-sm font-semibold">生成</button>
+                  </form>
+                </div>
+              </section>
+
+              <section data-screen="result" class="screen hidden">
+                <h2 class="pt-2 text-2xl font-bold">推荐菜谱</h2>
+                <ul class="mt-4 space-y-3">
+                  <li class="rounded-2xl bg-white p-3 shadow-sm"><p class="font-semibold">🍅 番茄炒蛋</p><p class="text-sm text-[#757575]">简单 · 4.8分</p></li>
+                  <li class="rounded-2xl bg-white p-3 shadow-sm"><p class="font-semibold">🥔 土豆丝炒肉</p><p class="text-sm text-[#757575]">家常 · 4.6分</p></li>
+                  <li class="rounded-2xl bg-white p-3 shadow-sm"><p class="font-semibold">🍜 青菜鸡蛋面</p><p class="text-sm text-[#757575]">快捷 · 4.7分</p></li>
+                </ul>
+                <button data-go="dish" class="mt-4 w-full rounded-full border border-[#EAEAEA] bg-white py-2 text-sm">查看菜品详情</button>
+              </section>
+
+              <section data-screen="record" class="screen hidden">
+                <h2 class="pt-2 text-2xl font-bold">我的记录</h2>
+                <div class="mt-4 grid grid-cols-3 gap-2 text-center text-xs">
+                  <div class="rounded-xl bg-[#FFE0B2] p-2"><p>聚餐</p><p class="font-semibold">18次</p></div>
+                  <div class="rounded-xl bg-[#FFF9C4] p-2"><p>点餐</p><p class="font-semibold">12次</p></div>
+                  <div class="rounded-xl bg-[#C8E6C9] p-2"><p>收藏</p><p class="font-semibold">8次</p></div>
+                </div>
+                <button data-go="nearby" class="mt-4 w-full rounded-full bg-[#FFD54F] py-2 text-sm font-semibold">🍜 再找一家附近店</button>
+              </section>
+
+              <section data-screen="mine" class="screen hidden">
+                <h2 class="pt-2 text-2xl font-bold">我的</h2>
+                <ul class="mt-4 space-y-2">
+                  <li class="rounded-xl bg-white p-3 shadow-sm">⭐ 我的收藏</li>
+                  <li class="rounded-xl bg-white p-3 shadow-sm">🌶️ 我的口味偏好</li>
+                  <li class="rounded-xl bg-white p-3 shadow-sm">🧾 历史订单</li>
+                  <li class="rounded-xl bg-white p-3 shadow-sm">⚙️ 设置</li>
+                </ul>
+                <div class="mt-4 grid grid-cols-2 gap-2">
+                  <button data-go="settings" class="rounded-full bg-[#FFD54F] py-2 text-sm font-semibold">进入设置</button>
+                  <button data-go="about" class="rounded-full border border-[#EAEAEA] bg-white py-2 text-sm">关于我们</button>
+                </div>
+              </section>
+
+              <section data-screen="nearby" class="screen hidden">
+                <h2 class="pt-2 text-2xl font-bold">附近吃什么</h2>
+                <ul class="mt-4 space-y-2">
+                  <li class="rounded-xl bg-white p-3 shadow-sm">🍲 海底捞(火锅) · 1.2km · ¥120/人</li>
+                  <li class="rounded-xl bg-white p-3 shadow-sm">🍢 喜茶(万象城店) · 1.5km · ¥20/人</li>
+                  <li class="rounded-xl bg-white p-3 shadow-sm">🍔 麦当劳(万象城店) · 1.8km · ¥35/人</li>
+                </ul>
+                <button data-go="home" class="mt-4 w-full rounded-full border border-[#EAEAEA] bg-white py-2 text-sm">返回首页</button>
+              </section>
+
+              <section data-screen="dish" class="screen hidden">
+                <h2 class="pt-2 text-2xl font-bold">菜品详情</h2>
+                <article class="mt-4 rounded-2xl bg-white p-4 shadow-sm">
+                  <p class="text-lg font-semibold">🍜 番茄鸡蛋面</p>
+                  <p class="mt-2 text-sm text-[#757575]">食材: 番茄 🍅 / 鸡蛋 🥚 / 面条 🍝</p>
+                  <p class="mt-1 text-sm text-[#757575]">耗时: 15 分钟 · 难度: 简单</p>
+                </article>
+                <button data-go="mode" class="mt-4 w-full rounded-full bg-[#FFD54F] py-2 text-sm font-semibold">按这个做饭</button>
+              </section>
+
+              <section data-screen="settings" class="screen hidden">
+                <h2 class="pt-2 text-2xl font-bold">设置</h2>
+                <ul class="mt-4 space-y-2">
+                  <li class="rounded-xl bg-white p-3 shadow-sm">🔔 通知设置</li>
+                  <li class="rounded-xl bg-white p-3 shadow-sm">🌐 语言设置</li>
+                  <li class="rounded-xl bg-white p-3 shadow-sm">🛡️ 隐私设置</li>
+                </ul>
+                <button data-go="mine" class="mt-4 w-full rounded-full border border-[#EAEAEA] bg-white py-2 text-sm">返回我的</button>
+              </section>
+
+              <section data-screen="about" class="screen hidden">
+                <h2 class="pt-2 text-2xl font-bold">关于 DecideMeal</h2>
+                <div class="mt-4 rounded-2xl bg-white p-4 text-sm text-[#424242] shadow-sm">
+                  <p>🍜 让每一次“吃什么”都更快达成一致。</p>
+                  <p class="mt-2">🤝 支持朋友投票、附近推荐、菜谱生成。</p>
+                  <p class="mt-2">💛 版本: v1.0.0 Demo</p>
+                </div>
+                <button data-go="home" class="mt-4 w-full rounded-full bg-[#FFD54F] py-2 text-sm font-semibold">回到首页</button>
+              </section>
+            </main>
+
+            <footer class="grid grid-cols-3 border-t border-[#EFEFEF] bg-white text-xs">
+              <button data-tab="home" class="tab-btn flex flex-col items-center gap-1 py-2 font-semibold text-[#212121]">
+                <span>🏠</span><span>首页</span>
+              </button>
+              <button data-tab="record" class="tab-btn flex flex-col items-center gap-1 py-2 text-[#757575]">
+                <span>🕘</span><span>记录</span>
+              </button>
+              <button data-tab="mine" class="tab-btn flex flex-col items-center gap-1 py-2 text-[#757575]">
+                <span>👤</span><span>我的</span>
+              </button>
+            </footer>
+          </article>
+        </div>
+
+        <p class="text-sm text-[#757575]">提示：点击页面中的按钮可跳转；底部导航可在首页/记录/我的间切换。新增页面：附近、详情、设置、关于。</p>
+      </section>
+
+      <aside class="rounded-3xl border border-[#EAEAEA] bg-white p-6">
+        <h2 class="text-2xl font-bold">组件库</h2>
+        <section class="mt-6">
+          <h3 class="font-semibold">按钮</h3>
+          <div class="mt-3 space-y-2">
+            <button class="w-full rounded-full bg-[#FFD54F] py-2 text-sm font-semibold">主按钮</button>
+            <button class="w-full rounded-full border border-[#EAEAEA] bg-white py-2 text-sm">次按钮</button>
+            <button class="w-full rounded-full py-2 text-sm text-[#757575]">文字按钮</button>
+          </div>
+        </section>
+        <section class="mt-6">
+          <h3 class="font-semibold">标签</h3>
+          <div class="mt-3 flex gap-2 text-xs">
+            <span class="rounded-xl bg-[#FFF9C4] px-3 py-1">🍋 清爽</span>
+            <span class="rounded-xl bg-[#E8F5E9] px-3 py-1">🥗 健康</span>
+            <span class="rounded-xl bg-[#EDE7F6] px-3 py-1">🌶️ 重口</span>
+          </div>
+        </section>
+        <section class="mt-6">
+          <h3 class="font-semibold">输入框</h3>
+          <input class="mt-3 w-full rounded-2xl border border-[#EAEAEA] px-3 py-2 text-sm" placeholder="输入内容..." />
+        </section>
+      </aside>
+    </main>
+
+    <script>
+      const screens = Array.from(document.querySelectorAll('.screen'));
+      const tabButtons = Array.from(document.querySelectorAll('.tab-btn'));
+      const navButtons = Array.from(document.querySelectorAll('[data-go]'));
+      const resetBtn = document.getElementById('resetBtn');
+
+      const showScreen = (name) => {
+        screens.forEach((el) => {
+          const visible = el.dataset.screen === name;
+          el.classList.toggle('hidden', !visible);
+        });
+        const tabTargets = ['home', 'record', 'mine'];
+        const activeTab = tabTargets.includes(name) ? name : 'home';
+        tabButtons.forEach((btn) => {
+          const isActive = btn.dataset.tab === activeTab;
+          btn.classList.toggle('text-[#212121]', isActive);
+          btn.classList.toggle('font-semibold', isActive);
+          btn.classList.toggle('text-[#757575]', !isActive);
+        });
+      };
+
+      tabButtons.forEach((btn) => {
+        btn.addEventListener('click', () => showScreen(btn.dataset.tab));
+      });
+
+      navButtons.forEach((btn) => {
+        btn.addEventListener('click', () => showScreen(btn.dataset.go));
+      });
+
+      resetBtn.addEventListener('click', () => showScreen('splash'));
+
+      showScreen('splash');
+    </script>
+  </body>
+</html>

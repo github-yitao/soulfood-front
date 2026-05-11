@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DecideMeal 01-09 纯HTML总览</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 20px; background: #f3f4f6; font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif; color: #212121; }
+    h1 { margin: 0 0 8px; font-size: 28px; }
+    p { margin: 0 0 20px; color: #757575; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+    .card { background: #fff; border: 1px solid #eaeaea; border-radius: 16px; padding: 10px; box-shadow: 0 4px 12px rgba(0,0,0,.05); }
+    .head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .title { font-size: 14px; font-weight: 700; }
+    .open { font-size: 12px; text-decoration: none; color: #444; border: 1px solid #eaeaea; border-radius: 999px; padding: 4px 10px; }
+    iframe { width: 100%; height: 640px; border: 1px solid #f1f1f1; border-radius: 14px; background: #fff; }
+  </style>
+</head>
+<body>
+  <h1>DecideMeal 01-09 纯 HTML 总览</h1>
+  <p>全部页面都由真实 HTML 结构生成，不使用切图当页面背景。</p>
+  <section class="grid">
+    <article class="card"><div class="head"><span class="title">01 启动页</span><a class="open" href="./01-splash.html">打开</a></div><iframe src="./01-splash.html"></iframe></article>
+    <article class="card"><div class="head"><span class="title">02 首页</span><a class="open" href="./02-home.html">打开</a></div><iframe src="./02-home.html"></iframe></article>
+    <article class="card"><div class="head"><span class="title">03 和朋友决定</span><a class="open" href="./03-friends.html">打开</a></div><iframe src="./03-friends.html"></iframe></article>
+    <article class="card"><div class="head"><span class="title">04 房间投票</span><a class="open" href="./04-vote.html">打开</a></div><iframe src="./04-vote.html"></iframe></article>
+    <article class="card"><div class="head"><span class="title">05 做饭模式</span><a class="open" href="./05-cook-mode.html">打开</a></div><iframe src="./05-cook-mode.html"></iframe></article>
+    <article class="card"><div class="head"><span class="title">06 菜谱结果</span><a class="open" href="./06-result.html">打开</a></div><iframe src="./06-result.html"></iframe></article>
+    <article class="card"><div class="head"><span class="title">07 附近吃什么</span><a class="open" href="./07-nearby.html">打开</a></div><iframe src="./07-nearby.html"></iframe></article>
+    <article class="card"><div class="head"><span class="title">08 记录页</span><a class="open" href="./08-record.html">打开</a></div><iframe src="./08-record.html"></iframe></article>
+    <article class="card"><div class="head"><span class="title">09 我的页</span><a class="open" href="./09-mine.html">打开</a></div><iframe src="./09-mine.html"></iframe></article>
+  </section>
+</body>
+</html>
