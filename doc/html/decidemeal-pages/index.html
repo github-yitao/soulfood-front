@@ -3,29 +3,20 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DecideMeal 纯HTML入口</title>
+  <meta http-equiv="refresh" content="0; url=./02-home.html" />
+  <title>DecideMeal 首页入口</title>
   <style>
-    *{box-sizing:border-box}body{margin:0;padding:20px;background:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;color:#212121}
-    h1{margin:0 0 8px;font-size:28px}p{margin:0 0 20px;color:#757575}
-    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
-    a{display:block;text-decoration:none;color:#222;background:#fff;border:1px solid #eaeaea;border-radius:12px;padding:12px 14px}
-    a:hover{border-color:#ffd54f}
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px;background:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;color:#212121}
+    .card{max-width:420px;background:#fff;border:1px solid #eaeaea;border-radius:20px;padding:24px;box-shadow:0 8px 24px rgba(0,0,0,.06);text-align:center}
+    h1{margin:0 0 8px;font-size:28px}p{margin:0;color:#757575;line-height:1.6}
+    a{display:inline-flex;margin-top:16px;text-decoration:none;color:#222;background:#fff7d6;border:1px solid #ffe08a;border-radius:999px;padding:10px 16px;font-weight:600}
   </style>
 </head>
 <body>
-  <h1>DecideMeal 页面入口（纯 HTML）</h1>
-  <p>01-09 页面均为真实 HTML 结构，不使用截图背景。</p>
-  <section class="grid">
-    <a href="./01-splash.html">01 启动页</a>
-    <a href="./02-home.html">02 首页</a>
-    <a href="./03-friends.html">03 和朋友一起决定</a>
-    <a href="./04-vote.html">04 房间投票页</a>
-    <a href="./05-cook-mode.html">05 做饭模式</a>
-    <a href="./06-result.html">06 菜谱结果页</a>
-    <a href="./07-nearby.html">07 附近吃什么</a>
-    <a href="./08-record.html">08 记录页</a>
-    <a href="./09-mine.html">09 我的页</a>
-    <a href="./overview-01-09.html">总览页</a>
+  <section class="card">
+    <h1>正在进入首页</h1>
+    <p>默认入口已调整为 02 首页。如果浏览器没有自动跳转，可以手动打开首页。</p>
+    <a href="./02-home.html">进入首页</a>
   </section>
 </body>
 </html>
