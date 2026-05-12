@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang='zh-CN'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport' content='width=device-width,initial-scale=1'>
+  <title>历史订单</title>
+  <link rel='stylesheet' href='https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400..700,0..1,0'>
+  <link rel='stylesheet' href='./assets/app.css'>
+  <style>
+    .orders-main { background:#fff; padding:10px 14px 16px; display:flex; flex-direction:column; gap:12px; }
+    .orders-head { display:flex; align-items:center; justify-content:space-between; padding:2px 4px 0; }
+    .orders-head h2 { margin:0; font-size:24px; font-weight:800; color:#1e2430; }
+    .icon-btn-lite { width:34px; height:34px; display:inline-flex; align-items:center; justify-content:center; border-radius:12px; border:1px solid #edf0f5; background:#fff; color:#1f2430; text-decoration:none; box-shadow:0 8px 18px rgba(20,28,45,.06); }
+
+    .overview {
+      background: linear-gradient(135deg, #1f2e45, #2f4569);
+      border-radius: 20px;
+      padding: 14px;
+      color: #fff;
+      box-shadow: 0 12px 24px rgba(20,33,56,.22);
+    }
+    .overview-top { display:flex; align-items:center; justify-content:space-between; }
+    .overview-top b { font-size:16px; letter-spacing:.2px; }
+    .overview-top span { font-size:12px; color:rgba(255,255,255,.8); }
+    .overview-grid { margin-top:12px; display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+    .metric { background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.18); border-radius:12px; padding:10px 8px; }
+    .metric em { display:block; font-style:normal; font-size:11px; color:rgba(255,255,255,.82); }
+    .metric b { display:block; margin-top:4px; font-size:18px; }
+
+    .filter-row { display:flex; gap:8px; overflow:auto; padding:2px 2px 4px; scrollbar-width:none; }
+    .filter-row::-webkit-scrollbar { display:none; }
+    .chip { border:1px solid #e8edf4; background:#f7f9fc; color:#5f697a; border-radius:999px; padding:8px 12px; font-size:12px; font-weight:700; white-space:nowrap; cursor:pointer; }
+    .chip.active { border-color:#ffd79f; background:#fff2e0; color:#d86a00; box-shadow:0 8px 14px rgba(255,133,62,.16); }
+
+    .timeline { position:relative; padding-left:18px; }
+    .timeline::before {
+      content:"";
+      position:absolute;
+      left:5px;
+      top:8px;
+      bottom:8px;
+      width:2px;
+      background: linear-gradient(#ffd9ad, #ffeede);
+    }
+    .day-block { margin-bottom:10px; }
+    .day-label {
+      position:relative;
+      font-size:12px;
+      font-weight:800;
+      color:#687184;
+      margin:0 0 8px;
+      padding-left:8px;
+    }
+    .day-label::before {
+      content:"";
+      position:absolute;
+      left:-17px;
+      top:3px;
+      width:8px;
+      height:8px;
+      border-radius:50%;
+      background:#ff9a4d;
+      box-shadow:0 0 0 3px #fff1e3;
+    }
+
+    .order-item {
+      background:#fff;
+      border:1px solid #edf1f6;
+      border-radius:16px;
+      padding:12px;
+      box-shadow:0 8px 18px rgba(30,41,65,.08);
+      margin-bottom:8px;
+      display:grid;
+      grid-template-columns:1fr auto;
+      gap:10px;
+      align-items:center;
+    }
+    .order-title { margin:0; font-size:15px; font-weight:800; color:#1f2633; }
+    .order-meta { margin-top:5px; color:#6f7889; font-size:12px; display:flex; gap:8px; flex-wrap:wrap; }
+    .order-price { font-weight:800; font-size:16px; color:#222a39; }
+    .status { display:inline-flex; margin-top:7px; border-radius:999px; padding:4px 9px; font-size:11px; font-weight:700; }
+    .status.done { background:#eef7ff; color:#3171cb; }
+    .status.pending { background:#fff2e3; color:#de7312; }
+
+    .orders-empty { display:none; border:1px dashed #e3e8f0; border-radius:16px; background:#fbfcff; color:#7c8594; text-align:center; padding:24px 14px; font-size:13px; }
+  </style>
+</head>
+<body><div class='wrap'><div class='phone'>
+<header class='status'>
+  <span class='status-time'>9:53</span>
+  <span class='status-icons'><i class='status-bar'></i><i class='status-wifi'></i><i class='status-battery'></i></span>
+</header>
+
+<main class='orders-main'>
+  <section class='orders-head'>
+    <a class='icon-btn-lite' href='./09-mine.html' aria-label='返回我的页'><span class='material-symbols-outlined'>chevron_left</span></a>
+    <h2>历史订单</h2>
+    <a class='icon-btn-lite' href='#' aria-label='筛选时间'><span class='material-symbols-outlined'>calendar_month</span></a>
+  </section>
+
+  <section class='overview'>
+    <div class='overview-top'>
+      <b>5 月消费概览</b>
+      <span>近 30 天</span>
+    </div>
+    <div class='overview-grid'>
+      <div class='metric'><em>订单数</em><b>12</b></div>
+      <div class='metric'><em>总消费</em><b>¥652</b></div>
+      <div class='metric'><em>常点品类</em><b>火锅</b></div>
+    </div>
+  </section>
+
+  <section class='filter-row'>
+    <button class='chip active' data-filter='all' type='button'>全部</button>
+    <button class='chip' data-filter='food' type='button'>餐厅</button>
+    <button class='chip' data-filter='drink' type='button'>饮品</button>
+    <button class='chip' data-filter='fast' type='button'>快餐</button>
+  </section>
+
+  <section class='timeline' id='timeline'>
+    <div class='day-block' data-type='food'>
+      <p class='day-label'>2026-05-10 周日</p>
+      <article class='order-item'>
+        <div>
+          <h3 class='order-title'>海底捞（万象城店）</h3>
+          <div class='order-meta'><span>2人</span><span>18:42</span><span>线下堂食</span></div>
+          <span class='status done'>已完成</span>
+        </div>
+        <div class='order-price'>¥168</div>
+      </article>
+    </div>
+
+    <div class='day-block' data-type='drink'>
+      <p class='day-label'>2026-05-08 周五</p>
+      <article class='order-item'>
+        <div>
+          <h3 class='order-title'>喜茶（万象城店）</h3>
+          <div class='order-meta'><span>2杯</span><span>15:20</span><span>外带</span></div>
+          <span class='status done'>已评价</span>
+        </div>
+        <div class='order-price'>¥38</div>
+      </article>
+    </div>
+
+    <div class='day-block' data-type='fast'>
+      <p class='day-label'>2026-05-06 周三</p>
+      <article class='order-item'>
+        <div>
+          <h3 class='order-title'>麦当劳（万象城店）</h3>
+          <div class='order-meta'><span>1人</span><span>12:05</span><span>自取</span></div>
+          <span class='status pending'>待开发票</span>
+        </div>
+        <div class='order-price'>¥46</div>
+      </article>
+    </div>
+  </section>
+
+  <div class='orders-empty' id='emptyBox'>当前筛选下暂无订单，换个分类看看。</div>
+</main>
+
+<footer class='footer-nav'>
+  <a href='./02-home.html'><span class='material-symbols-outlined'>home</span><span>首页</span><i class='footer-dot'></i></a>
+  <a href='./08-record.html'><span class='material-symbols-outlined'>history</span><span>记录</span><i class='footer-dot'></i></a>
+  <a class='active' href='./09-mine.html'><span class='material-symbols-outlined'>person</span><span>我的</span><i class='footer-dot'></i></a>
+</footer>
+</div></div>
+
+<script>
+(function(){
+  var chips = Array.prototype.slice.call(document.querySelectorAll('.chip'));
+  var blocks = Array.prototype.slice.call(document.querySelectorAll('.day-block'));
+  var emptyBox = document.getElementById('emptyBox');
+  var active = 'all';
+
+  function render(){
+    var count = 0;
+    blocks.forEach(function(block){
+      var t = block.getAttribute('data-type');
+      var show = active === 'all' || active === t;
+      block.style.display = show ? 'block' : 'none';
+      if(show) count += 1;
+    });
+    emptyBox.style.display = count ? 'none' : 'block';
+  }
+
+  chips.forEach(function(chip){
+    chip.addEventListener('click', function(){
+      active = chip.getAttribute('data-filter');
+      chips.forEach(function(c){ c.classList.toggle('active', c === chip); });
+      render();
+    });
+  });
+
+  render();
+})();
+</script>
+</body></html>

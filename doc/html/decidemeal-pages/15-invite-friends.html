@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang='zh-CN'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport' content='width=device-width,initial-scale=1'>
+  <title>邀请好友</title>
+  <link rel='stylesheet' href='https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400..700,0..1,0'>
+  <link rel='stylesheet' href='./assets/app.css'>
+  <style>
+    .invite-main { background:#fff; padding:10px 14px 16px; display:flex; flex-direction:column; gap:12px; }
+    .invite-head { display:flex; align-items:center; justify-content:space-between; padding:2px 4px 0; }
+    .invite-head h2 { margin:0; font-size:24px; font-weight:800; color:#1e2430; }
+    .icon-btn-lite { width:34px; height:34px; display:inline-flex; align-items:center; justify-content:center; border-radius:12px; border:1px solid #edf0f5; background:#fff; color:#1f2430; text-decoration:none; box-shadow:0 8px 18px rgba(20,28,45,.06); }
+
+    .hero {
+      border-radius:22px;
+      padding:20px 18px 18px;
+      color:#fff;
+      background: linear-gradient(135deg, #ff9f52, #ff6f61 55%, #7f5cff 120%);
+      box-shadow: 0 16px 24px rgba(255,120,84,.28);
+    }
+    .hero h3 {
+      margin:0;
+      font-size:28px;
+      line-height:1.24;
+      letter-spacing:.2px;
+      text-wrap: balance;
+    }
+    .hero p {
+      margin:12px 0 0;
+      font-size:14px;
+      line-height:1.5;
+      color:rgba(255,255,255,.94);
+    }
+
+    .code-card {
+      background:#fff;
+      border:1px solid #edf1f6;
+      border-radius:18px;
+      padding:12px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      box-shadow:0 10px 22px rgba(30,41,65,.08);
+    }
+    .code-copy { color:#2a3040; }
+    .code-copy b { display:block; font-size:12px; color:#778197; }
+    .code-copy strong { display:block; margin-top:4px; font-size:18px; letter-spacing:1px; color:#111827; }
+    .copy-btn {
+      border:0;
+      border-radius:12px;
+      padding:10px 14px;
+      background:#1b2538;
+      color:#fff;
+      font-size:12px;
+      font-weight:700;
+      cursor:pointer;
+    }
+
+    .share-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+    .share-item {
+      border:1px solid #edf1f6;
+      border-radius:16px;
+      background:#fff;
+      padding:12px 6px;
+      text-align:center;
+      color:#5f697a;
+      font-size:12px;
+      font-weight:700;
+      cursor:pointer;
+      box-shadow: 0 6px 14px rgba(32,41,61,.06);
+    }
+    .share-item .material-symbols-outlined {
+      display:block;
+      margin:0 auto 6px;
+      font-size:20px;
+      color:#ff7a22;
+    }
+
+    .panel {
+      border:1px solid #edf1f6;
+      border-radius:18px;
+      background:#fff;
+      box-shadow:0 10px 22px rgba(30,41,65,.08);
+      overflow:hidden;
+    }
+    .panel-hd {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding:12px 14px;
+      border-bottom:1px solid #f2f4f8;
+    }
+    .panel-hd h3 { margin:0; font-size:16px; color:#202838; }
+    .panel-hd span { font-size:12px; color:#758095; }
+
+    .invite-row {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding:12px 14px;
+      border-bottom:1px solid #f4f6fa;
+    }
+    .invite-row:last-child { border-bottom:0; }
+    .friend { display:flex; align-items:center; gap:10px; }
+    .avatar {
+      width:34px; height:34px; border-radius:50%;
+      display:grid; place-items:center;
+      font-size:13px; font-weight:800;
+      color:#fff;
+      background:linear-gradient(145deg,#8cc8ff,#4d8dff);
+    }
+    .avatar.a2 { background:linear-gradient(145deg,#9de2ca,#31b18f); }
+    .avatar.a3 { background:linear-gradient(145deg,#ffc7b0,#ff8c67); }
+    .friend b { display:block; font-size:14px; color:#1f2633; }
+    .friend em { display:block; margin-top:2px; font-style:normal; font-size:12px; color:#778195; }
+
+    .badge {
+      border-radius:999px;
+      padding:5px 10px;
+      font-size:11px;
+      font-weight:700;
+      border:1px solid;
+      white-space:nowrap;
+    }
+    .badge.done { background:#ecfdf3; color:#0f9f55; border-color:#bdeccf; }
+    .badge.wait { background:#fff4e7; color:#cf6c16; border-color:#ffd8b1; }
+
+    .reward-bar {
+      border:1px solid #edf1f6;
+      border-radius:14px;
+      padding:12px;
+      background:#fbfcff;
+    }
+    .reward-top { display:flex; justify-content:space-between; align-items:center; font-size:13px; color:#2b3342; font-weight:700; }
+    .track { margin-top:8px; height:8px; border-radius:999px; background:#e8edf4; overflow:hidden; }
+    .track i { display:block; width:58%; height:100%; background:linear-gradient(90deg,#ffb15b,#ff7a43); }
+
+    .invite-btn {
+      border:0;
+      border-radius:14px;
+      height:46px;
+      font-size:16px;
+      font-weight:800;
+      color:#fff;
+      background:linear-gradient(135deg,#ffb35c,#ff7f43);
+      box-shadow:0 12px 18px rgba(255,120,58,.28);
+      cursor:pointer;
+    }
+  </style>
+</head>
+<body><div class='wrap'><div class='phone'>
+<header class='status'>
+  <span class='status-time'>9:53</span>
+  <span class='status-icons'><i class='status-bar'></i><i class='status-wifi'></i><i class='status-battery'></i></span>
+</header>
+
+<main class='invite-main'>
+  <section class='invite-head'>
+    <a class='icon-btn-lite' href='./09-mine.html' aria-label='返回我的页'><span class='material-symbols-outlined'>chevron_left</span></a>
+    <h2>邀请好友</h2>
+    <a class='icon-btn-lite' href='#' aria-label='邀请规则'><span class='material-symbols-outlined'>help</span></a>
+  </section>
+
+  <section class='hero'>
+    <h3>邀请 1 位好友，<br>一起加入吃饭小队</h3>
+    <p>好友注册后即可一起投票选店，解锁「组局达人」徽章</p>
+  </section>
+
+  <section class='code-card'>
+    <div class='code-copy'>
+      <b>我的邀请码</b>
+      <strong id='inviteCode'>CHIHUO888</strong>
+    </div>
+    <button class='copy-btn' id='copyBtn' type='button'>复制</button>
+  </section>
+
+  <section class='share-grid'>
+    <button class='share-item' type='button'><span class='material-symbols-outlined'>chat</span>微信</button>
+    <button class='share-item' type='button'><span class='material-symbols-outlined'>forum</span>朋友圈</button>
+    <button class='share-item' type='button'><span class='material-symbols-outlined'>mail</span>QQ</button>
+    <button class='share-item' type='button'><span class='material-symbols-outlined'>share</span>更多</button>
+  </section>
+
+  <section class='reward-bar'>
+    <div class='reward-top'><span>本月邀请进度</span><span id='progressText'>3 / 5 人</span></div>
+    <div class='track'><i id='progressBar'></i></div>
+  </section>
+
+  <section class='panel'>
+    <div class='panel-hd'>
+      <h3>邀请记录</h3>
+      <span>最近 30 天</span>
+    </div>
+
+    <div class='invite-row'>
+      <div class='friend'>
+        <span class='avatar'>王</span>
+        <span><b>小王</b><em>2026-05-11 注册</em></span>
+      </div>
+      <span class='badge done'>已加入小队</span>
+    </div>
+
+    <div class='invite-row'>
+      <div class='friend'>
+        <span class='avatar a2'>李</span>
+        <span><b>小李</b><em>2026-05-09 注册</em></span>
+      </div>
+      <span class='badge wait'>待完成注册</span>
+    </div>
+
+    <div class='invite-row'>
+      <div class='friend'>
+        <span class='avatar a3'>周</span>
+        <span><b>小周</b><em>2026-05-06 注册</em></span>
+      </div>
+      <span class='badge done'>已加入小队</span>
+    </div>
+  </section>
+
+  <button class='invite-btn' id='shareBtn' type='button'>立即邀请好友</button>
+</main>
+
+<footer class='footer-nav'>
+  <a href='./02-home.html'><span class='material-symbols-outlined'>home</span><span>首页</span><i class='footer-dot'></i></a>
+  <a href='./08-record.html'><span class='material-symbols-outlined'>history</span><span>记录</span><i class='footer-dot'></i></a>
+  <a class='active' href='./09-mine.html'><span class='material-symbols-outlined'>person</span><span>我的</span><i class='footer-dot'></i></a>
+</footer>
+</div></div>
+
+<script>
+(function(){
+  var copyBtn = document.getElementById('copyBtn');
+  var code = document.getElementById('inviteCode').textContent;
+  var shareBtn = document.getElementById('shareBtn');
+
+  copyBtn.addEventListener('click', function(){
+    var copied = false;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(code).then(function(){
+        copied = true;
+        copyBtn.textContent = '已复制';
+      }).catch(function(){});
+    }
+    if (!copied) {
+      copyBtn.textContent = '已复制';
+    }
+    setTimeout(function(){ copyBtn.textContent = '复制'; }, 1200);
+  });
+
+  shareBtn.addEventListener('click', function(){
+    shareBtn.textContent = '已发起邀请';
+    setTimeout(function(){ shareBtn.textContent = '立即邀请好友'; }, 1200);
+  });
+})();
+</script>
+</body></html>

@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang='zh-CN'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport' content='width=device-width,initial-scale=1'>
+  <title>加入房间</title>
+  <link rel='stylesheet' href='https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400..700,0..1,0'>
+  <link rel='stylesheet' href='./assets/app.css'>
+  <style>
+    .join-main{background:#fff;padding:10px 14px 16px;display:flex;flex-direction:column;gap:12px}
+    .head{display:flex;align-items:center;justify-content:space-between;padding:2px 4px 0}
+    .head h2{margin:0;font-size:24px;font-weight:800;color:#1e2430}
+    .icon-btn-lite{width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;border-radius:12px;border:1px solid #edf0f5;background:#fff;color:#1f2430;text-decoration:none;box-shadow:0 8px 18px rgba(20,28,45,.06)}
+    .card{border:1px solid #edf1f6;border-radius:20px;background:#fff;padding:14px;box-shadow:0 10px 22px rgba(30,41,65,.08)}
+    .label{font-size:13px;font-weight:700;color:#404a5f;margin:0 0 8px}
+    .code{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+    .code input{height:46px;text-align:center;font-size:18px;font-weight:800;border:1px solid #e5eaf2;border-radius:12px}
+    .tip{margin-top:10px;font-size:12px;color:#6b7385}
+    .recent{margin-top:10px;border-top:1px dashed #e4e8ef;padding-top:10px}
+    .recent button{width:100%;height:42px;border:1px solid #e8edf4;border-radius:12px;background:#f9fbff;color:#42506b;font-weight:700;cursor:pointer}
+    .btn{height:46px;border:0;border-radius:14px;font-size:16px;font-weight:800;cursor:pointer;background:linear-gradient(135deg,#ffb35c,#ff7f43);color:#fff;box-shadow:0 12px 18px rgba(255,120,58,.28)}
+  </style>
+</head>
+<body><div class='wrap'><div class='phone'>
+<header class='status'><span class='status-time'>9:53</span><span class='status-icons'><i class='status-bar'></i><i class='status-wifi'></i><i class='status-battery'></i></span></header>
+<main class='join-main'>
+  <section class='head'>
+    <a class='icon-btn-lite' href='./03-friends.html'><span class='material-symbols-outlined'>chevron_left</span></a>
+    <h2>加入房间</h2>
+    <a class='icon-btn-lite' href='#'><span class='material-symbols-outlined'>qr_code_scanner</span></a>
+  </section>
+  <section class='card'>
+    <p class='label'>输入 6 位房间号</p>
+    <div class='code' id='codeWrap'>
+      <input maxlength='1' inputmode='numeric'><input maxlength='1' inputmode='numeric'><input maxlength='1' inputmode='numeric'><input maxlength='1' inputmode='numeric'><input maxlength='1' inputmode='numeric'><input maxlength='1' inputmode='numeric'>
+    </div>
+    <p class='tip'>示例：123456。也可以点击右上角扫码快速加入。</p>
+    <div class='recent'><button type='button' id='useRecent'>使用最近房间：928314</button></div>
+  </section>
+  <button class='btn' id='joinBtn'>加入并开始投票</button>
+</main>
+<footer class='footer-nav'>
+  <a class='active' href='./02-home.html'><span class='material-symbols-outlined'>home</span><span>首页</span><i class='footer-dot'></i></a>
+  <a href='./08-record.html'><span class='material-symbols-outlined'>history</span><span>记录</span><i class='footer-dot'></i></a>
+  <a href='./09-mine.html'><span class='material-symbols-outlined'>person</span><span>我的</span><i class='footer-dot'></i></a>
+</footer>
+</div></div>
+<script>
+(function(){
+  var ins=Array.prototype.slice.call(document.querySelectorAll('#codeWrap input'));
+  ins.forEach(function(i,idx){i.addEventListener('input',function(){this.value=this.value.replace(/\D/g,'').slice(0,1);if(this.value&&ins[idx+1])ins[idx+1].focus();});});
+  document.getElementById('useRecent').addEventListener('click',function(){'928314'.split('').forEach(function(v,i){ins[i].value=v;});});
+  document.getElementById('joinBtn').addEventListener('click',function(){var code=ins.map(function(i){return i.value;}).join(''); if(code.length<6){this.textContent='请先输入完整房间号';setTimeout(()=>this.textContent='加入并开始投票',1200);return;} this.textContent='加入成功，跳转中'; setTimeout(function(){location.href='./04-vote.html';},500);});
+})();
+</script>
+</body></html>
