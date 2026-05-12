@@ -8,7 +8,14 @@
   <link rel='stylesheet' href='./assets/app.css'>
 </head>
 <body><div class='wrap'><p class='title'>01 启动页（纯 HTML）</p><div class='phone'>
-<header class='status'><span>9:53</span><span class='signal'><span>5G</span><span class='material-symbols-outlined'>battery_full</span></span></header>
+<header class='status'>
+  <span class='status-time'>9:53</span>
+  <span class='status-icons'>
+    <i class='status-bar' aria-hidden='true'></i>
+    <i class='status-wifi' aria-hidden='true'></i>
+    <i class='status-battery' aria-hidden='true'></i>
+  </span>
+</header>
 <main style='display:grid;place-items:center'>
   <section class='card' style='width:100%;max-width:280px;text-align:center;background:#fff;border:none;box-shadow:none'>
     <div class='logo-box'><span class='material-symbols-outlined'>ramen_dining</span></div>

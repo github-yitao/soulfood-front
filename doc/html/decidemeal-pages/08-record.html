@@ -8,28 +8,53 @@
   <link rel='stylesheet' href='./assets/app.css'>
 </head>
 <body><div class='wrap'><p class='title'>08 记录页（纯 HTML）</p><div class='phone'>
-<header class='status'><span>9:53</span><span class='signal'><span>5G</span><span class='material-symbols-outlined'>battery_full</span></span></header>
-<main>
-  <h2 class='h2'>我的记录</h2>
-  <section class='badges mt12'>
-    <article class='badge' style='background:#ffd9d9'><span class='stats-note'>观众悦度</span><b>53次</b></article>
-    <article class='badge' style='background:#ffefbc'><span class='stats-note'>收藏菜谱</span><b>18次</b></article>
-    <article class='badge' style='background:#ddf6df'><span class='stats-note'>吃过餐厅</span><b>12次</b></article>
-    <article class='badge' style='background:#e0e6ff'><span class='stats-note'>投票次数</span><b>83次</b></article>
+<header class='status'>
+  <span class='status-time'>9:53</span>
+  <span class='status-icons'>
+    <i class='status-bar' aria-hidden='true'></i>
+    <i class='status-wifi' aria-hidden='true'></i>
+    <i class='status-battery' aria-hidden='true'></i>
+  </span>
+</header>
+<main class='record-main'>
+  <h2 class='record-title'>我的记录</h2>
+  <section class='record-stats'>
+    <article class='record-stat stat-warm'>
+      <span class='record-stat-note'>观众悦度</span>
+      <b>53次</b>
+    </article>
+    <article class='record-stat stat-gold'>
+      <span class='record-stat-note'>收藏菜谱</span>
+      <b>18次</b>
+    </article>
+    <article class='record-stat stat-green'>
+      <span class='record-stat-note'>吃过餐厅</span>
+      <b>12次</b>
+    </article>
+    <article class='record-stat stat-violet'>
+      <span class='record-stat-note'>投票次数</span>
+      <b>83次</b>
+    </article>
   </section>
-  <h3 class='h3 mt16'>最近记录</h3>
-  <ul class='list mt8'>
+  <h3 class='record-section-title'>最近记录</h3>
+  <ul class='record-list'>
     <li class='record-item'>
-      <span class='food-thumb thumb-hotpot'><span class='material-symbols-outlined'>soup_kitchen</span></span>
-      <span><b>火锅还是烤肉？</b><span class='meta'><span>4人参与</span><span>2024-05-20</span></span></span>
+      <span class='record-thumb record-thumb-hotpot' aria-hidden='true'>
+        <i class='tile tile-red'></i><i class='tile tile-orange'></i><i class='tile tile-cream'></i><i class='tile tile-deep'></i>
+      </span>
+      <span class='record-copy'><b>火锅还是烤肉？</b><span class='meta'><span>4人参与</span><span>2024-05-20</span></span></span>
     </li>
     <li class='record-item'>
-      <span class='food-thumb thumb-bbq'><span class='material-symbols-outlined'>outdoor_grill</span></span>
-      <span><b>晚饭吃什么？</b><span class='meta'><span>3人参与</span><span>2024-05-18</span></span></span>
+      <span class='record-thumb record-thumb-dinner' aria-hidden='true'>
+        <i class='skillet'></i><i class='tile tile-orange'></i><i class='tile tile-gold'></i><i class='tile tile-cream small'></i>
+      </span>
+      <span class='record-copy'><b>晚饭吃什么？</b><span class='meta'><span>3人参与</span><span>2024-05-18</span></span></span>
     </li>
     <li class='record-item'>
-      <span class='food-thumb thumb-tomato'><span class='material-symbols-outlined'>breakfast_dining</span></span>
-      <span><b>番茄炒蛋</b><span class='meta'><span>我做的</span><span>2024-05-15</span></span></span>
+      <span class='record-thumb record-thumb-tomato' aria-hidden='true'>
+        <i class='plate'></i><i class='tile tile-egg'></i><i class='tile tile-red small'></i><i class='tile tile-gold tiny'></i>
+      </span>
+      <span class='record-copy'><b>番茄炒蛋</b><span class='meta'><span>我做的</span><span>2024-05-15</span></span></span>
     </li>
   </ul>
 </main>

@@ -593,6 +593,236 @@ main {
   margin-top: 2px;
 }
 
+.record-main {
+  background: #fff;
+  padding: 6px 18px 12px;
+}
+
+.record-title {
+  margin: 0;
+  font-size: 24px;
+  line-height: 1.1;
+  font-weight: 800;
+  letter-spacing: -0.4px;
+}
+
+.record-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.record-stat {
+  min-height: 70px;
+  border-radius: 16px;
+  padding: 12px 10px 10px;
+}
+
+.record-stat-note {
+  display: block;
+  font-size: 10px;
+  line-height: 1.15;
+  font-weight: 700;
+}
+
+.record-stat b {
+  display: block;
+  margin-top: 8px;
+  font-size: 16px;
+  line-height: 1;
+  color: #2b2f39;
+}
+
+.stat-warm {
+  background: linear-gradient(180deg, #ffd7d7 0%, #ffd0cf 100%);
+}
+
+.stat-warm .record-stat-note {
+  color: #ef8180;
+}
+
+.stat-gold {
+  background: linear-gradient(180deg, #fff0ba 0%, #ffecb0 100%);
+}
+
+.stat-gold .record-stat-note {
+  color: #ecb738;
+}
+
+.stat-green {
+  background: linear-gradient(180deg, #dff4dd 0%, #d5efcf 100%);
+}
+
+.stat-green .record-stat-note {
+  color: #76b87c;
+}
+
+.stat-violet {
+  background: linear-gradient(180deg, #e2e7ff 0%, #d9dfff 100%);
+}
+
+.stat-violet .record-stat-note {
+  color: #8f92eb;
+}
+
+.record-section-title {
+  margin: 18px 0 0;
+  font-size: 18px;
+  line-height: 1.15;
+  font-weight: 800;
+  letter-spacing: -0.2px;
+}
+
+.record-list {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+}
+
+.record-list .record-item {
+  grid-template-columns: 50px 1fr;
+  gap: 12px;
+  justify-content: start;
+  padding: 10px 12px;
+  margin-top: 0;
+  border: 1px solid #f1f2f5;
+  border-radius: 16px;
+  box-shadow: 0 4px 10px rgba(30, 31, 35, 0.03);
+}
+
+.record-list .record-item + .record-item {
+  margin-top: 10px;
+}
+
+.record-copy {
+  min-width: 0;
+}
+
+.record-copy b {
+  display: block;
+  font-size: 15px;
+  line-height: 1.2;
+  color: #20232a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.record-list .meta {
+  justify-content: flex-start;
+  gap: 8px;
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #9aa0ac;
+}
+
+.record-thumb {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(24, 26, 33, 0.08) inset;
+}
+
+.record-thumb-hotpot {
+  background:
+    radial-gradient(circle at 28% 32%, #ff8f60 0 18%, transparent 19%),
+    radial-gradient(circle at 72% 30%, #f7b561 0 16%, transparent 17%),
+    radial-gradient(circle at 42% 68%, #f6e2aa 0 18%, transparent 19%),
+    radial-gradient(circle at 70% 68%, #d25641 0 14%, transparent 15%),
+    linear-gradient(135deg, #2c272f 0%, #554034 100%);
+}
+
+.record-thumb-dinner {
+  background: linear-gradient(140deg, #f7ddb5 0%, #e7a85b 100%);
+}
+
+.record-thumb-tomato {
+  background: radial-gradient(circle at 50% 50%, #ffeaa0 0%, #f5bb47 60%, #ec8a24 100%);
+}
+
+.record-thumb .tile,
+.record-thumb .skillet,
+.record-thumb .plate {
+  position: absolute;
+  display: block;
+}
+
+.record-thumb .tile {
+  width: 16px;
+  height: 16px;
+  border-radius: 5px;
+}
+
+.record-thumb .tile.small {
+  width: 12px;
+  height: 12px;
+}
+
+.record-thumb .tile.tiny {
+  width: 10px;
+  height: 10px;
+}
+
+.record-thumb .tile-red {
+  background: #f57f53;
+  left: 8px;
+  top: 9px;
+}
+
+.record-thumb .tile-orange {
+  background: #f1ab4f;
+  left: 25px;
+  top: 8px;
+}
+
+.record-thumb .tile-cream {
+  background: #f4e1b0;
+  left: 18px;
+  top: 26px;
+}
+
+.record-thumb .tile-deep {
+  background: #c84a34;
+  left: 34px;
+  top: 27px;
+}
+
+.record-thumb .tile-gold {
+  background: #ffd161;
+  left: 25px;
+  top: 11px;
+}
+
+.record-thumb .tile-egg {
+  background: #f7a620;
+  left: 16px;
+  top: 17px;
+}
+
+.record-thumb .skillet {
+  width: 72px;
+  height: 28px;
+  left: -9px;
+  bottom: -4px;
+  transform: rotate(-26deg);
+  border-radius: 18px;
+  background: rgba(25, 27, 34, 0.84);
+}
+
+.record-thumb .plate {
+  width: 39px;
+  height: 39px;
+  left: 8px;
+  top: 8px;
+  border-radius: 50%;
+  background: rgba(255, 250, 228, 0.76);
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.35);
+}
+
 .profile {
   display: flex;
   align-items: center;
