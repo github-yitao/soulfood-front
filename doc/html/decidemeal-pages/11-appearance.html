@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang='zh-CN'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport' content='width=device-width,initial-scale=1'>
+  <title>11 外观设置</title>
+  <link rel='stylesheet' href='https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400..700,0..1,0'>
+  <link rel='stylesheet' href='./assets/app.css'>
+</head>
+<body><div class='wrap'><p class='title'>11 外观设置（纯 HTML）</p><div class='phone'>
+<header class='status'>
+  <span class='status-time'>9:53</span>
+  <span class='status-icons'>
+    <i class='status-bar' aria-hidden='true'></i>
+    <i class='status-wifi' aria-hidden='true'></i>
+    <i class='status-battery' aria-hidden='true'></i>
+  </span>
+</header>
+<main class='appearance-main'>
+  <div class='settings-top'>
+    <a class='back-link' href='./10-setting.html' aria-label='返回设置'><span class='material-symbols-outlined'>chevron_left</span></a>
+    <h1 class='settings-title'>外观设置</h1>
+  </div>
+
+  <section class='appearance-stack'>
+    <article class='appearance-card'>
+      <h3>主题模式</h3>
+      <div class='mode-grid mt10' id='modeGrid'>
+        <div class='mode-item' data-mode='light'>
+          <div class='mode-preview light'></div>
+          <p>浅色模式</p>
+        </div>
+        <div class='mode-item' data-mode='dark'>
+          <div class='mode-preview dark'></div>
+          <p>深色模式</p>
+        </div>
+        <div class='mode-item active' data-mode='system'>
+          <div class='mode-preview system'><span class='mode-check'>✓</span></div>
+          <p>跟随系统</p>
+        </div>
+      </div>
+    </article>
+
+    <article class='appearance-card'>
+      <div class='appearance-row'>
+        <div>
+          <h3>跟随系统外观</h3>
+          <p class='appearance-sub'>开启后，将跟随系统的浅色/深色模式设置</p>
+        </div>
+        <span class='switch' id='followSwitch' aria-hidden='true'></span>
+      </div>
+    </article>
+
+    <article class='appearance-card'>
+      <h3>主题色</h3>
+      <p class='appearance-sub'>选择你喜欢的主题色</p>
+      <div class='color-row'>
+        <span class='color-dot active' style='background:#f2c43f'></span>
+        <span class='color-dot' style='background:#45c16e'></span>
+        <span class='color-dot' style='background:#4a90e2'></span>
+        <span class='color-dot' style='background:#8c63df'></span>
+        <span class='color-dot' style='background:#f05563'></span>
+      </div>
+    </article>
+
+    <article class='appearance-card'>
+      <h3>应用图标</h3>
+      <p class='appearance-sub'>选择你喜欢的应用图标样式</p>
+      <div class='icon-row'>
+        <div class='app-icon-option selected'>
+          <img src='./assets/ramen-bowl.svg' alt='默认应用图标'>
+          <span class='mode-check'>✓</span>
+        </div>
+        <div class='app-icon-option'>
+          <img src='./assets/ramen-bowl.svg' alt='圆角应用图标'>
+        </div>
+        <span class='app-icon-ring' aria-hidden='true'></span>
+      </div>
+    </article>
+
+    <article class='appearance-card'>
+      <h3>预览</h3>
+      <div class='preview-grid mt10'>
+        <div class='preview-phone light'>
+          <div class='preview-brand'>浅色模式预览</div>
+          <div class='preview-row'>
+            <span class='preview-badge'><img src='./assets/ramen-bowl.svg' alt='预览图标' width='16' height='16'></span>
+            <span>帮你更快决定吃什么 🙂</span>
+          </div>
+        </div>
+        <div class='preview-phone dark'>
+          <div class='preview-brand'>Dark 模式预览</div>
+          <div class='preview-row'>
+            <span class='preview-badge'><img src='./assets/ramen-bowl.svg' alt='预览图标' width='16' height='16'></span>
+            <span>帮你更快决定吃什么 🙂</span>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <p class='preview-note'>主题设置仅在当前设备生效</p>
+  </section>
+</main>
+<footer class='footer-nav'>
+  <a href='./02-home.html'><span class='material-symbols-outlined'>home</span><span>首页</span><i class='footer-dot'></i></a>
+  <a href='./08-record.html'><span class='material-symbols-outlined'>history</span><span>记录</span><i class='footer-dot'></i></a>
+  <a class='active' href='./09-mine.html'><span class='material-symbols-outlined'>person</span><span>我的</span><i class='footer-dot'></i></a>
+</footer>
+</div></div>
+<script>
+  (function () {
+    var root = document.querySelector('.phone');
+    var items = Array.prototype.slice.call(document.querySelectorAll('.mode-item'));
+    var followSwitch = document.getElementById('followSwitch');
+
+    function getSystemTheme() {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+
+    function setActive(mode) {
+      items.forEach(function (item) {
+        item.classList.toggle('active', item.getAttribute('data-mode') === mode);
+      });
+    }
+
+    function applyTheme(mode) {
+      var resolved = mode === 'system' ? getSystemTheme() : mode;
+      root.classList.toggle('theme-dark', resolved === 'dark');
+      root.classList.toggle('theme-light', resolved === 'light');
+      followSwitch.classList.toggle('off', mode !== 'system');
+      setActive(mode);
+      localStorage.setItem('decidemeal-theme-mode', mode);
+    }
+
+    var savedMode = localStorage.getItem('decidemeal-theme-mode') || 'system';
+    applyTheme(savedMode);
+
+    items.forEach(function (item) {
+      item.addEventListener('click', function () {
+        applyTheme(item.getAttribute('data-mode'));
+      });
+    });
+
+    var media = window.matchMedia('(prefers-color-scheme: dark)');
+    media.addEventListener('change', function () {
+      if ((localStorage.getItem('decidemeal-theme-mode') || 'system') === 'system') {
+        applyTheme('system');
+      }
+    });
+  })();
+</script>
+</body></html>
