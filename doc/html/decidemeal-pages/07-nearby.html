@@ -1,17 +1,36 @@
 <!doctype html>
 <html lang='zh-CN'>
-<head><meta charset='UTF-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>07 附近吃什么</title><link rel='stylesheet' href='./assets/app.css'></head>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport' content='width=device-width,initial-scale=1'>
+  <title>07 附近吃什么</title>
+  <link rel='stylesheet' href='https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400..700,0..1,0'>
+  <link rel='stylesheet' href='./assets/app.css'>
+</head>
 <body><div class='wrap'><p class='title'>07 附近吃什么（纯 HTML）</p><div class='phone'>
-<header class='status'><span>9:53</span><span>5G 🔋</span></header>
+<header class='status'><span>9:53</span><span class='signal'><span>5G</span><span class='material-symbols-outlined'>battery_full</span></span></header>
 <main>
   <h2 class='h2'>附近吃什么</h2>
-  <p class='sub'>浏览附近美食</p>
+  <p class='sub'>发现附近美食</p>
   <ul class='list mt10'>
-    <li><span>🍲 海底捞(万象城店)</span><span>1.2km</span></li>
-    <li><span>🍢 喜茶(万象城店)</span><span>1.5km</span></li>
-    <li><span>🍔 麦当劳(万象城店)</span><span>1.8km</span></li>
+    <li class='record-item'>
+      <span class='food-thumb thumb-hotpot'><span class='material-symbols-outlined'>soup_kitchen</span></span>
+      <span><b>海底捞(万象城店)</b><span class='meta'><span>火锅</span><span>1.1km</span></span></span>
+    </li>
+    <li class='record-item'>
+      <span class='food-thumb thumb-noodle'><span class='material-symbols-outlined'>ramen_dining</span></span>
+      <span><b>喜茶(万象城店)</b><span class='meta'><span>饮品</span><span>1.5km</span></span></span>
+    </li>
+    <li class='record-item'>
+      <span class='food-thumb thumb-potato'><span class='material-symbols-outlined'>lunch_dining</span></span>
+      <span><b>麦当劳(万象城店)</b><span class='meta'><span>快餐</span><span>1.8km</span></span></span>
+    </li>
   </ul>
   <a class='btn btn-primary btn-block mt16' href='./04-vote.html'>发起投票</a>
 </main>
-<footer class='footer-nav'><a href='./02-home.html'><span>首页</span><i class='footer-dot'></i></a><a class='active' href='./08-record.html'><span>记录</span><i class='footer-dot'></i></a><a href='./09-mine.html'><span>我的</span><i class='footer-dot'></i></a></footer>
+<footer class='footer-nav'>
+  <a href='./02-home.html'><span class='material-symbols-outlined'>home</span><span>首页</span><i class='footer-dot'></i></a>
+  <a class='active' href='./08-record.html'><span class='material-symbols-outlined'>history</span><span>记录</span><i class='footer-dot'></i></a>
+  <a href='./09-mine.html'><span class='material-symbols-outlined'>person</span><span>我的</span><i class='footer-dot'></i></a>
+</footer>
 </div></div></body></html>

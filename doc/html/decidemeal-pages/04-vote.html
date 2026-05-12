@@ -1,20 +1,52 @@
 <!doctype html>
 <html lang='zh-CN'>
-<head><meta charset='UTF-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>04 房间投票页</title><link rel='stylesheet' href='./assets/app.css'></head>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport' content='width=device-width,initial-scale=1'>
+  <title>04 房间投票页</title>
+  <link rel='stylesheet' href='https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400..700,0..1,0'>
+  <link rel='stylesheet' href='./assets/app.css'>
+</head>
 <body><div class='wrap'><p class='title'>04 房间投票页（纯 HTML）</p><div class='phone'>
-<header class='status'><span>9:53</span><span>5G 🔋</span></header>
+<header class='status'><span>9:53</span><span class='signal'><span>5G</span><span class='material-symbols-outlined'>battery_full</span></span></header>
 <main>
   <h2 class='h2'>火锅还是烤肉？</h2>
-  <p class='sub'>房间号：123456 · 4人参与</p>
-  <section class='card mt12'>
-    <div class='row'><span>🍲 火锅</span><strong>3票</strong></div>
-    <div class='progress'><div class='bar' style='width:75%'></div></div>
+  <p class='sub'>房间号：123456　　4人参与</p>
+
+  <section class='option-card mt12'>
+    <div class='option-head'>
+      <div class='option-left'>
+        <span class='food-thumb thumb-hotpot'><span class='material-symbols-outlined'>soup_kitchen</span></span>
+        <div>
+          <div class='option-main'>火锅</div>
+          <div class='vote-meta'>3票</div>
+        </div>
+      </div>
+      <strong>75%</strong>
+    </div>
+    <div class='progress mt8'><div class='bar' style='width:75%'></div></div>
   </section>
-  <section class='card mt10'>
-    <div class='row'><span>🥩 烤肉</span><strong>1票</strong></div>
-    <div class='progress'><div class='bar' style='width:25%;background:#ffb74d'></div></div>
+
+  <section class='option-card mt10'>
+    <div class='option-head'>
+      <div class='option-left'>
+        <span class='food-thumb thumb-bbq'><span class='material-symbols-outlined'>outdoor_grill</span></span>
+        <div>
+          <div class='option-main'>烤肉</div>
+          <div class='vote-meta'>1票</div>
+        </div>
+      </div>
+      <strong>25%</strong>
+    </div>
+    <div class='progress mt8'><div class='bar' style='width:25%;background:#f3a247'></div></div>
   </section>
-  <a class='btn btn-primary btn-block mt16' href='./06-result.html'>生成菜谱</a>
+
+  <a class='btn btn-secondary btn-block mt10' href='./04-vote.html'>＋ 添加选项</a>
+  <a class='btn btn-primary btn-block mt12' href='./06-result.html'>生成菜谱</a>
 </main>
-<footer class='footer-nav'><a class='active' href='./02-home.html'><span>首页</span><i class='footer-dot'></i></a><a href='./08-record.html'><span>记录</span><i class='footer-dot'></i></a><a href='./09-mine.html'><span>我的</span><i class='footer-dot'></i></a></footer>
+<footer class='footer-nav'>
+  <a class='active' href='./02-home.html'><span class='material-symbols-outlined'>home</span><span>首页</span><i class='footer-dot'></i></a>
+  <a href='./08-record.html'><span class='material-symbols-outlined'>history</span><span>记录</span><i class='footer-dot'></i></a>
+  <a href='./09-mine.html'><span class='material-symbols-outlined'>person</span><span>我的</span><i class='footer-dot'></i></a>
+</footer>
 </div></div></body></html>

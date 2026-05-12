@@ -1,16 +1,44 @@
 <!doctype html>
 <html lang='zh-CN'>
-<head><meta charset='UTF-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>02 首页</title><link rel='stylesheet' href='./assets/app.css'></head>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport' content='width=device-width,initial-scale=1'>
+  <title>02 首页</title>
+  <link rel='stylesheet' href='https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400..700,0..1,0'>
+  <link rel='stylesheet' href='./assets/app.css'>
+</head>
 <body><div class='wrap'><p class='title'>02 首页（纯 HTML）</p><div class='phone'>
-<header class='status'><span>9:53</span><span>5G 🔋</span></header>
-<main>
-  <h1 class='h1'>帮我决定<br>吃什么</h1>
-  <div class='hero'>🍜<br>吃什么</div>
-  <section class='grid3'>
-    <a class='btn btn-secondary small-btn' href='./03-friends.html'>和朋友一起</a>
-    <a class='btn btn-secondary small-btn' href='./05-cook-mode.html'>做饭模式</a>
-    <a class='btn btn-secondary small-btn' href='./07-nearby.html'>随便吃什么</a>
-  </section>
+<header class='status'>
+  <span class='status-time'>9:53</span>
+  <span class='status-icons'>
+    <i class='status-bar' aria-hidden='true'></i>
+    <i class='status-wifi' aria-hidden='true'></i>
+    <i class='status-battery' aria-hidden='true'></i>
+  </span>
+</header>
+<main class='home-main'>
+  <div class='top-actions'>
+    <div>
+      <h1 class='brand-title'>DecideMeal</h1>
+      <p class='brand-sub'>帮你更快决定吃什么 🙂</p>
+    </div>
+    <span class='icon-btn'><span class='material-symbols-outlined'>settings</span></span>
+  </div>
+  <div class='home-center'>
+    <div class='home-hero'>
+      <span class='hero-icon'><img src='./assets/ramen-bowl.svg' alt='面碗插画'></span>
+      <p class='home-hero-title'>帮我决定<br>吃什么</p>
+    </div>
+    <section class='home-actions'>
+      <a class='home-action friends' href='./03-friends.html'><span class='material-symbols-outlined'>groups</span><span class='action-line'>和朋友一起</span><span class='action-line'>决定</span></a>
+      <a class='home-action nearby' href='./05-cook-mode.html'><span class='material-symbols-outlined'>gesture</span><span class='action-line'>附近觅食</span><span class='action-line'>(探店用呀)</span></a>
+      <a class='home-action any' href='./07-nearby.html'><span class='material-symbols-outlined'>location_on</span><span class='action-line'>随机吃什么</span></a>
+    </section>
+  </div>
 </main>
-<footer class='footer-nav'><a class='active' href='./02-home.html'><span>首页</span><i class='footer-dot'></i></a><a href='./08-record.html'><span>记录</span><i class='footer-dot'></i></a><a href='./09-mine.html'><span>我的</span><i class='footer-dot'></i></a></footer>
+<footer class='footer-nav'>
+  <a class='active' href='./02-home.html'><span class='material-symbols-outlined'>home</span><span>首页</span><i class='footer-dot'></i></a>
+  <a href='./08-record.html'><span class='material-symbols-outlined'>history</span><span>记录</span><i class='footer-dot'></i></a>
+  <a href='./09-mine.html'><span class='material-symbols-outlined'>person</span><span>我的</span><i class='footer-dot'></i></a>
+</footer>
 </div></div></body></html>

@@ -1,0 +1,27 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bowlBody" x1="20" y1="44" x2="108" y2="88" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#F7FAFF"/>
+      <stop offset="1" stop-color="#D6DEE8"/>
+    </linearGradient>
+    <linearGradient id="soup" x1="20" y1="50" x2="108" y2="74" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFD98A"/>
+      <stop offset="1" stop-color="#FFBA5A"/>
+    </linearGradient>
+  </defs>
+
+  <path d="M22 62C22 42.4 40.4 28 64 28C87.6 28 106 42.4 106 62C106 83.2 86.8 98 64 98C41.2 98 22 83.2 22 62Z" fill="url(#bowlBody)"/>
+  <path d="M28 60C28 46.8 43.6 36 64 36C84.4 36 100 46.8 100 60C100 66.8 95.6 72 89.6 72H38.4C32.4 72 28 66.8 28 60Z" fill="url(#soup)"/>
+  <path d="M30 70H98C96 81.2 82.8 90 64 90C45.2 90 32 81.2 30 70Z" fill="#EEF3FA"/>
+  <path d="M27 64H101" stroke="#F26B6B" stroke-width="4" stroke-linecap="round"/>
+
+  <ellipse cx="63" cy="58" rx="10" ry="8" fill="#FFF6DE"/>
+  <circle cx="63" cy="58" r="3.5" fill="#FFB84E"/>
+  <path d="M75 52C82 52 87 55 90 59" stroke="#357553" stroke-width="5" stroke-linecap="round"/>
+  <path d="M78 47C84 45 88 47 92 51" stroke="#2F6A4A" stroke-width="3" stroke-linecap="round"/>
+
+  <path d="M46 34C50 28 57 26 64 28C70 30 74 34 76 40" stroke="#F0A43C" stroke-width="5" stroke-linecap="round"/>
+  <path d="M52 40C56 33 64 31 72 33" stroke="#F2B347" stroke-width="4" stroke-linecap="round"/>
+  <path d="M53 16L91 10" stroke="#AD5E06" stroke-width="5" stroke-linecap="round"/>
+  <path d="M55 24L93 18" stroke="#AD5E06" stroke-width="5" stroke-linecap="round"/>
+</svg>

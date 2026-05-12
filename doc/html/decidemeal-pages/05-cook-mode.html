@@ -1,18 +1,32 @@
 <!doctype html>
 <html lang='zh-CN'>
-<head><meta charset='UTF-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>05 做饭模式</title><link rel='stylesheet' href='./assets/app.css'></head>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport' content='width=device-width,initial-scale=1'>
+  <title>05 做饭模式</title>
+  <link rel='stylesheet' href='https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400..700,0..1,0'>
+  <link rel='stylesheet' href='./assets/app.css'>
+</head>
 <body><div class='wrap'><p class='title'>05 做饭模式（纯 HTML）</p><div class='phone'>
-<header class='status'><span>9:53</span><span>5G 🔋</span></header>
+<header class='status'><span>9:53</span><span class='signal'><span>5G</span><span class='material-symbols-outlined'>battery_full</span></span></header>
 <main>
-  <h2 class='h2'>做饭模式</h2>
-  <p class='sub'>冰箱里有什么？输入食材</p>
+  <h2 class='h2'>筛选模式</h2>
+  <p class='sub'>帮你更快找吃什么</p>
   <section class='card mt12'>
     <form action='./06-result.html'>
-      <input class='input' name='ingredients' placeholder='输入食材，如 鸡蛋 / 西红柿 / 青菜' />
-      <div class='tag-wrap mt10'><span class='tag'>鸡蛋</span><span class='tag'>西红柿</span><span class='tag'>土豆</span><span class='tag'>青菜</span></div>
-      <button class='btn btn-primary btn-block mt12' type='submit'>生成菜谱</button>
+      <input class='input' name='ingredients' placeholder='输入食材，如：米饭、蛋类、鸡腿肉...' />
+      <p class='mini-title mt12'>常见食材</p>
+      <div class='tag-wrap mt8'>
+        <span class='tag'>鸡肉</span><span class='tag'>西红柿</span><span class='tag'>土豆</span><span class='tag'>青菜</span>
+        <span class='tag'>鸡蛋</span><span class='tag'>豆腐</span><span class='tag'>海鲜</span><span class='tag'>面食</span>
+      </div>
+      <button class='btn btn-primary btn-block mt16' type='submit'>生成菜谱</button>
     </form>
   </section>
 </main>
-<footer class='footer-nav'><a class='active' href='./02-home.html'><span>首页</span><i class='footer-dot'></i></a><a href='./08-record.html'><span>记录</span><i class='footer-dot'></i></a><a href='./09-mine.html'><span>我的</span><i class='footer-dot'></i></a></footer>
+<footer class='footer-nav'>
+  <a class='active' href='./02-home.html'><span class='material-symbols-outlined'>home</span><span>首页</span><i class='footer-dot'></i></a>
+  <a href='./08-record.html'><span class='material-symbols-outlined'>history</span><span>记录</span><i class='footer-dot'></i></a>
+  <a href='./09-mine.html'><span class='material-symbols-outlined'>person</span><span>我的</span><i class='footer-dot'></i></a>
+</footer>
 </div></div></body></html>
