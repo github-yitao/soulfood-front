@@ -410,6 +410,7 @@ main {
 }
 
 .footer-nav a {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -423,11 +424,34 @@ main {
 
 .footer-nav a .material-symbols-outlined {
   font-size: 18px;
+  font-variation-settings: "FILL" 0, "wght" 500, "GRAD" 0, "opsz" 24;
 }
 
 .footer-nav a.active {
-  color: #212121;
+  color: #161a22;
   font-weight: 700;
+}
+
+.footer-nav a.active .material-symbols-outlined {
+  font-variation-settings: "FILL" 1, "wght" 600, "GRAD" 0, "opsz" 24;
+}
+
+.footer-nav a.active::before {
+  content: "";
+  position: absolute;
+  top: 9px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: rgba(246, 201, 63, 0.52);
+  z-index: 0;
+}
+
+.footer-nav a .material-symbols-outlined,
+.footer-nav a span,
+.footer-nav a .footer-dot {
+  position: relative;
+  z-index: 1;
 }
 
 .footer-dot {
@@ -861,49 +885,171 @@ main {
 }
 
 .mine-main {
-  padding-top: 12px;
+  padding: 0;
+  background: linear-gradient(180deg, #fff6dd 0%, #f5f6fa 220px);
 }
 
-.mine-profile-card {
-  min-height: 96px;
-  border-radius: 18px;
-  padding: 14px 16px;
+.mine-head {
+  padding: 8px 16px 14px;
 }
 
-.mine-main .h3 {
-  font-size: 18px;
-  line-height: 1.2;
-  letter-spacing: -0.2px;
+.mine-top-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
 }
 
-.mine-main .sub {
-  margin-top: 4px;
-  font-size: 12px;
+.mini-icon-btn {
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  color: #442d27;
+  text-decoration: none;
+}
+
+.mini-icon-btn .material-symbols-outlined {
+  font-size: 20px;
+  font-variation-settings: "FILL" 0, "wght" 500, "GRAD" 0, "opsz" 24;
+}
+
+.mine-profile-link {
+  margin-top: 8px;
+  text-decoration: none;
+  color: #1f2430;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .mine-main .avatar {
   width: 56px;
   height: 56px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #ffe9b8 0 55%, #f2d39a 56%);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.65);
 }
 
 .mine-main .avatar .material-symbols-outlined {
   font-size: 30px;
 }
 
-.mine-list li {
-  min-height: 66px;
+.profile-copy {
+  min-width: 0;
+  flex: 1;
+}
+
+.name-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.name-line b {
+  font-size: 21px;
+  line-height: 1.15;
+  letter-spacing: -0.2px;
+}
+
+.mine-main .sub {
+  margin-top: 5px;
+  display: block;
+  font-size: 14px;
+  color: #8f95a1;
+}
+
+.member-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(240, 203, 110, 0.2);
+  color: #ab7f20;
+  font-size: 11px;
+}
+
+.member-tag .material-symbols-outlined {
+  font-size: 14px;
+  color: #ba8a1f;
+}
+
+.mine-profile-link > .material-symbols-outlined {
+  color: #2d323d;
+  font-size: 22px;
+}
+
+.member-center {
   margin-top: 12px;
-  border-radius: 16px;
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 80% -60%, rgba(255, 226, 135, 0.35) 0%, transparent 58%),
+    linear-gradient(130deg, #242e3f 0%, #17202f 100%);
+  min-height: 94px;
+  padding: 14px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  text-decoration: none;
+}
+
+.member-copy b {
+  color: #f3cd6b;
+  font-size: 27px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  line-height: 1;
+}
+
+.member-copy b .material-symbols-outlined {
+  font-size: 20px;
+}
+
+.member-copy span {
+  display: block;
+  margin-top: 8px;
+  color: #dce2ec;
+  font-size: 13px;
+}
+
+.open-member-btn {
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ffd95d 0%, #f6c93f 100%);
+  color: #2e2412;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 7px 14px;
+}
+
+.mine-panel {
+  margin-top: 12px;
+  background: #f5f6fa;
+  border-radius: 22px 22px 0 0;
+  padding: 14px 16px 16px;
+  flex: 1;
+}
+
+.menu-card {
+  list-style: none;
+  margin: 0;
   padding: 0;
+  background: #fff;
+  border: 1px solid #eef1f5;
+  border-radius: 16px;
   overflow: hidden;
 }
 
+.menu-card li + li {
+  border-top: 1px solid #eff2f6;
+}
+
 .menu-link {
+  min-height: 64px;
+  padding: 0 14px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: 66px;
-  padding: 0 18px;
   text-decoration: none;
   color: #232630;
 }
@@ -912,18 +1058,33 @@ main {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
 }
 
 .menu-link .left .material-symbols-outlined {
-  color: #6b717d;
-  font-size: 19px;
+  color: #1f2430;
+  font-size: 21px;
+}
+
+.menu-link .right {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.invite-pill {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  color: #f2a824;
+  background: #fff5df;
+  border: 1px solid #ffe3a9;
 }
 
 .menu-link .material-symbols-outlined:last-child {
   font-size: 21px;
-  color: #2c313b;
+  color: #222833;
 }
 
 .top-actions {
