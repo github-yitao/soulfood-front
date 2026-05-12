@@ -1,0 +1,4 @@
+interface:
+  display_name: "UI Decomposer"
+  short_description: "将 UI 截图拆解为 HTML 和 Tailwind CSS"
+  default_prompt: "Use $ui-decomposer to convert this UI screenshot into semantic HTML and Tailwind CSS."
