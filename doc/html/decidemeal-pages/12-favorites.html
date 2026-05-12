@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang='zh-CN'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport' content='width=device-width,initial-scale=1'>
+  <title>12 我的收藏</title>
+  <link rel='stylesheet' href='https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400..700,0..1,0'>
+  <link rel='stylesheet' href='./assets/app.css'>
+  <style>
+    .favorites-main {
+      background: #ffffff;
+      padding: 10px 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .favorites-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 2px 4px 0;
+    }
+
+    .favorites-head h2 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: .2px;
+    }
+
+    .favorites-back {
+      width: 34px;
+      height: 34px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+      border: 1px solid #eef0f4;
+      background: #fff;
+      color: #1f2430;
+      text-decoration: none;
+      box-shadow: 0 8px 18px rgba(20, 28, 45, 0.06);
+    }
+
+    .favorites-filter {
+      display: flex;
+      gap: 8px;
+      overflow: auto;
+      padding: 2px 2px 4px;
+      scrollbar-width: none;
+    }
+
+    .favorites-filter::-webkit-scrollbar {
+      display: none;
+    }
+
+    .filter-chip {
+      border: 1px solid #edf0f6;
+      background: #f7f9fc;
+      color: #5d6677;
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all .18s ease;
+    }
+
+    .filter-chip.active {
+      border-color: #ffd99a;
+      background: #fff2df;
+      color: #c76700;
+      box-shadow: 0 8px 16px rgba(255, 140, 66, 0.18);
+    }
+
+    .favorite-card {
+      display: grid;
+      grid-template-columns: 64px 1fr auto;
+      gap: 10px;
+      align-items: center;
+      background: #fff;
+      border: 1px solid #edf0f6;
+      border-radius: 20px;
+      padding: 12px;
+      box-shadow: 0 10px 22px rgba(28, 39, 64, 0.08);
+    }
+
+    .food-cover {
+      width: 64px;
+      height: 64px;
+      border-radius: 14px;
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.55);
+      box-shadow: 0 8px 20px rgba(35, 45, 70, 0.16);
+      background: linear-gradient(145deg, #ffd58f, #ff9c6a);
+    }
+
+    .food-cover::before {
+      content: "";
+      position: absolute;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      left: -10px;
+      top: -14px;
+      background: rgba(255, 255, 255, 0.22);
+    }
+
+    .food-cover::after {
+      content: "";
+      position: absolute;
+      width: 46px;
+      height: 46px;
+      right: -12px;
+      bottom: -12px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .food-cover.noodle { background: linear-gradient(145deg, #94e3cb, #39b59a); }
+    .food-cover.beef { background: linear-gradient(145deg, #ffc8ca, #ff8f99); }
+
+    .food-icon {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.92);
+      display: grid;
+      place-items: center;
+      color: #3a4252;
+      z-index: 1;
+      box-shadow: 0 6px 14px rgba(26, 34, 52, 0.14);
+    }
+
+    .food-icon .material-symbols-outlined {
+      font-size: 22px;
+      font-variation-settings: "FILL" 1, "wght" 500, "GRAD" 0, "opsz" 24;
+    }
+
+    .food-title {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 800;
+      color: #1e2431;
+    }
+
+    .food-meta {
+      margin-top: 6px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      color: #737c8b;
+      font-size: 12px;
+    }
+
+    .fav-toggle {
+      width: 36px;
+      height: 36px;
+      border-radius: 12px;
+      border: 1px solid #ffd9b0;
+      background: #fff1e3;
+      color: #ff7a22;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all .2s ease;
+    }
+
+    .fav-toggle.off {
+      border-color: #e8ecf3;
+      background: #fff;
+      color: #8b94a3;
+    }
+
+    .favorites-empty {
+      margin-top: 14px;
+      display: none;
+      border: 1px dashed #e3e8f0;
+      border-radius: 16px;
+      background: #fbfcff;
+      color: #7c8594;
+      text-align: center;
+      padding: 26px 14px;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body><div class='wrap'><div class='phone'>
+<header class='status'>
+  <span class='status-time'>9:53</span>
+  <span class='status-icons'>
+    <i class='status-bar' aria-hidden='true'></i>
+    <i class='status-wifi' aria-hidden='true'></i>
+    <i class='status-battery' aria-hidden='true'></i>
+  </span>
+</header>
+
+<main class='favorites-main'>
+  <section class='favorites-head'>
+    <a class='favorites-back' href='./09-mine.html' aria-label='返回我的页'><span class='material-symbols-outlined'>chevron_left</span></a>
+    <h2>我的收藏</h2>
+    <a class='favorites-back' href='#' aria-label='搜索收藏'><span class='material-symbols-outlined'>search</span></a>
+  </section>
+
+  <section class='favorites-filter' id='filterWrap'>
+    <button class='filter-chip active' data-filter='all' type='button'>全部</button>
+    <button class='filter-chip' data-filter='home' type='button'>家常菜</button>
+    <button class='filter-chip' data-filter='fast' type='button'>快手菜</button>
+    <button class='filter-chip' data-filter='soup' type='button'>汤面</button>
+  </section>
+
+  <article class='favorite-card' data-type='home'>
+    <div class='food-cover'><span class='food-icon'><span class='material-symbols-outlined'>skillet</span></span></div>
+    <div>
+      <h3 class='food-title'>番茄炒蛋</h3>
+      <div class='food-meta'><span>评分 4.8</span><span>10分钟</span><span>家常菜</span></div>
+    </div>
+    <button class='fav-toggle' type='button' aria-label='取消收藏'><span class='material-symbols-outlined'>favorite</span></button>
+  </article>
+
+  <article class='favorite-card' data-type='soup'>
+    <div class='food-cover noodle'><span class='food-icon'><span class='material-symbols-outlined'>ramen_dining</span></span></div>
+    <div>
+      <h3 class='food-title'>青菜鸡蛋面</h3>
+      <div class='food-meta'><span>评分 4.7</span><span>12分钟</span><span>汤面</span></div>
+    </div>
+    <button class='fav-toggle' type='button' aria-label='取消收藏'><span class='material-symbols-outlined'>favorite</span></button>
+  </article>
+
+  <article class='favorite-card' data-type='fast'>
+    <div class='food-cover beef'><span class='food-icon'><span class='material-symbols-outlined'>lunch_dining</span></span></div>
+    <div>
+      <h3 class='food-title'>土豆丝炒肉</h3>
+      <div class='food-meta'><span>评分 4.6</span><span>15分钟</span><span>快手菜</span></div>
+    </div>
+    <button class='fav-toggle' type='button' aria-label='取消收藏'><span class='material-symbols-outlined'>favorite</span></button>
+  </article>
+
+  <div class='favorites-empty' id='emptyBox'>当前分类下暂无收藏，试试切换分类或重新收藏。</div>
+</main>
+
+<footer class='footer-nav'>
+  <a href='./02-home.html'><span class='material-symbols-outlined'>home</span><span>首页</span><i class='footer-dot'></i></a>
+  <a href='./08-record.html'><span class='material-symbols-outlined'>history</span><span>记录</span><i class='footer-dot'></i></a>
+  <a class='active' href='./09-mine.html'><span class='material-symbols-outlined'>person</span><span>我的</span><i class='footer-dot'></i></a>
+</footer>
+</div></div>
+
+<script>
+  (function () {
+    var chips = Array.prototype.slice.call(document.querySelectorAll('.filter-chip'));
+    var cards = Array.prototype.slice.call(document.querySelectorAll('.favorite-card'));
+    var toggles = Array.prototype.slice.call(document.querySelectorAll('.fav-toggle'));
+    var emptyBox = document.getElementById('emptyBox');
+    var activeFilter = 'all';
+
+    function render() {
+      var visible = 0;
+      cards.forEach(function (card) {
+        var removed = card.getAttribute('data-removed') === '1';
+        var type = card.getAttribute('data-type');
+        var matched = activeFilter === 'all' || activeFilter === type;
+        var show = matched && !removed;
+        card.style.display = show ? 'grid' : 'none';
+        if (show) visible += 1;
+      });
+      emptyBox.style.display = visible ? 'none' : 'block';
+    }
+
+    chips.forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        activeFilter = chip.getAttribute('data-filter');
+        chips.forEach(function (item) { item.classList.toggle('active', item === chip); });
+        render();
+      });
+    });
+
+    toggles.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var card = btn.closest('.favorite-card');
+        var removed = card.getAttribute('data-removed') === '1';
+        if (removed) {
+          card.setAttribute('data-removed', '0');
+          btn.classList.remove('off');
+          btn.innerHTML = '<span class="material-symbols-outlined">favorite</span>';
+          btn.setAttribute('aria-label', '取消收藏');
+        } else {
+          card.setAttribute('data-removed', '1');
+          btn.classList.add('off');
+          btn.innerHTML = '<span class="material-symbols-outlined">favorite_border</span>';
+          btn.setAttribute('aria-label', '恢复收藏');
+        }
+        render();
+      });
+    });
+
+    render();
+  })();
+</script>
+</body></html>
