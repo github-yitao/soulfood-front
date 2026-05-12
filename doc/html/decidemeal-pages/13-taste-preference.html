@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang='zh-CN'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport' content='width=device-width,initial-scale=1'>
+  <title>13 我的口味偏好</title>
+  <link rel='stylesheet' href='https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400..700,0..1,0'>
+  <link rel='stylesheet' href='./assets/app.css'>
+  <style>
+    .taste-main {
+      background: #fff;
+      padding: 10px 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .taste-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 2px 4px 0;
+    }
+    .taste-head h2 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 800;
+      color: #1e2430;
+    }
+    .icon-btn-lite {
+      width: 34px;
+      height: 34px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+      border: 1px solid #edf0f5;
+      background: #fff;
+      color: #1f2430;
+      text-decoration: none;
+      box-shadow: 0 8px 18px rgba(20, 28, 45, 0.06);
+    }
+    .taste-card {
+      background: #fff;
+      border: 1px solid #edf1f6;
+      border-radius: 20px;
+      padding: 14px;
+      box-shadow: 0 10px 22px rgba(30, 41, 65, 0.08);
+    }
+    .taste-card h3 {
+      margin: 0;
+      font-size: 16px;
+      color: #212937;
+    }
+    .taste-sub {
+      margin: 6px 0 0;
+      font-size: 12px;
+      color: #6f7888;
+    }
+    .tag-wrap2 {
+      margin-top: 12px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .taste-tag {
+      border: 1px solid #e8edf4;
+      background: #f7f9fc;
+      color: #5f697a;
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all .18s ease;
+    }
+    .taste-tag.active {
+      border-color: #ffd79f;
+      background: #fff2e0;
+      color: #d86a00;
+      box-shadow: 0 8px 14px rgba(255, 133, 62, 0.18);
+    }
+    .range-row {
+      margin-top: 12px;
+    }
+    .range-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13px;
+      color: #2a3240;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .range-val {
+      color: #ff7a21;
+      font-weight: 800;
+    }
+    input[type='range'] {
+      width: 100%;
+      accent-color: #ff8d40;
+    }
+    .switch-row {
+      margin-top: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid #f1f3f8;
+      font-size: 14px;
+      color: #2c3444;
+    }
+    .switch-row:last-child { border-bottom: 0; }
+    .switch {
+      width: 46px;
+      height: 28px;
+      border-radius: 20px;
+      background: #1fc978;
+      border: 1px solid #19b86c;
+      position: relative;
+      cursor: pointer;
+      transition: all .2s ease;
+    }
+    .switch::after {
+      content: '';
+      position: absolute;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #fff;
+      top: 2px;
+      right: 2px;
+      box-shadow: 0 2px 6px rgba(0,0,0,.18);
+      transition: all .2s ease;
+    }
+    .switch.off {
+      background: #e7ebf2;
+      border-color: #dde3ec;
+    }
+    .switch.off::after {
+      right: 22px;
+    }
+    .save-btn {
+      margin-top: 2px;
+      border: 0;
+      border-radius: 14px;
+      height: 44px;
+      font-size: 15px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #ffb35c, #ff7f43);
+      color: #fff;
+      cursor: pointer;
+      box-shadow: 0 12px 18px rgba(255, 120, 58, 0.28);
+    }
+  </style>
+</head>
+<body><div class='wrap'><div class='phone'>
+<header class='status'>
+  <span class='status-time'>9:53</span>
+  <span class='status-icons'>
+    <i class='status-bar' aria-hidden='true'></i>
+    <i class='status-wifi' aria-hidden='true'></i>
+    <i class='status-battery' aria-hidden='true'></i>
+  </span>
+</header>
+
+<main class='taste-main'>
+  <section class='taste-head'>
+    <a class='icon-btn-lite' href='./09-mine.html' aria-label='返回我的页'><span class='material-symbols-outlined'>chevron_left</span></a>
+    <h2>我的口味偏好</h2>
+    <a class='icon-btn-lite' href='#' aria-label='重置'><span class='material-symbols-outlined'>restart_alt</span></a>
+  </section>
+
+  <section class='taste-card'>
+    <h3>偏好标签</h3>
+    <p class='taste-sub'>选择你常吃和喜欢的口味（可多选）</p>
+    <div class='tag-wrap2' id='tagWrap'>
+      <button class='taste-tag active' type='button'>清淡</button>
+      <button class='taste-tag active' type='button'>微辣</button>
+      <button class='taste-tag' type='button'>重辣</button>
+      <button class='taste-tag active' type='button'>家常菜</button>
+      <button class='taste-tag' type='button'>汤面</button>
+      <button class='taste-tag' type='button'>低脂</button>
+      <button class='taste-tag active' type='button'>高蛋白</button>
+      <button class='taste-tag' type='button'>夜宵</button>
+    </div>
+  </section>
+
+  <section class='taste-card'>
+    <h3>口味强度</h3>
+    <div class='range-row'>
+      <div class='range-top'><span>辣度偏好</span><span class='range-val' id='spicyVal'>3 / 5</span></div>
+      <input id='spicyRange' type='range' min='1' max='5' value='3'>
+    </div>
+    <div class='range-row'>
+      <div class='range-top'><span>甜度偏好</span><span class='range-val' id='sweetVal'>2 / 5</span></div>
+      <input id='sweetRange' type='range' min='1' max='5' value='2'>
+    </div>
+  </section>
+
+  <section class='taste-card'>
+    <h3>忌口与过滤</h3>
+    <div class='switch-row'><span>不吃香菜</span><button class='switch off' data-switch type='button' aria-label='切换不吃香菜'></button></div>
+    <div class='switch-row'><span>过滤花生过敏</span><button class='switch' data-switch type='button' aria-label='切换过滤花生过敏'></button></div>
+  </section>
+
+  <button class='save-btn' type='button'>保存偏好</button>
+</main>
+
+<footer class='footer-nav'>
+  <a href='./02-home.html'><span class='material-symbols-outlined'>home</span><span>首页</span><i class='footer-dot'></i></a>
+  <a href='./08-record.html'><span class='material-symbols-outlined'>history</span><span>记录</span><i class='footer-dot'></i></a>
+  <a class='active' href='./09-mine.html'><span class='material-symbols-outlined'>person</span><span>我的</span><i class='footer-dot'></i></a>
+</footer>
+</div></div>
+
+<script>
+  (function () {
+    var tags = Array.prototype.slice.call(document.querySelectorAll('.taste-tag'));
+    var switches = Array.prototype.slice.call(document.querySelectorAll('[data-switch]'));
+    var spicyRange = document.getElementById('spicyRange');
+    var sweetRange = document.getElementById('sweetRange');
+    var spicyVal = document.getElementById('spicyVal');
+    var sweetVal = document.getElementById('sweetVal');
+
+    tags.forEach(function (tag) {
+      tag.addEventListener('click', function () {
+        tag.classList.toggle('active');
+      });
+    });
+
+    switches.forEach(function (sw) {
+      sw.addEventListener('click', function () {
+        sw.classList.toggle('off');
+      });
+    });
+
+    spicyRange.addEventListener('input', function () {
+      spicyVal.textContent = spicyRange.value + ' / 5';
+    });
+
+    sweetRange.addEventListener('input', function () {
+      sweetVal.textContent = sweetRange.value + ' / 5';
+    });
+  })();
+</script>
+</body></html>

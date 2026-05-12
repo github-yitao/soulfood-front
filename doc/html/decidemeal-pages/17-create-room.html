@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang='zh-CN'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport' content='width=device-width,initial-scale=1'>
+  <title>创建房间</title>
+  <link rel='stylesheet' href='https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400..700,0..1,0'>
+  <link rel='stylesheet' href='./assets/app.css'>
+  <style>
+    .room-main{background:#fff;padding:10px 14px 16px;display:flex;flex-direction:column;gap:12px}
+    .head{display:flex;align-items:center;justify-content:space-between;padding:2px 4px 0}
+    .head h2{margin:0;font-size:24px;font-weight:800;color:#1e2430}
+    .icon-btn-lite{width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;border-radius:12px;border:1px solid #edf0f5;background:#fff;color:#1f2430;text-decoration:none;box-shadow:0 8px 18px rgba(20,28,45,.06)}
+    .card{border:1px solid #edf1f6;border-radius:20px;background:#fff;padding:14px;box-shadow:0 10px 22px rgba(30,41,65,.08)}
+    .row{display:flex;gap:10px}
+    .input{width:100%;height:44px;border:1px solid #e5eaf2;border-radius:12px;padding:0 12px;font-size:14px}
+    .label{font-size:13px;font-weight:700;color:#404a5f;margin:0 0 8px}
+    .chip-wrap{display:flex;gap:8px;flex-wrap:wrap}
+    .chip{border:1px solid #e8edf4;background:#f7f9fc;color:#5f697a;border-radius:999px;padding:8px 12px;font-size:12px;font-weight:700;cursor:pointer}
+    .chip.active{border-color:#ffd79f;background:#fff2e0;color:#d86a00}
+    .btn{height:46px;border:0;border-radius:14px;font-size:16px;font-weight:800;cursor:pointer}
+    .btn-primary{background:linear-gradient(135deg,#ffb35c,#ff7f43);color:#fff;box-shadow:0 12px 18px rgba(255,120,58,.28)}
+    .preview{margin-top:4px;border:1px dashed #e3e8f0;border-radius:14px;background:#fbfcff;padding:12px;color:#667085;font-size:13px;line-height:1.6}
+  </style>
+</head>
+<body><div class='wrap'><div class='phone'>
+<header class='status'><span class='status-time'>9:53</span><span class='status-icons'><i class='status-bar'></i><i class='status-wifi'></i><i class='status-battery'></i></span></header>
+<main class='room-main'>
+  <section class='head'>
+    <a class='icon-btn-lite' href='./03-friends.html'><span class='material-symbols-outlined'>chevron_left</span></a>
+    <h2>创建房间</h2>
+    <a class='icon-btn-lite' href='#'><span class='material-symbols-outlined'>help</span></a>
+  </section>
+
+  <section class='card'>
+    <p class='label'>本次主题</p>
+    <input class='input' id='topicInput' value='今晚吃什么？'>
+    <p class='label' style='margin-top:12px'>参与人数</p>
+    <div class='chip-wrap' id='peopleChips'>
+      <button class='chip' data-v='2'>2人</button><button class='chip active' data-v='4'>4人</button><button class='chip' data-v='6'>6人</button><button class='chip' data-v='8+'>8人+</button>
+    </div>
+    <p class='label' style='margin-top:12px'>投票时长</p>
+    <div class='chip-wrap' id='timeChips'>
+      <button class='chip'>10分钟</button><button class='chip active'>20分钟</button><button class='chip'>30分钟</button>
+    </div>
+    <div class='preview' id='preview'>房间预览：<b>今晚吃什么？</b> · 4人 · 20分钟</div>
+  </section>
+
+  <button class='btn btn-primary' id='createBtn'>创建并邀请好友</button>
+</main>
+<footer class='footer-nav'>
+  <a class='active' href='./02-home.html'><span class='material-symbols-outlined'>home</span><span>首页</span><i class='footer-dot'></i></a>
+  <a href='./08-record.html'><span class='material-symbols-outlined'>history</span><span>记录</span><i class='footer-dot'></i></a>
+  <a href='./09-mine.html'><span class='material-symbols-outlined'>person</span><span>我的</span><i class='footer-dot'></i></a>
+</footer>
+</div></div>
+<script>
+(function(){
+  var topic=document.getElementById('topicInput');
+  var preview=document.getElementById('preview');
+  var p='4人',t='20分钟';
+  function active(group,btn){Array.prototype.slice.call(group.querySelectorAll('.chip')).forEach(function(c){c.classList.toggle('active',c===btn);});}
+  function render(){preview.innerHTML='房间预览：<b>'+topic.value+'</b> · '+p+' · '+t;}
+  document.getElementById('peopleChips').addEventListener('click',function(e){if(e.target.classList.contains('chip')){p=e.target.textContent;active(this,e.target);render();}});
+  document.getElementById('timeChips').addEventListener('click',function(e){if(e.target.classList.contains('chip')){t=e.target.textContent;active(this,e.target);render();}});
+  topic.addEventListener('input',render);
+  document.getElementById('createBtn').addEventListener('click',function(){this.textContent='已创建，去投票';setTimeout(function(){location.href='./04-vote.html';},500);});
+})();
+</script>
+</body></html>

@@ -3,11 +3,31 @@
 <head>
   <meta charset='UTF-8'>
   <meta name='viewport' content='width=device-width,initial-scale=1'>
-  <title>03 和朋友一起决定</title>
+  <title>和朋友一起决定</title>
   <link rel='stylesheet' href='https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400..700,0..1,0'>
   <link rel='stylesheet' href='./assets/app.css'>
+  <style>
+    .friends-main{background:#fff;padding:10px 14px 16px;display:flex;flex-direction:column;gap:12px}
+    .hero{border-radius:22px;padding:16px;background:linear-gradient(135deg,#1f2e45,#35527d);color:#fff;box-shadow:0 14px 24px rgba(20,33,56,.2)}
+    .hero h2{margin:0;font-size:34px;line-height:1.12}
+    .hero p{margin:8px 0 0;color:rgba(255,255,255,.84);font-size:13px;line-height:1.5}
+    .hero .row{margin-top:12px;display:flex;gap:8px;flex-wrap:wrap}
+    .pill{border:1px solid rgba(255,255,255,.24);background:rgba(255,255,255,.12);color:#fff;border-radius:999px;padding:6px 10px;font-size:11px;font-weight:700}
+
+    .action-card{border:1px solid #edf1f6;border-radius:20px;background:#fff;padding:14px;box-shadow:0 10px 22px rgba(30,41,65,.08)}
+    .action-title{margin:0 0 8px;font-size:17px;color:#1f2633}
+    .action-sub{margin:0 0 12px;font-size:12px;color:#6f7888}
+    .btn{height:46px;border-radius:14px;text-decoration:none;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800}
+    .btn-primary{background:linear-gradient(135deg,#ffb35c,#ff7f43);color:#fff;box-shadow:0 12px 18px rgba(255,120,58,.28)}
+    .btn-secondary{margin-top:10px;border:1px solid #e7ebf3;background:#fff;color:#374054}
+
+    .quick{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+    .quick .item{border:1px solid #edf1f6;border-radius:14px;padding:10px;text-align:center;background:#fff}
+    .quick b{display:block;font-size:16px;color:#1f2633}
+    .quick span{font-size:11px;color:#7a8395}
+  </style>
 </head>
-<body><div class='wrap'><p class='title'>03 和朋友一起决定（纯 HTML）</p><div class='phone'>
+<body><div class='wrap'><div class='phone'>
 <header class='status'>
   <span class='status-time'>9:53</span>
   <span class='status-icons'>
@@ -16,15 +36,32 @@
     <i class='status-battery' aria-hidden='true'></i>
   </span>
 </header>
-<main>
-  <h2 class='h2'>和朋友一起决定</h2>
-  <p class='sub'>创建房间，邀请朋友一起投票决定今天吃什么</p>
-  <article class='card mt12' style='text-align:center'>
-    <div class='avatar-group'><span class='material-symbols-outlined'>group</span></div>
-    <a class='btn btn-primary btn-block mt12' href='./04-vote.html'>创建房间</a>
-    <a class='btn btn-secondary btn-block mt8' href='./04-vote.html'>加入房间</a>
-  </article>
+
+<main class='friends-main'>
+  <section class='hero'>
+    <h2>和朋友一起<br>决定吃什么</h2>
+    <p>创建房间发给朋友，大家投票后快速出结果，避免“随便吃”的循环。</p>
+    <div class='row'>
+      <span class='pill'>实时票数</span>
+      <span class='pill'>6位房间号</span>
+      <span class='pill'>一键分享</span>
+    </div>
+  </section>
+
+  <section class='action-card'>
+    <h3 class='action-title'>发起一个新房间</h3>
+    <p class='action-sub'>自定义主题、人数和时长，创建后直接邀请好友。</p>
+    <a class='btn btn-primary' href='./17-create-room.html'>创建房间</a>
+    <a class='btn btn-secondary' href='./18-join-room.html'>加入房间</a>
+  </section>
+
+  <section class='quick'>
+    <div class='item'><b>20s</b><span>平均建房时间</span></div>
+    <div class='item'><b>4-6人</b><span>常见参与规模</span></div>
+    <div class='item'><b>1轮</b><span>快速决策完成</span></div>
+  </section>
 </main>
+
 <footer class='footer-nav'>
   <a class='active' href='./02-home.html'><span class='material-symbols-outlined'>home</span><span>首页</span><i class='footer-dot'></i></a>
   <a href='./08-record.html'><span class='material-symbols-outlined'>history</span><span>记录</span><i class='footer-dot'></i></a>
