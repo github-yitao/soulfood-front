@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 import 'package:soulfood_front/core/api/api_result.dart';
 import 'package:soulfood_front/core/config/app_config.dart';
@@ -97,6 +100,46 @@ class ApiClient {
     try {
       final response = await _dio.delete<Map<String, dynamic>>(path);
       _ensureOk(response.data);
+    } on DioException catch (e) {
+      throw _toApiException(e);
+    }
+  }
+
+  /// NDJSON 流式 POST，每行一个 JSON 对象
+  Stream<Map<String, dynamic>> postNdjsonStream(String path, {Object? data}) async* {
+    try {
+      final response = await _dio.post<ResponseBody>(
+        path,
+        data: data,
+        options: Options(
+          responseType: ResponseType.stream,
+          receiveTimeout: const Duration(seconds: 120),
+          headers: const {'Accept': 'application/x-ndjson'},
+        ),
+      );
+      final body = response.data;
+      if (body == null) return;
+
+      final buffer = StringBuffer();
+      await for (final chunk in utf8.decoder.bind(body.stream)) {
+        buffer.write(chunk);
+        while (true) {
+          final text = buffer.toString();
+          final newline = text.indexOf('\n');
+          if (newline == -1) break;
+          final line = text.substring(0, newline).trim();
+          final rest = text.substring(newline + 1);
+          buffer
+            ..clear()
+            ..write(rest);
+          if (line.isEmpty) continue;
+          yield jsonDecode(line) as Map<String, dynamic>;
+        }
+      }
+      final tail = buffer.toString().trim();
+      if (tail.isNotEmpty) {
+        yield jsonDecode(tail) as Map<String, dynamic>;
+      }
     } on DioException catch (e) {
       throw _toApiException(e);
     }

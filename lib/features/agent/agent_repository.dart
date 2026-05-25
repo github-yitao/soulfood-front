@@ -32,16 +32,48 @@ class RandomPickResult {
   }
 }
 
+class ChatActionCard {
+  ChatActionCard({
+    required this.type,
+    required this.id,
+    required this.name,
+    this.subtitle,
+  });
+
+  final String type;
+  final int id;
+  final String name;
+  final String? subtitle;
+
+  factory ChatActionCard.fromJson(Map<String, dynamic> json) {
+    return ChatActionCard(
+      type: json['type'] as String? ?? '',
+      id: (json['id'] as num).toInt(),
+      name: json['name'] as String? ?? '',
+      subtitle: json['subtitle'] as String?,
+    );
+  }
+}
+
 class ChatReply {
-  ChatReply({required this.conversationId, required this.reply});
+  ChatReply({
+    required this.conversationId,
+    required this.reply,
+    this.cards = const [],
+  });
 
   final String conversationId;
   final String reply;
+  final List<ChatActionCard> cards;
 
   factory ChatReply.fromJson(Map<String, dynamic> json) {
+    final rawCards = json['cards'] as List<dynamic>? ?? [];
     return ChatReply(
       conversationId: json['conversationId'] as String? ?? '',
       reply: json['reply'] as String? ?? '',
+      cards: rawCards
+          .map((e) => ChatActionCard.fromJson(e as Map<String, dynamic>))
+          .toList(),
     );
   }
 }
@@ -106,6 +138,8 @@ class AgentRepository {
   Future<ChatReply> chat({
     required String message,
     String? conversationId,
+    double? lat,
+    double? lng,
   }) async {
     final data = await _api.postData<Map<String, dynamic>>(
       '/ai/chat',
@@ -113,6 +147,8 @@ class AgentRepository {
         'message': message,
         if (conversationId != null && conversationId.isNotEmpty)
           'conversationId': conversationId,
+        if (lat != null) 'lat': lat,
+        if (lng != null) 'lng': lng,
       },
       parser: (json) => json as Map<String, dynamic>,
     );
@@ -121,6 +157,24 @@ class AgentRepository {
       await saveConversationId(reply.conversationId);
     }
     return reply;
+  }
+
+  Stream<Map<String, dynamic>> chatStream({
+    required String message,
+    String? conversationId,
+    double? lat,
+    double? lng,
+  }) {
+    return _api.postNdjsonStream(
+      '/ai/chat/stream',
+      data: {
+        'message': message,
+        if (conversationId != null && conversationId.isNotEmpty)
+          'conversationId': conversationId,
+        if (lat != null) 'lat': lat,
+        if (lng != null) 'lng': lng,
+      },
+    );
   }
 
   Future<void> clearConversation(String conversationId) async {

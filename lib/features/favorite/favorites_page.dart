@@ -240,17 +240,33 @@ class _FavoriteCard extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 4),
-                    Text(
-                      [
-                        if (item.score != null) '评分 ${item.score}',
-                        if (item.duration != null) item.duration,
-                        if (item.category != null) item.category,
-                        if (item.subtitle != null && item.subtitle!.isNotEmpty) item.subtitle,
-                      ].join(' · '),
-                      style: const TextStyle(color: Color(0xFF737C8B), fontSize: 12),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                    if (item.targetType == 'ai_reply')
+                      Text(
+                        item.subtitle ?? 'AI 回复收藏',
+                        style: const TextStyle(color: Color(0xFF737C8B), fontSize: 12),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      )
+                    else
+                      Text(
+                        [
+                          if (item.score != null) '评分 ${item.score}',
+                          if (item.duration != null) item.duration,
+                          if (item.category != null) item.category,
+                          if (item.subtitle != null && item.subtitle!.isNotEmpty) item.subtitle,
+                        ].join(' · '),
+                        style: const TextStyle(color: Color(0xFF737C8B), fontSize: 12),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    if (item.targetType == 'ai_reply')
+                      const Padding(
+                        padding: EdgeInsets.only(top: 4),
+                        child: Text(
+                          '点击查看全文',
+                          style: TextStyle(color: Color(0xFF2B5EA8), fontSize: 11, fontWeight: FontWeight.w600),
+                        ),
+                      ),
                   ],
                 ),
               ),
