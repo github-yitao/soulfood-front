@@ -55,7 +55,11 @@ class HomePage extends StatelessWidget {
                       ),
                     ],
                   ),
-                  child: const Icon(Icons.settings, color: Color(0xFF363940)),
+                  child: IconButton(
+                    onPressed: () => Navigator.pushNamed(context, AppRoutes.aiChat),
+                    icon: const Icon(Icons.chat_bubble_outline, color: Color(0xFF363940)),
+                    tooltip: 'AI 对话',
+                  ),
                 ),
               ],
             ),

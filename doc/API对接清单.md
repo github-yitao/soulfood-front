@@ -1,61 +1,49 @@
 # DecideMeal API 对接清单
 
-> 后端 Base URL：`lib/core/config/app_config.dart`  
-> 登录后请求头：`X-User-Id: <userId>`
+> Base URL：`lib/core/config/app_config.dart`  
+> 鉴权：`Authorization: Bearer <JWT>`（登录/注册返回的 `token`）  
+> 兼容：`X-User-Id` 仍可作为开发兜底
 
-## 鉴权（账号密码）
+## 鉴权
 
 | 方法 | 路径 | Flutter |
 |------|------|---------|
 | POST | `/api/v1/auth/register` | `RegisterPage` |
 | POST | `/api/v1/auth/login` | `LoginPage` |
 | GET | `/api/v1/auth/me` | `ProfilePage` |
-| POST | `/api/v1/auth/login/mock` | 仅开发调试 |
 
-注册/登录请求体示例：
-
-```json
-{ "username": "demo01", "password": "123456", "nickname": "昵称", "inviteCode": "DM123456" }
-```
-
-## P0 业务
-
-| 模块 | 方法 | 路径 | Flutter |
-|------|------|------|---------|
-| 创建房间 | POST | `/api/v1/rooms` | `CreateRoomPage` |
-| 加入房间 | POST | `/api/v1/rooms/{code}/join` | `JoinRoomPage` |
-| 房间详情 | GET | `/api/v1/rooms/{code}` | `VotePage` |
-| 投票/选项 | POST | `/api/v1/rooms/{code}/votes` 等 | `VotePage` |
-| 附近餐厅 | GET | `/api/v1/restaurants/nearby` | `NearbyPage` |
-| 记录概览 | GET | `/api/v1/records/overview` | `RecordsPage` |
-
-## P1 体验
-
-| 模块 | 方法 | 路径 | Flutter |
-|------|------|------|---------|
-| 口味偏好 | GET/PUT | `/api/v1/users/me/preferences` | `PreferencePage` |
-| 收藏 | GET/POST/DELETE | `/api/v1/favorites` | `FavoritesPage` / `RecipeResultPage` |
-| 订单 | GET | `/api/v1/orders/overview` | `OrdersPage` |
-
-## P2 增长与设置
-
-| 模块 | 方法 | 路径 | Flutter |
-|------|------|------|---------|
-| 邀请 | GET | `/api/v1/invites/overview` | `InvitePage` |
-| 外观 | 本地 | SharedPreferences | `AppearancePage` |
-| 设置/关于 | 本地 | — | `SettingsPage` / `AboutPage` |
-| 启动 | — | — | `SplashPage` → 登录或首页 |
+登录响应 `data.token` 为 JWT，客户端持久化后随请求携带。
 
 ## AI
 
 | 方法 | 路径 | Flutter |
 |------|------|---------|
+| POST | `/ai/chat` | `AiChatPage` |
+| DELETE | `/ai/chat/{conversationId}` | `AiChatPage` 清空对话 |
 | POST | `/ai/recommend/recipes` | `RecipeResultPage` / `AiQuickPage` |
 | POST | `/ai/suggest-options` | `VotePage` |
 | POST | `/ai/random-pick` | `NearbyPage` |
-| POST | `/ai/chat` | 待做 UI |
+| GET | `/ai/chat/stream` | 预留流式 |
 
-## 待做
+`POST /ai/chat` 请求体：
 
-- AI 对话页 + conversationId 持久化
-- JWT / Token 鉴权（当前仍用 X-User-Id）
+```json
+{ "message": "今晚吃什么", "conversationId": "optional-uuid" }
+```
+
+响应：
+
+```json
+{ "conversationId": "uuid", "reply": "..." }
+```
+
+## 业务 / P1 / P2
+
+见此前章节：房间、餐厅、偏好、收藏、订单、邀请、设置等均已对接。
+
+## 环境变量（后端）
+
+| 变量 | 说明 |
+|------|------|
+| `JWT_SECRET` | HS256 密钥（≥32 字符） |
+| `JWT_EXPIRE_HOURS` | Token 有效期，默认 168h |

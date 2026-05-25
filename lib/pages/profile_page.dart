@@ -152,6 +152,11 @@ class _ProfilePageState extends State<ProfilePage> {
                 _MenuCard(
                   items: [
                     _MenuItem(
+                      icon: Icons.chat_bubble_outline,
+                      label: 'AI 对话',
+                      onTap: () => Navigator.pushNamed(context, AppRoutes.aiChat),
+                    ),
+                    _MenuItem(
                       icon: Icons.smart_toy_outlined,
                       label: 'AI 快捷推荐',
                       onTap: () => Navigator.pushNamed(context, AppRoutes.aiQuick),

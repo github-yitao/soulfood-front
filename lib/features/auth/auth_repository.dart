@@ -92,6 +92,15 @@ class AuthRepository {
   Future<void> _saveFromResponse(Map<String, dynamic> data, {String? username}) async {
     final userId = (data['userId'] as num).toInt();
     final nickname = data['nickname'] as String? ?? username ?? '用户';
-    await _session.saveUser(userId: userId, nickname: nickname, username: username);
+    final token = data['token'] as String? ?? '';
+    if (token.isEmpty) {
+      throw ApiException('登录响应缺少 token');
+    }
+    await _session.saveUser(
+      userId: userId,
+      nickname: nickname,
+      accessToken: token,
+      username: username,
+    );
   }
 }

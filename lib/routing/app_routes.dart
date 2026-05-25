@@ -7,6 +7,7 @@ class AppRoutes {
   static const String vote = '/rooms/vote';
   static const String recipeResult = '/recipes/result';
   static const String aiQuick = '/ai/quick';
+  static const String aiChat = '/ai/chat';
   static const String nearby = '/nearby';
   static const String favorites = '/favorites';
   static const String preference = '/preference';

@@ -26,9 +26,14 @@ class ApiClient {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) {
-          final userId = _session.userId;
-          if (userId != null) {
-            options.headers['X-User-Id'] = '$userId';
+          final token = _session.accessToken;
+          if (token != null && token.isNotEmpty) {
+            options.headers['Authorization'] = 'Bearer $token';
+          } else {
+            final userId = _session.userId;
+            if (userId != null) {
+              options.headers['X-User-Id'] = '$userId';
+            }
           }
           handler.next(options);
         },

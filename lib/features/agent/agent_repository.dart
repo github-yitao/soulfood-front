@@ -1,5 +1,6 @@
 import 'package:soulfood_front/core/api/api_client.dart';
 import 'package:soulfood_front/core/app_bootstrap.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class RecipeItem {
   RecipeItem({required this.name, required this.score, this.reason = ''});
@@ -31,10 +32,64 @@ class RandomPickResult {
   }
 }
 
+class ChatReply {
+  ChatReply({required this.conversationId, required this.reply});
+
+  final String conversationId;
+  final String reply;
+
+  factory ChatReply.fromJson(Map<String, dynamic> json) {
+    return ChatReply(
+      conversationId: json['conversationId'] as String? ?? '',
+      reply: json['reply'] as String? ?? '',
+    );
+  }
+}
+
 class AgentRepository {
   AgentRepository() : _api = AppServices.I.api;
 
   final ApiClient _api;
+  static const _conversationKey = 'ai_conversation_id';
+
+  Future<String?> loadConversationId() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_conversationKey);
+  }
+
+  Future<void> saveConversationId(String? id) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (id == null || id.isEmpty) {
+      await prefs.remove(_conversationKey);
+    } else {
+      await prefs.setString(_conversationKey, id);
+    }
+  }
+
+  Future<ChatReply> chat({
+    required String message,
+    String? conversationId,
+  }) async {
+    final data = await _api.postData<Map<String, dynamic>>(
+      '/ai/chat',
+      data: {
+        'message': message,
+        if (conversationId != null && conversationId.isNotEmpty)
+          'conversationId': conversationId,
+      },
+      parser: (json) => json as Map<String, dynamic>,
+    );
+    final reply = ChatReply.fromJson(data);
+    if (reply.conversationId.isNotEmpty) {
+      await saveConversationId(reply.conversationId);
+    }
+    return reply;
+  }
+
+  Future<void> clearConversation(String conversationId) async {
+    await _api.deleteVoid('/ai/chat/$conversationId');
+    await saveConversationId(null);
+  }
 
   Future<List<RecipeItem>> recommendRecipes({
     String preference = '清淡、家常菜',

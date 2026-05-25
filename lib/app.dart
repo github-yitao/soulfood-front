@@ -11,6 +11,7 @@ import 'package:soulfood_front/features/order/orders_page.dart';
 import 'package:soulfood_front/features/preference/preference_page.dart';
 import 'package:soulfood_front/features/profile/appearance_page.dart';
 import 'package:soulfood_front/features/profile/settings_page.dart';
+import 'package:soulfood_front/features/agent/ai_chat_page.dart';
 import 'package:soulfood_front/features/agent/ai_quick_page.dart';
 import 'package:soulfood_front/features/room/pages/create_room_page.dart';
 import 'package:soulfood_front/features/room/pages/friends_page.dart';
@@ -118,6 +119,8 @@ class _DecideMealAppState extends State<_DecideMealApp> {
         );
       case AppRoutes.aiQuick:
         return MaterialPageRoute<void>(builder: (_) => const AiQuickPage(), settings: settings);
+      case AppRoutes.aiChat:
+        return MaterialPageRoute<void>(builder: (_) => const AiChatPage(), settings: settings);
       case AppRoutes.nearby:
         return MaterialPageRoute<void>(builder: (_) => const NearbyPage(), settings: settings);
       case AppRoutes.favorites:
