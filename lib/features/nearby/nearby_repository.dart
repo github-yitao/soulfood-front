@@ -10,6 +10,7 @@ class RestaurantItem {
     required this.distanceKm,
     required this.wanted,
     required this.favorited,
+    this.address,
   });
 
   final int id;
@@ -19,6 +20,7 @@ class RestaurantItem {
   final double? distanceKm;
   final bool wanted;
   final bool favorited;
+  final String? address;
 
   factory RestaurantItem.fromJson(Map<String, dynamic> json) {
     return RestaurantItem(
@@ -29,6 +31,7 @@ class RestaurantItem {
       distanceKm: (json['distanceKm'] as num?)?.toDouble(),
       wanted: json['wanted'] as bool? ?? false,
       favorited: json['favorited'] as bool? ?? false,
+      address: json['address'] as String?,
     );
   }
 }
@@ -38,10 +41,17 @@ class NearbyRepository {
 
   final ApiClient _api;
 
-  Future<List<RestaurantItem>> list({String? category, String? keyword}) async {
+  Future<List<RestaurantItem>> list({
+    double? lat,
+    double? lng,
+    String? category,
+    String? keyword,
+  }) async {
     return _api.getData<List<RestaurantItem>>(
       '/api/v1/restaurants/nearby',
       query: {
+        if (lat != null) 'lat': lat,
+        if (lng != null) 'lng': lng,
         if (category != null && category.isNotEmpty) 'category': category,
         if (keyword != null && keyword.isNotEmpty) 'keyword': keyword,
       },

@@ -126,6 +126,10 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
                   Text(item.category, style: const TextStyle(color: Color(0xFFD86A00), fontWeight: FontWeight.w700)),
                   const SizedBox(height: 8),
                   Text('评分 ${item.rating ?? '-'} · 距离 ${item.distanceKm ?? '-'} km'),
+                  if (item.address != null && item.address!.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Text(item.address!, style: const TextStyle(color: Color(0xFF737C8B), fontSize: 13)),
+                  ],
                   if (item.wanted)
                     const Padding(
                       padding: EdgeInsets.only(top: 8),

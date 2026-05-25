@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:soulfood_front/core/location/location_service.dart';
 import 'package:soulfood_front/features/agent/agent_repository.dart';
 import 'package:soulfood_front/features/nearby/nearby_repository.dart';
 import 'package:soulfood_front/features/room/room_repository.dart';
@@ -32,7 +33,13 @@ class _RandomEatPageState extends State<RandomEatPage> {
   Future<void> _load() async {
     setState(() => _loading = true);
     try {
-      final items = await _repo.list();
+      final location = await LocationService.current();
+      if (mounted && location == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('未获取定位，将按默认区域搜索附近餐厅')),
+        );
+      }
+      final items = await _repo.list(lat: location?.lat, lng: location?.lng);
       if (mounted) setState(() => _items = items);
     } catch (e) {
       if (mounted) {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:soulfood_front/core/location/location_service.dart';
 import 'package:soulfood_front/features/agent/agent_repository.dart';
 import 'package:soulfood_front/features/favorite/favorite_repository.dart';
 import 'package:soulfood_front/features/nearby/nearby_repository.dart';
@@ -47,7 +48,15 @@ class _NearbyPageState extends State<NearbyPage> {
   Future<void> _load() async {
     setState(() => _loading = true);
     try {
+      final location = await LocationService.current();
+      if (mounted && location == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('未获取定位，将按默认区域搜索附近餐厅')),
+        );
+      }
       final items = await _repo.list(
+        lat: location?.lat,
+        lng: location?.lng,
         category: _category == 'all' ? null : _category,
         keyword: _searchCtrl.text.trim().isEmpty ? null : _searchCtrl.text.trim(),
       );
@@ -149,7 +158,16 @@ class _NearbyPageState extends State<NearbyPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('附近觅食')),
+      appBar: AppBar(
+        title: const Text('附近觅食'),
+        actions: [
+          IconButton(
+            onPressed: _loading ? null : _load,
+            icon: const Icon(Icons.my_location_outlined),
+            tooltip: '刷新定位',
+          ),
+        ],
+      ),
       body: Column(
         children: [
           Padding(

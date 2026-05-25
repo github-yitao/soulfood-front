@@ -10,6 +10,7 @@ dependencies:
   flutter:
     sdk: flutter
   dio: ^5.8.0+1
+  geolocator: ^13.0.4
   shared_preferences: ^2.5.3
   flutter_markdown_plus: ^1.0.7
 
