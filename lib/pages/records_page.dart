@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:soulfood_front/features/record/record_repository.dart';
 
 class RecordsPage extends StatefulWidget {
   const RecordsPage({super.key});
@@ -8,11 +9,18 @@ class RecordsPage extends StatefulWidget {
 }
 
 class _RecordsPageState extends State<RecordsPage> {
-  late final Future<RecordsData> _recordsFuture = _loadRecords();
+  final _repo = RecordRepository();
+  late Future<RecordsData> _recordsFuture = _loadRecords();
 
-  Future<RecordsData> _loadRecords() async {
-    // TODO: 在这里接入后端接口并返回真实记录数据。
-    return const RecordsData.empty();
+  Future<RecordsData> _loadRecords() {
+    return _repo.loadOverview();
+  }
+
+  Future<void> _refresh() async {
+    setState(() {
+      _recordsFuture = _loadRecords();
+    });
+    await _recordsFuture;
   }
 
   @override
@@ -27,55 +35,70 @@ class _RecordsPageState extends State<RecordsPage> {
               return const Center(child: CircularProgressIndicator());
             }
             if (snapshot.hasError) {
-              return const Center(
-                child: Text(
-                  '记录加载失败，请稍后重试',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: Color(0xFF646871),
-                  ),
+              return Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      '记录加载失败，请确认后端已启动',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF646871),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    FilledButton(onPressed: _refresh, child: const Text('重试')),
+                  ],
                 ),
               );
             }
 
             final RecordsData data = snapshot.data ?? const RecordsData.empty();
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  '我的记录',
-                  style: TextStyle(
-                    fontSize: 42,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF1E1F23),
+            return RefreshIndicator(
+              onRefresh: _refresh,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    '我的记录',
+                    style: TextStyle(
+                      fontSize: 42,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF1E1F23),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 24),
-                _StatsGrid(stats: data.stats),
-                const SizedBox(height: 34),
-                const Text(
-                  '最近记录',
-                  style: TextStyle(
-                    fontSize: 38,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF1E1F23),
+                  const SizedBox(height: 24),
+                  _StatsGrid(stats: data.stats),
+                  const SizedBox(height: 34),
+                  const Text(
+                    '最近记录',
+                    style: TextStyle(
+                      fontSize: 38,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF1E1F23),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                Expanded(
-                  child: data.records.isEmpty
-                      ? const _EmptyRecords()
-                      : ListView.separated(
-                          itemCount: data.records.length,
-                          separatorBuilder: (_, __) =>
-                              const SizedBox(height: 14),
-                          itemBuilder: (BuildContext context, int index) {
-                            return _RecordItem(record: data.records[index]);
-                          },
-                        ),
-                ),
-              ],
+                  const SizedBox(height: 16),
+                  Expanded(
+                    child: data.records.isEmpty
+                        ? ListView(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            children: const [
+                              SizedBox(height: 120, child: _EmptyRecords()),
+                            ],
+                          )
+                        : ListView.separated(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            itemCount: data.records.length,
+                            separatorBuilder: (_, __) => const SizedBox(height: 14),
+                            itemBuilder: (BuildContext context, int index) {
+                              return _RecordItem(record: data.records[index]);
+                            },
+                          ),
+                  ),
+                ],
+              ),
             );
           },
         ),
@@ -117,7 +140,7 @@ class _StatsGrid extends StatelessWidget {
                   ),
                   const Spacer(),
                   Text(
-                    stat.count != null ? '${stat.count}次' : '--',
+                    '${stat.count ?? 0}次',
                     style: const TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.w800,
@@ -140,9 +163,10 @@ class _EmptyRecords extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Center(
       child: Text(
-        '暂无记录',
+        '暂无记录，去投票或标记「想去」后会出现在这里',
+        textAlign: TextAlign.center,
         style: TextStyle(
-          fontSize: 20,
+          fontSize: 16,
           fontWeight: FontWeight.w600,
           color: Color(0xFF8D919A),
         ),
@@ -197,7 +221,7 @@ class _RecordItem extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    fontSize: 26,
+                    fontSize: 20,
                     fontWeight: FontWeight.w700,
                     color: Color(0xFF1E1F23),
                   ),
@@ -205,22 +229,16 @@ class _RecordItem extends StatelessWidget {
                 const SizedBox(height: 6),
                 Text(
                   '${record.detail} · ${record.dateText}',
-                  maxLines: 1,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    fontSize: 18,
+                    fontSize: 14,
                     fontWeight: FontWeight.w500,
                     color: Color(0xFF8D919A),
                   ),
                 ),
               ],
             ),
-          ),
-          const SizedBox(width: 8),
-          const Icon(
-            Icons.chevron_right_rounded,
-            color: Color(0xFFC0C4CC),
-            size: 28,
           ),
         ],
       ),
@@ -232,28 +250,7 @@ class RecordsData {
   const RecordsData({required this.stats, required this.records});
 
   const RecordsData.empty()
-    : stats = const <RecordStat>[
-        RecordStat(
-          title: '观众悦度',
-          backgroundColor: Color(0xFFFFD6D7),
-          titleColor: Color(0xFFF05F65),
-        ),
-        RecordStat(
-          title: '和朋友',
-          backgroundColor: Color(0xFFFFEFBC),
-          titleColor: Color(0xFFE0AF28),
-        ),
-        RecordStat(
-          title: '健康',
-          backgroundColor: Color(0xFFDDF6DF),
-          titleColor: Color(0xFF48B86B),
-        ),
-        RecordStat(
-          title: '收藏',
-          backgroundColor: Color(0xFFE0E6FF),
-          titleColor: Color(0xFF7E8BDF),
-        ),
-      ],
+    : stats = const <RecordStat>[],
       records = const <RecordItem>[];
 
   final List<RecordStat> stats;

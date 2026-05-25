@@ -5,16 +5,20 @@ class FeatureCard extends StatelessWidget {
     required this.icon,
     required this.iconColor,
     required this.title,
+    this.onTap,
     super.key,
   });
 
   final IconData icon;
   final Color iconColor;
   final String title;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
       height: 132,
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
       decoration: BoxDecoration(
@@ -45,6 +49,7 @@ class FeatureCard extends StatelessWidget {
           ),
         ],
       ),
+    ),
     );
   }
 }

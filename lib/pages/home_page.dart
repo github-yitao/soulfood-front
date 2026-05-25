@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:soulfood_front/routing/app_routes.dart';
 import 'package:soulfood_front/widgets/feature_card.dart';
 
 class HomePage extends StatelessWidget {
@@ -61,7 +62,7 @@ class HomePage extends StatelessWidget {
             const Spacer(),
             Center(
               child: GestureDetector(
-                onTap: () {},
+                onTap: () => Navigator.pushNamed(context, AppRoutes.friends),
                 child: Container(
                   width: 300,
                   height: 300,
@@ -97,29 +98,32 @@ class HomePage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 34),
-            const Row(
+            Row(
               children: [
                 Expanded(
                   child: FeatureCard(
                     icon: Icons.groups_rounded,
                     iconColor: Color(0xFFFD7E7E),
                     title: '和朋友一起\n决定',
+                    onTap: () => Navigator.pushNamed(context, AppRoutes.friends),
                   ),
                 ),
-                SizedBox(width: 14),
+                const SizedBox(width: 14),
                 Expanded(
                   child: FeatureCard(
                     icon: Icons.soup_kitchen_rounded,
                     iconColor: Color(0xFF38BF7F),
-                    title: '做饭模式\n(有啥做啥)',
+                    title: '附近觅食\n(探店用呀)',
+                    onTap: () => Navigator.pushNamed(context, AppRoutes.nearby),
                   ),
                 ),
-                SizedBox(width: 14),
+                const SizedBox(width: 14),
                 Expanded(
                   child: FeatureCard(
                     icon: Icons.place_rounded,
                     iconColor: Color(0xFF8E7BFF),
-                    title: '附近吃什么',
+                    title: '随机吃什么',
+                    onTap: () => Navigator.pushNamed(context, AppRoutes.nearby),
                   ),
                 ),
               ],
