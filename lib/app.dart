@@ -127,15 +127,15 @@ class _DecideMealAppState extends State<_DecideMealApp> {
         return MaterialPageRoute<void>(builder: (_) => const AiQuickPage(), settings: settings);
       case AppRoutes.aiChat:
         final args = settings.arguments;
-        if (args is String && args.isNotEmpty) {
-          return MaterialPageRoute<void>(
-            builder: (_) => AiChatPage(conversationId: args),
-            settings: settings,
-          );
-        }
         if (args == 'new') {
           return MaterialPageRoute<void>(
             builder: (_) => const AiChatPage(isNewChat: true),
+            settings: settings,
+          );
+        }
+        if (args is String && args.isNotEmpty) {
+          return MaterialPageRoute<void>(
+            builder: (_) => AiChatPage(conversationId: args),
             settings: settings,
           );
         }

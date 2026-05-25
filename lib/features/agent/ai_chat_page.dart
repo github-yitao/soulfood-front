@@ -115,8 +115,10 @@ class _AiChatPageState extends State<AiChatPage> {
       if (_messages.isEmpty) _addWelcomeMessage();
       _scrollToBottom();
     } catch (e) {
+      // 本地缓存的会话可能已被删除或数据库已重置，静默开新对话
+      await _agent.saveConversationId(null);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('加载历史失败：$e')));
+        setState(() => _conversationId = null);
         _addWelcomeMessage();
       }
     }
