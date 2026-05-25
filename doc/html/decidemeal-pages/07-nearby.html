@@ -7,7 +7,7 @@
   <link rel='stylesheet' href='https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400..700,0..1,0'>
   <link rel='stylesheet' href='./assets/app.css'>
 </head>
-<body><div class='wrap'><p class='title'>07 附近吃什么（纯 HTML）</p><div class='phone'>
+<body><div class='wrap'><p class='title'>07 附近吃什么（Agent）</p><div class='phone'>
 <header class='status'>
   <span class='status-time'>9:53</span>
   <span class='status-icons'>
@@ -17,27 +17,67 @@
   </span>
 </header>
 <main>
+  <span class='agent-badge'><span class='material-symbols-outlined'>auto_awesome</span>AI 决策</span>
   <h2 class='h2'>附近吃什么</h2>
-  <p class='sub'>发现附近美食</p>
-  <ul class='list mt10'>
-    <li class='record-item'>
+  <p class='sub'>发现附近美食，或由 AI 帮你拍板</p>
+  <ul class='list mt10' id='shopList'>
+    <li class='record-item' data-name='海底捞(万象城店)'>
       <span class='food-thumb thumb-hotpot'><span class='material-symbols-outlined'>soup_kitchen</span></span>
       <span><b>海底捞(万象城店)</b><span class='meta'><span>火锅</span><span>1.1km</span></span></span>
     </li>
-    <li class='record-item'>
+    <li class='record-item' data-name='喜茶(万象城店)'>
       <span class='food-thumb thumb-noodle'><span class='material-symbols-outlined'>ramen_dining</span></span>
       <span><b>喜茶(万象城店)</b><span class='meta'><span>饮品</span><span>1.5km</span></span></span>
     </li>
-    <li class='record-item'>
+    <li class='record-item' data-name='麦当劳(万象城店)'>
       <span class='food-thumb thumb-potato'><span class='material-symbols-outlined'>lunch_dining</span></span>
       <span><b>麦当劳(万象城店)</b><span class='meta'><span>快餐</span><span>1.8km</span></span></span>
     </li>
   </ul>
-  <a class='btn btn-primary btn-block mt16' href='./04-vote.html'>发起投票</a>
+
+  <section class='agent-pick-card' id='pickCard'>
+    <h3 id='pickName'>—</h3>
+    <p id='pickReason'>—</p>
+    <p class='agent-source' id='pickSource'></p>
+  </section>
+
+  <button class='btn btn-agent btn-block mt12' id='aiPickBtn' type='button'>
+    <span class='material-symbols-outlined'>casino</span>AI 随机帮我选
+  </button>
+  <a class='btn btn-primary btn-block mt10' href='./04-vote.html'>发起投票</a>
 </main>
 <footer class='footer-nav'>
   <a href='./02-home.html'><span class='material-symbols-outlined'>home</span><span>首页</span><i class='footer-dot'></i></a>
   <a class='active' href='./08-record.html'><span class='material-symbols-outlined'>history</span><span>记录</span><i class='footer-dot'></i></a>
   <a href='./09-mine.html'><span class='material-symbols-outlined'>person</span><span>我的</span><i class='footer-dot'></i></a>
 </footer>
-</div></div></body></html>
+</div></div>
+<script src='./assets/agent.js'></script>
+<script>
+(function () {
+  var phone = document.querySelector('.phone');
+  var pickBtn = document.getElementById('aiPickBtn');
+  var pickCard = document.getElementById('pickCard');
+  var pickName = document.getElementById('pickName');
+  var pickReason = document.getElementById('pickReason');
+  var pickSource = document.getElementById('pickSource');
+  var names = Array.prototype.slice.call(document.querySelectorAll('#shopList [data-name]'))
+    .map(function (el) { return el.getAttribute('data-name'); });
+
+  pickBtn.addEventListener('click', async function () {
+    SoulFoodAgent.setLoading(pickBtn, true);
+    try {
+      var res = await SoulFoodAgent.randomPick(names);
+      pickName.textContent = '今天就吃：' + res.name;
+      pickReason.textContent = res.reason || '综合距离与偏好推荐';
+      pickSource.textContent = '来源：' + res.source + ' · POST /ai/chat';
+      pickCard.classList.add('visible');
+      SoulFoodAgent.showToast(phone, '已选好：' + res.name);
+    } finally {
+      SoulFoodAgent.setLoading(pickBtn, false);
+      pickBtn.innerHTML = '<span class="material-symbols-outlined">casino</span>AI 随机帮我选';
+    }
+  });
+})();
+</script>
+</body></html>

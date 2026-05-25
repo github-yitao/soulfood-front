@@ -1169,7 +1169,7 @@ main {
 
 .home-actions {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   width: 100%;
   gap: 8px;
   max-width: 360px;
@@ -1700,6 +1700,117 @@ main {
 
 .phone.theme-dark .footer-nav a.active {
   color: #f1f6ff;
+}
+
+/* --- Agent / AI --- */
+.agent-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #7a4b00;
+  background: linear-gradient(135deg, #fff4d6, #ffe9a8);
+  border: 1px solid #ffd79f;
+  border-radius: 999px;
+  padding: 4px 10px;
+  margin-bottom: 6px;
+}
+
+.agent-badge .material-symbols-outlined {
+  font-size: 14px;
+  color: #d86a00;
+}
+
+.agent-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.btn-agent {
+  border: 1px solid #cfe0ff;
+  background: linear-gradient(135deg, #f0f6ff, #e8f1ff);
+  color: #2b5ea8;
+  box-shadow: 0 8px 16px rgba(43, 94, 168, 0.12);
+}
+
+.btn-agent .material-symbols-outlined {
+  font-size: 18px;
+  vertical-align: middle;
+  margin-right: 4px;
+}
+
+.btn.is-loading {
+  opacity: 0.72;
+  pointer-events: none;
+}
+
+.agent-toast {
+  position: absolute;
+  left: 50%;
+  bottom: 72px;
+  transform: translateX(-50%);
+  z-index: 20;
+  max-width: 86%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: rgba(30, 36, 48, 0.92);
+  color: #fff;
+  font-size: 12px;
+  line-height: 1.45;
+  text-align: center;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+  animation: agent-toast-in 0.25s ease;
+}
+
+.agent-toast.error {
+  background: rgba(180, 48, 48, 0.94);
+}
+
+.agent-pick-card {
+  margin-top: 12px;
+  border: 1px solid #cfe0ff;
+  border-radius: 16px;
+  background: linear-gradient(145deg, #f8fbff, #eef4ff);
+  padding: 14px;
+  display: none;
+}
+
+.agent-pick-card.visible {
+  display: block;
+}
+
+.agent-pick-card h3 {
+  margin: 0 0 6px;
+  font-size: 18px;
+  color: #1f2633;
+}
+
+.agent-pick-card p {
+  margin: 0;
+  font-size: 13px;
+  color: #5f6b7f;
+  line-height: 1.5;
+}
+
+.agent-source {
+  margin-top: 8px;
+  font-size: 11px;
+  color: #8d919a;
+}
+
+@keyframes agent-toast-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
 }
 
 @media (max-width: 430px) {

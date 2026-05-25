@@ -248,7 +248,5 @@
 
 ## 6. 交付说明
 - 本文档用于“功能块与范围对齐”。
-- 下一步建议基于该文档输出：
-  - 功能块级需求清单（每块 5-10 条）
-  - 接口清单（按模块分组）
-  - 里程碑排期（MVP / 增强版 / 增长版）
+- 已输出前后端计划：`doc/product/decidemeal-前后端开发计划.md`
+- HTML 原型 Agent 脚本：`doc/html/decidemeal-pages/assets/agent.js`

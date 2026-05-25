@@ -203,7 +203,7 @@
     <div class='switch-row'><span>过滤花生过敏</span><button class='switch' data-switch type='button' aria-label='切换过滤花生过敏'></button></div>
   </section>
 
-  <button class='save-btn' type='button'>保存偏好</button>
+  <button class='save-btn' id='savePrefBtn' type='button'>保存偏好（同步 Agent）</button>
 </main>
 
 <footer class='footer-nav'>
@@ -213,9 +213,12 @@
 </footer>
 </div></div>
 
+<script src='./assets/agent.js'></script>
 <script>
   (function () {
     var tags = Array.prototype.slice.call(document.querySelectorAll('.taste-tag'));
+    var saveBtn = document.getElementById('savePrefBtn');
+    var phone = document.querySelector('.phone');
     var switches = Array.prototype.slice.call(document.querySelectorAll('[data-switch]'));
     var spicyRange = document.getElementById('spicyRange');
     var sweetRange = document.getElementById('sweetRange');
@@ -240,6 +243,22 @@
 
     sweetRange.addEventListener('input', function () {
       sweetVal.textContent = sweetRange.value + ' / 5';
+    });
+
+    saveBtn.addEventListener('click', function () {
+      var activeTags = tags.filter(function (t) { return t.classList.contains('active'); })
+        .map(function (t) { return t.textContent; });
+      var sw = Array.prototype.slice.call(document.querySelectorAll('[data-switch]'));
+      SoulFoodAgent.savePreference({
+        tags: activeTags,
+        spicy: spicyRange.value,
+        sweet: sweetRange.value,
+        noCoriander: sw[0] && !sw[0].classList.contains('off'),
+        noPeanut: sw[1] && !sw[1].classList.contains('off')
+      });
+      SoulFoodAgent.showToast(phone, '偏好已保存，将影响 AI 推荐');
+      saveBtn.textContent = '已保存 ✓';
+      setTimeout(function () { saveBtn.textContent = '保存偏好（同步 Agent）'; }, 2000);
     });
   })();
 </script>

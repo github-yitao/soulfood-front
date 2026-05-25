@@ -216,6 +216,9 @@
     </li>
   </ul>
 
+  <button class='btn btn-agent btn-block' id='aiNearbyBtn' type='button' style='margin-top:4px;height:42px;border-radius:14px;font-size:14px;font-weight:800;cursor:pointer'>
+    <span class='material-symbols-outlined'>auto_awesome</span>AI 帮我挑一家
+  </button>
   <button class='cta' id='voteBtn' type='button'>用这些店发起投票</button>
 </main>
 
@@ -226,11 +229,14 @@
 </footer>
 </div></div>
 
+<script src='./assets/agent.js'></script>
 <script>
 (function(){
   var chips = Array.prototype.slice.call(document.querySelectorAll('.chip'));
   var cards = Array.prototype.slice.call(document.querySelectorAll('.shop-card'));
   var voteBtn = document.getElementById('voteBtn');
+  var aiBtn = document.getElementById('aiNearbyBtn');
+  var phone = document.querySelector('.phone');
 
   chips.forEach(function(chip){
     chip.addEventListener('click', function(){
@@ -246,6 +252,22 @@
   voteBtn.addEventListener('click', function(){
     voteBtn.textContent = '正在创建投票...';
     setTimeout(function(){ location.href = './04-vote.html'; }, 400);
+  });
+
+  aiBtn.addEventListener('click', async function(){
+    var visible = cards.filter(function(c){ return c.style.display !== 'none'; });
+    var names = visible.map(function(c){
+      var t = c.querySelector('.shop-title');
+      return t ? t.textContent : '';
+    }).filter(Boolean);
+    SoulFoodAgent.setLoading(aiBtn, true);
+    try {
+      var res = await SoulFoodAgent.randomPick(names);
+      SoulFoodAgent.showToast(phone, 'AI 推荐：' + res.name + ' — ' + (res.reason || ''));
+    } finally {
+      SoulFoodAgent.setLoading(aiBtn, false);
+      aiBtn.innerHTML = '<span class="material-symbols-outlined">auto_awesome</span>AI 帮我挑一家';
+    }
   });
 })();
 </script>

@@ -64,7 +64,11 @@
   document.getElementById('peopleChips').addEventListener('click',function(e){if(e.target.classList.contains('chip')){p=e.target.textContent;active(this,e.target);render();}});
   document.getElementById('timeChips').addEventListener('click',function(e){if(e.target.classList.contains('chip')){t=e.target.textContent;active(this,e.target);render();}});
   topic.addEventListener('input',render);
-  document.getElementById('createBtn').addEventListener('click',function(){this.textContent='已创建，去投票';setTimeout(function(){location.href='./04-vote.html';},500);});
+  document.getElementById('createBtn').addEventListener('click',function(){
+    sessionStorage.setItem('room_topic', topic.value);
+    this.textContent='已创建，去投票';
+    setTimeout(function(){location.href='./04-vote.html';},500);
+  });
 })();
 </script>
 </body></html>
