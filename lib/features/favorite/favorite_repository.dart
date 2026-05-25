@@ -71,7 +71,33 @@ class FavoriteRepository {
     return FavoriteItem.fromJson(data);
   }
 
+  Future<FavoriteItem> addRestaurant({
+    required int restaurantId,
+    required String title,
+    String? subtitle,
+    String? category,
+    String? score,
+  }) async {
+    final data = await _api.postData<Map<String, dynamic>>(
+      '/api/v1/favorites',
+      data: {
+        'targetType': 'restaurant',
+        'targetId': restaurantId,
+        'title': title,
+        if (subtitle != null) 'subtitle': subtitle,
+        if (category != null) 'category': category,
+        if (score != null) 'score': score,
+      },
+      parser: (json) => json as Map<String, dynamic>,
+    );
+    return FavoriteItem.fromJson(data);
+  }
+
   Future<void> remove(int id) async {
     await _api.deleteVoid('/api/v1/favorites/$id');
+  }
+
+  Future<void> removeRestaurant(int restaurantId) async {
+    await _api.deleteVoid('/api/v1/favorites/target/restaurant/$restaurantId');
   }
 }

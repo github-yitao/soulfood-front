@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:soulfood_front/features/agent/agent_repository.dart';
+import 'package:soulfood_front/features/favorite/favorite_repository.dart';
 import 'package:soulfood_front/features/nearby/nearby_repository.dart';
 import 'package:soulfood_front/features/room/room_repository.dart';
 import 'package:soulfood_front/routing/app_routes.dart';
@@ -13,6 +14,7 @@ class NearbyPage extends StatefulWidget {
 
 class _NearbyPageState extends State<NearbyPage> {
   final _repo = NearbyRepository();
+  final _favRepo = FavoriteRepository();
   final _agent = AgentRepository();
   final _roomRepo = RoomRepository();
   String? _aiPickName;
@@ -66,6 +68,35 @@ class _NearbyPageState extends State<NearbyPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('已标记想去：${item.name}')));
       }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+      }
+    }
+  }
+
+  Future<void> _toggleFavorite(RestaurantItem item) async {
+    try {
+      if (item.favorited) {
+        await _favRepo.removeRestaurant(item.id);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('已取消收藏：${item.name}')));
+        }
+      } else {
+        await _favRepo.addRestaurant(
+          restaurantId: item.id,
+          title: item.name,
+          subtitle: item.category,
+          category: item.category,
+          score: item.rating?.toString(),
+        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('已收藏，可在「我的收藏」查看')),
+          );
+        }
+      }
+      await _load();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
@@ -180,15 +211,30 @@ class _NearbyPageState extends State<NearbyPage> {
                           child: ListTile(
                             title: Text(item.name, style: const TextStyle(fontWeight: FontWeight.w700)),
                             subtitle: Text('${item.category} · ${item.distanceKm ?? '-'} km'),
-                            trailing: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.end,
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
                               children: [
-                                Text('${item.rating ?? '-'}'),
-                                const SizedBox(height: 4),
-                                Text(
-                                  item.wanted ? '已想去' : '',
-                                  style: const TextStyle(fontSize: 11, color: Color(0xFFD86A00)),
+                                Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text('${item.rating ?? '-'}'),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      item.wanted ? '已想去' : '',
+                                      style: const TextStyle(fontSize: 11, color: Color(0xFFD86A00)),
+                                    ),
+                                  ],
+                                ),
+                                IconButton(
+                                  tooltip: item.favorited ? '取消收藏' : '收藏店铺',
+                                  icon: Icon(
+                                    item.favorited ? Icons.favorite : Icons.favorite_border,
+                                    color: item.favorited
+                                        ? const Color(0xFFFF7A22)
+                                        : const Color(0xFF8D919A),
+                                  ),
+                                  onPressed: () => _toggleFavorite(item),
                                 ),
                               ],
                             ),

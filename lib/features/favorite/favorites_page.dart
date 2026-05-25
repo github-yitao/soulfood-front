@@ -88,7 +88,8 @@ class _FavoritesPageState extends State<FavoritesPage> {
                 : _items.isEmpty
                     ? const Center(
                         child: Text(
-                          '暂无收藏，在菜谱结果页可添加收藏',
+                          '暂无收藏\n在附近觅食点 ❤ 收藏店铺，或在菜谱结果页收藏菜谱',
+                          textAlign: TextAlign.center,
                           style: TextStyle(color: Color(0xFF8D919A)),
                         ),
                       )
@@ -141,7 +142,22 @@ class _FavoriteCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(item.title, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(item.title, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+                    ),
+                    if (item.targetType == 'restaurant')
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFF2E0),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Text('餐厅', style: TextStyle(fontSize: 11, color: Color(0xFFD86A00))),
+                      ),
+                  ],
+                ),
                 const SizedBox(height: 4),
                 Text(
                   [

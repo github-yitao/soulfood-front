@@ -9,6 +9,7 @@ class RestaurantItem {
     required this.rating,
     required this.distanceKm,
     required this.wanted,
+    required this.favorited,
   });
 
   final int id;
@@ -17,6 +18,7 @@ class RestaurantItem {
   final double? rating;
   final double? distanceKm;
   final bool wanted;
+  final bool favorited;
 
   factory RestaurantItem.fromJson(Map<String, dynamic> json) {
     return RestaurantItem(
@@ -26,6 +28,7 @@ class RestaurantItem {
       rating: (json['rating'] as num?)?.toDouble(),
       distanceKm: (json['distanceKm'] as num?)?.toDouble(),
       wanted: json['wanted'] as bool? ?? false,
+      favorited: json['favorited'] as bool? ?? false,
     );
   }
 }
