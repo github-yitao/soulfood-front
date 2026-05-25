@@ -1,55 +1,61 @@
 # DecideMeal API 对接清单
 
-> 后端 Base URL：`lib/core/config/app_config.dart`（可用 `--dart-define=API_BASE_URL=...` 覆盖）  
-> 请求头：`X-User-Id`（Mock 登录后自动带上）
+> 后端 Base URL：`lib/core/config/app_config.dart`  
+> 登录后请求头：`X-User-Id: <userId>`
 
-## P0 已对接
+## 鉴权（账号密码）
+
+| 方法 | 路径 | Flutter |
+|------|------|---------|
+| POST | `/api/v1/auth/register` | `RegisterPage` |
+| POST | `/api/v1/auth/login` | `LoginPage` |
+| GET | `/api/v1/auth/me` | `ProfilePage` |
+| POST | `/api/v1/auth/login/mock` | 仅开发调试 |
+
+注册/登录请求体示例：
+
+```json
+{ "username": "demo01", "password": "123456", "nickname": "昵称", "inviteCode": "DM123456" }
+```
+
+## P0 业务
 
 | 模块 | 方法 | 路径 | Flutter |
 |------|------|------|---------|
-| 登录 | POST | `/api/v1/auth/login/mock` | `AppBootstrap` |
-| 我的 | GET | `/api/v1/auth/me` | `ProfilePage` |
 | 创建房间 | POST | `/api/v1/rooms` | `CreateRoomPage` |
 | 加入房间 | POST | `/api/v1/rooms/{code}/join` | `JoinRoomPage` |
 | 房间详情 | GET | `/api/v1/rooms/{code}` | `VotePage` |
-| 添加选项 | POST | `/api/v1/rooms/{code}/options` | `VotePage` |
-| 投票 | POST | `/api/v1/rooms/{code}/votes` | `VotePage` |
-| 投票结果 | GET | `/api/v1/rooms/{code}/result` | `RecipeResultPage` |
+| 投票/选项 | POST | `/api/v1/rooms/{code}/votes` 等 | `VotePage` |
 | 附近餐厅 | GET | `/api/v1/restaurants/nearby` | `NearbyPage` |
-| 想去 | POST | `/api/v1/restaurants/{id}/want` | `NearbyPage` |
 | 记录概览 | GET | `/api/v1/records/overview` | `RecordsPage` |
 
-## AI 已对接
+## P1 体验
+
+| 模块 | 方法 | 路径 | Flutter |
+|------|------|------|---------|
+| 口味偏好 | GET/PUT | `/api/v1/users/me/preferences` | `PreferencePage` |
+| 收藏 | GET/POST/DELETE | `/api/v1/favorites` | `FavoritesPage` / `RecipeResultPage` |
+| 订单 | GET | `/api/v1/orders/overview` | `OrdersPage` |
+
+## P2 增长与设置
+
+| 模块 | 方法 | 路径 | Flutter |
+|------|------|------|---------|
+| 邀请 | GET | `/api/v1/invites/overview` | `InvitePage` |
+| 外观 | 本地 | SharedPreferences | `AppearancePage` |
+| 设置/关于 | 本地 | — | `SettingsPage` / `AboutPage` |
+| 启动 | — | — | `SplashPage` → 登录或首页 |
+
+## AI
 
 | 方法 | 路径 | Flutter |
 |------|------|---------|
 | POST | `/ai/recommend/recipes` | `RecipeResultPage` / `AiQuickPage` |
-| POST | `/ai/suggest-options` | `VotePage` AI 补选项 |
-| POST | `/ai/random-pick` | `NearbyPage` 随机帮我选 |
-| POST | `/ai/chat` | 预留 |
-| GET | `/ai/recommend` | 兼容旧接口 |
+| POST | `/ai/suggest-options` | `VotePage` |
+| POST | `/ai/random-pick` | `NearbyPage` |
+| POST | `/ai/chat` | 待做 UI |
 
-## P1 已对接（本次）
+## 待做
 
-| 模块 | 方法 | 路径 | Flutter |
-|------|------|------|---------|
-| 口味偏好 | GET | `/api/v1/users/me/preferences` | `PreferencePage` |
-| 口味偏好 | PUT | `/api/v1/users/me/preferences` | `PreferencePage` |
-| 收藏列表 | GET | `/api/v1/favorites?type=` | `FavoritesPage` |
-| 添加收藏 | POST | `/api/v1/favorites` | `RecipeResultPage` |
-| 取消收藏 | DELETE | `/api/v1/favorites/{id}` | `FavoritesPage` |
-| 订单概览 | GET | `/api/v1/orders/overview?category=` | `OrdersPage` |
-
-偏好 `preferenceText` 已接入 `RecipeResultPage`、`AiQuickPage` 的 AI 推荐请求。
-
-## P2 待做
-
-| 模块 | 说明 | 原型页 |
-|------|------|--------|
-| 设置 | 通知、账号 | 10-setting |
-| 外观 | 主题切换 | 11-appearance |
-| 邀请好友 | 邀请码/分享 | 15-invite-friends |
-| 关于我们 | 静态页 | 16-about-us |
-| 启动页 | Splash | 01-splash |
-| AI 对话 | `/ai/chat` UI + conversationId | — |
-| 微信登录 | `/api/v1/auth/login/wechat` | — |
+- AI 对话页 + conversationId 持久化
+- JWT / Token 鉴权（当前仍用 X-User-Id）

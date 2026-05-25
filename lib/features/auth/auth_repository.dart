@@ -2,22 +2,29 @@ import 'package:soulfood_front/core/api/api_client.dart';
 import 'package:soulfood_front/core/session/session_store.dart';
 
 class LoginResult {
-  LoginResult({required this.userId, required this.nickname});
+  LoginResult({
+    required this.userId,
+    required this.nickname,
+    this.username,
+  });
 
   final int userId;
   final String nickname;
+  final String? username;
 }
 
 class UserProfile {
   UserProfile({
     required this.userId,
     required this.nickname,
+    this.username,
     this.avatarUrl,
     this.signature,
   });
 
   final int userId;
   final String nickname;
+  final String? username;
   final String? avatarUrl;
   final String? signature;
 
@@ -25,6 +32,7 @@ class UserProfile {
     return UserProfile(
       userId: (json['userId'] as num).toInt(),
       nickname: json['nickname'] as String? ?? '用户',
+      username: json['username'] as String?,
       avatarUrl: json['avatarUrl'] as String?,
       signature: json['signature'] as String?,
     );
@@ -37,24 +45,41 @@ class AuthRepository {
   final ApiClient _api;
   final SessionStore _session;
 
-  Future<LoginResult> ensureLoggedIn() async {
-    if (_session.userId != null) {
-      return LoginResult(userId: _session.userId!, nickname: _session.nickname ?? '用户');
-    }
-    return mockLogin();
-  }
+  bool get isLoggedIn => _session.isLoggedIn;
 
-  Future<LoginResult> mockLogin() async {
-    final deviceId = await _session.deviceId();
+  Future<void> login({
+    required String username,
+    required String password,
+  }) async {
     final data = await _api.postData<Map<String, dynamic>>(
-      '/api/v1/auth/login/mock',
-      data: {'deviceId': deviceId},
+      '/api/v1/auth/login',
+      data: {'username': username, 'password': password},
       parser: (json) => json as Map<String, dynamic>,
     );
-    final userId = (data['userId'] as num).toInt();
-    final nickname = data['nickname'] as String? ?? '用户';
-    await _session.saveUser(userId: userId, nickname: nickname);
-    return LoginResult(userId: userId, nickname: nickname);
+    await _saveFromResponse(data, username: username.trim());
+  }
+
+  Future<void> register({
+    required String username,
+    required String password,
+    String? nickname,
+    String? inviteCode,
+  }) async {
+    final data = await _api.postData<Map<String, dynamic>>(
+      '/api/v1/auth/register',
+      data: {
+        'username': username,
+        'password': password,
+        if (nickname != null && nickname.isNotEmpty) 'nickname': nickname,
+        if (inviteCode != null && inviteCode.isNotEmpty) 'inviteCode': inviteCode,
+      },
+      parser: (json) => json as Map<String, dynamic>,
+    );
+    await _saveFromResponse(data, username: username.trim());
+  }
+
+  Future<void> logout() async {
+    await _session.clear();
   }
 
   Future<UserProfile> getProfile() async {
@@ -62,5 +87,11 @@ class AuthRepository {
       '/api/v1/auth/me',
       parser: (json) => UserProfile.fromJson(json as Map<String, dynamic>),
     );
+  }
+
+  Future<void> _saveFromResponse(Map<String, dynamic> data, {String? username}) async {
+    final userId = (data['userId'] as num).toInt();
+    final nickname = data['nickname'] as String? ?? username ?? '用户';
+    await _session.saveUser(userId: userId, nickname: nickname, username: username);
   }
 }

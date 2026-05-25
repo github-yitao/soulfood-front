@@ -1,6 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:soulfood_front/core/api/api_client.dart';
 import 'package:soulfood_front/core/session/session_store.dart';
+import 'package:soulfood_front/core/settings/appearance_store.dart';
 import 'package:soulfood_front/features/auth/auth_repository.dart';
 
 class AppServices {
@@ -8,11 +10,15 @@ class AppServices {
     required this.session,
     required this.api,
     required this.auth,
+    required this.appearance,
+    required this.themeNotifier,
   });
 
   final SessionStore session;
   final ApiClient api;
   final AuthRepository auth;
+  final AppearanceStore appearance;
+  final ValueNotifier<AppThemeMode> themeNotifier;
 
   static AppServices? _instance;
 
@@ -27,10 +33,22 @@ class AppServices {
   static Future<void> init() async {
     final session = SessionStore();
     await session.load();
+    final appearance = AppearanceStore();
+    await appearance.load();
     final api = ApiClient(session);
     final auth = AuthRepository(api, session);
-    _instance = AppServices._(session: session, api: api, auth: auth);
-    await auth.ensureLoggedIn();
+    _instance = AppServices._(
+      session: session,
+      api: api,
+      auth: auth,
+      appearance: appearance,
+      themeNotifier: ValueNotifier<AppThemeMode>(appearance.mode),
+    );
+  }
+
+  Future<void> setThemeMode(AppThemeMode mode) async {
+    await appearance.save(mode);
+    themeNotifier.value = mode;
   }
 }
 
@@ -95,12 +113,6 @@ class _AppBootstrapState extends State<AppBootstrap> {
                     textAlign: TextAlign.center,
                     style: const TextStyle(color: Color(0xFF646871)),
                   ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    '请确认 Cloudflare 隧道和后端服务可用',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: Color(0xFF8D919A), fontSize: 13),
-                  ),
                   const SizedBox(height: 20),
                   FilledButton(onPressed: _retry, child: const Text('重试')),
                 ],
@@ -112,16 +124,7 @@ class _AppBootstrapState extends State<AppBootstrap> {
     }
     if (!_ready) {
       return const Scaffold(
-        body: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CircularProgressIndicator(),
-              SizedBox(height: 16),
-              Text('DecideMeal 加载中…', style: TextStyle(color: Color(0xFF646871))),
-            ],
-          ),
-        ),
+        body: Center(child: CircularProgressIndicator()),
       );
     }
     return widget.child;

@@ -91,6 +91,11 @@ class _ProfilePageState extends State<ProfilePage> {
                               style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
                             ),
                             const SizedBox(height: 4),
+                            if (profile.username != null && profile.username!.isNotEmpty)
+                              Text(
+                                '@${profile.username}',
+                                style: const TextStyle(color: Color(0xFF8D919A), fontSize: 13),
+                              ),
                             Text(
                               profile.signature?.isNotEmpty == true
                                   ? profile.signature!
@@ -121,6 +126,11 @@ class _ProfilePageState extends State<ProfilePage> {
                       label: '历史订单',
                       onTap: () => _open(const OrdersPage()),
                     ),
+                    _MenuItem(
+                      icon: Icons.group_add_outlined,
+                      label: '邀请好友',
+                      onTap: () => Navigator.pushNamed(context, AppRoutes.invite),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 12),
@@ -129,14 +139,12 @@ class _ProfilePageState extends State<ProfilePage> {
                     _MenuItem(
                       icon: Icons.settings_outlined,
                       label: '设置',
-                      trailing: 'P2',
-                      onTap: () {},
+                      onTap: () => Navigator.pushNamed(context, AppRoutes.settings),
                     ),
                     _MenuItem(
                       icon: Icons.info_outline,
                       label: '关于我们',
-                      trailing: 'P2',
-                      onTap: () {},
+                      onTap: () => Navigator.pushNamed(context, AppRoutes.about),
                     ),
                   ],
                 ),

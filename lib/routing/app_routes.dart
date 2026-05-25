@@ -1,5 +1,6 @@
 class AppRoutes {
   static const String root = '/';
+  static const String login = '/login';
   static const String friends = '/friends';
   static const String createRoom = '/rooms/create';
   static const String joinRoom = '/rooms/join';
@@ -10,6 +11,10 @@ class AppRoutes {
   static const String favorites = '/favorites';
   static const String preference = '/preference';
   static const String orders = '/orders';
+  static const String settings = '/settings';
+  static const String appearance = '/appearance';
+  static const String about = '/about';
+  static const String invite = '/invite';
 
   const AppRoutes._();
 }

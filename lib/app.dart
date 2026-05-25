@@ -1,17 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:soulfood_front/core/app_bootstrap.dart';
-import 'package:soulfood_front/features/agent/ai_quick_page.dart';
+import 'package:soulfood_front/core/settings/appearance_store.dart';
+import 'package:soulfood_front/features/auth/login_page.dart';
+import 'package:soulfood_front/features/auth/splash_page.dart';
 import 'package:soulfood_front/features/favorite/favorites_page.dart';
+import 'package:soulfood_front/features/growth/about_page.dart';
+import 'package:soulfood_front/features/growth/invite_page.dart';
 import 'package:soulfood_front/features/nearby/nearby_page.dart';
 import 'package:soulfood_front/features/order/orders_page.dart';
 import 'package:soulfood_front/features/preference/preference_page.dart';
+import 'package:soulfood_front/features/profile/appearance_page.dart';
+import 'package:soulfood_front/features/profile/settings_page.dart';
+import 'package:soulfood_front/features/agent/ai_quick_page.dart';
 import 'package:soulfood_front/features/room/pages/create_room_page.dart';
 import 'package:soulfood_front/features/room/pages/friends_page.dart';
 import 'package:soulfood_front/features/room/pages/join_room_page.dart';
 import 'package:soulfood_front/features/room/pages/recipe_result_page.dart';
 import 'package:soulfood_front/features/room/pages/vote_page.dart';
 import 'package:soulfood_front/features/room/room_models.dart';
-import 'package:soulfood_front/pages/root_page.dart';
 import 'package:soulfood_front/routing/app_routes.dart';
 
 class SoulFoodApp extends StatelessWidget {
@@ -19,18 +25,66 @@ class SoulFoodApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return AppBootstrap(child: const _DecideMealApp());
+  }
+}
+
+class _DecideMealApp extends StatefulWidget {
+  const _DecideMealApp();
+
+  @override
+  State<_DecideMealApp> createState() => _DecideMealAppState();
+}
+
+class _DecideMealAppState extends State<_DecideMealApp> {
+  @override
+  void initState() {
+    super.initState();
+    AppServices.I.themeNotifier.addListener(_onThemeChanged);
+  }
+
+  @override
+  void dispose() {
+    AppServices.I.themeNotifier.removeListener(_onThemeChanged);
+    super.dispose();
+  }
+
+  void _onThemeChanged() => setState(() {});
+
+  @override
+  Widget build(BuildContext context) {
+    final themeMode = _toThemeMode(AppServices.I.themeNotifier.value);
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'DecideMeal',
+      themeMode: themeMode,
       theme: ThemeData(
         useMaterial3: true,
+        brightness: Brightness.light,
         scaffoldBackgroundColor: const Color(0xFFF5F6F8),
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFFFD966)),
         fontFamily: 'PingFang SC',
       ),
-      home: AppBootstrap(child: const RootPage()),
+      darkTheme: ThemeData(
+        useMaterial3: true,
+        brightness: Brightness.dark,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFFFFD966),
+          brightness: Brightness.dark,
+        ),
+        fontFamily: 'PingFang SC',
+      ),
+      home: const SplashPage(),
       onGenerateRoute: _onGenerateRoute,
     );
+  }
+
+  ThemeMode _toThemeMode(AppThemeMode mode) {
+    return switch (mode) {
+      AppThemeMode.light => ThemeMode.light,
+      AppThemeMode.dark => ThemeMode.dark,
+      AppThemeMode.system => ThemeMode.system,
+    };
   }
 
   Route<void>? _onGenerateRoute(RouteSettings settings) {
@@ -39,27 +93,17 @@ class SoulFoodApp extends StatelessWidget {
       return null;
     }
     switch (name) {
+      case AppRoutes.login:
+        return MaterialPageRoute<void>(builder: (_) => const LoginPage(), settings: settings);
       case AppRoutes.friends:
-        return MaterialPageRoute<void>(
-          builder: (_) => const FriendsPage(),
-          settings: settings,
-        );
+        return MaterialPageRoute<void>(builder: (_) => const FriendsPage(), settings: settings);
       case AppRoutes.createRoom:
-        return MaterialPageRoute<void>(
-          builder: (_) => const CreateRoomPage(),
-          settings: settings,
-        );
+        return MaterialPageRoute<void>(builder: (_) => const CreateRoomPage(), settings: settings);
       case AppRoutes.joinRoom:
-        return MaterialPageRoute<void>(
-          builder: (_) => const JoinRoomPage(),
-          settings: settings,
-        );
+        return MaterialPageRoute<void>(builder: (_) => const JoinRoomPage(), settings: settings);
       case AppRoutes.vote:
         final code = settings.arguments as String? ?? '';
-        return MaterialPageRoute<void>(
-          builder: (_) => VotePage(roomCode: code),
-          settings: settings,
-        );
+        return MaterialPageRoute<void>(builder: (_) => VotePage(roomCode: code), settings: settings);
       case AppRoutes.recipeResult:
         final args = settings.arguments;
         if (args is RoomResult) {
@@ -73,33 +117,26 @@ class SoulFoodApp extends StatelessWidget {
           settings: settings,
         );
       case AppRoutes.aiQuick:
-        return MaterialPageRoute<void>(
-          builder: (_) => const AiQuickPage(),
-          settings: settings,
-        );
+        return MaterialPageRoute<void>(builder: (_) => const AiQuickPage(), settings: settings);
       case AppRoutes.nearby:
-        return MaterialPageRoute<void>(
-          builder: (_) => const NearbyPage(),
-          settings: settings,
-        );
+        return MaterialPageRoute<void>(builder: (_) => const NearbyPage(), settings: settings);
       case AppRoutes.favorites:
-        return MaterialPageRoute<void>(
-          builder: (_) => const FavoritesPage(),
-          settings: settings,
-        );
+        return MaterialPageRoute<void>(builder: (_) => const FavoritesPage(), settings: settings);
       case AppRoutes.preference:
-        return MaterialPageRoute<void>(
-          builder: (_) => const PreferencePage(),
-          settings: settings,
-        );
+        return MaterialPageRoute<void>(builder: (_) => const PreferencePage(), settings: settings);
       case AppRoutes.orders:
-        return MaterialPageRoute<void>(
-          builder: (_) => const OrdersPage(),
-          settings: settings,
-        );
+        return MaterialPageRoute<void>(builder: (_) => const OrdersPage(), settings: settings);
+      case AppRoutes.settings:
+        return MaterialPageRoute<void>(builder: (_) => const SettingsPage(), settings: settings);
+      case AppRoutes.appearance:
+        return MaterialPageRoute<void>(builder: (_) => const AppearancePage(), settings: settings);
+      case AppRoutes.about:
+        return MaterialPageRoute<void>(builder: (_) => const AboutPage(), settings: settings);
+      case AppRoutes.invite:
+        return MaterialPageRoute<void>(builder: (_) => const InvitePage(), settings: settings);
       default:
         return MaterialPageRoute<void>(
-          builder: (_) => const RootPage(),
+          builder: (_) => const SplashPage(),
           settings: settings,
         );
     }
