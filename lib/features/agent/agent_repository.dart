@@ -41,23 +41,44 @@ class AgentRepository {
     String? voteWinner,
     int? participants,
   }) async {
-    final data = await _api.postData<Map<String, dynamic>>(
-      '/ai/recommend/recipes',
-      data: {
-        'preference': preference,
-        if (voteWinner != null && voteWinner.isNotEmpty) 'voteWinner': voteWinner,
-        if (participants != null) 'participants': participants,
-      },
-      parser: (json) => json as Map<String, dynamic>,
-    );
-    final items = data['items'] as List<dynamic>? ?? [];
-    if (items.isNotEmpty) {
-      return items
-          .map((e) => RecipeItem.fromJson(e as Map<String, dynamic>))
-          .toList();
+    try {
+      final data = await _api.postData<Map<String, dynamic>>(
+        '/ai/recommend/recipes',
+        data: {
+          'preference': preference,
+          if (voteWinner != null && voteWinner.isNotEmpty) 'voteWinner': voteWinner,
+          if (participants != null) 'participants': participants,
+        },
+        parser: (json) => json as Map<String, dynamic>,
+      );
+      final items = data['items'] as List<dynamic>? ?? [];
+      if (items.isNotEmpty) {
+        return items
+            .map((e) => RecipeItem.fromJson(e as Map<String, dynamic>))
+            .toList();
+      }
+      final raw = data['rawReply'] as String? ?? '';
+      final parsed = _parseRecipesFromText(raw);
+      if (parsed.isNotEmpty) return parsed;
+    } catch (_) {
+      // fallback below
     }
-    final raw = data['rawReply'] as String? ?? '';
-    return _parseRecipesFromText(raw);
+    return _fallbackRecipes(voteWinner);
+  }
+
+  List<RecipeItem> _fallbackRecipes(String? voteWinner) {
+    if (voteWinner != null && voteWinner.contains('火锅')) {
+      return [
+        RecipeItem(name: '毛肚', score: '4.8', reason: '火锅经典（离线推荐）'),
+        RecipeItem(name: '肥牛卷', score: '4.7', reason: '搭配火锅很合适'),
+        RecipeItem(name: '娃娃菜', score: '4.6', reason: '解腻必备'),
+      ];
+    }
+    return [
+      RecipeItem(name: '番茄炒蛋', score: '4.8', reason: '清淡下饭（离线推荐）'),
+      RecipeItem(name: '土豆丝炒肉', score: '4.6', reason: '家常菜'),
+      RecipeItem(name: '青菜鸡蛋面', score: '4.7', reason: '快手暖胃'),
+    ];
   }
 
   Future<List<String>> suggestOptions({
