@@ -1,10 +1,14 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:soulfood_front/core/location/location_service.dart';
 import 'package:soulfood_front/features/agent/agent_repository.dart';
 import 'package:soulfood_front/features/agent/ai_conversations_page.dart';
+import 'package:soulfood_front/features/agent/ai_memory_page.dart';
 import 'package:soulfood_front/features/favorite/favorite_repository.dart';
 import 'package:soulfood_front/features/nearby/nearby_repository.dart';
 import 'package:soulfood_front/features/nearby/restaurant_detail_page.dart';
@@ -21,6 +25,7 @@ class ChatMessage {
     this.favorited = false,
     this.cards = const [],
     this.streaming = false,
+    this.imagePath,
   });
 
   final String text;
@@ -29,6 +34,7 @@ class ChatMessage {
   final bool favorited;
   final List<ChatActionCard> cards;
   final bool streaming;
+  final String? imagePath;
 }
 
 class AiChatPage extends StatefulWidget {
@@ -59,6 +65,8 @@ class _AiChatPageState extends State<AiChatPage> {
   double _thinkingElapsed = 0;
   Timer? _thinkingTimer;
   UserLocation? _location;
+  XFile? _pendingImage;
+  final _imagePicker = ImagePicker();
 
   static const _quickPrompts = [
     '今晚吃什么？',
@@ -170,15 +178,31 @@ class _AiChatPageState extends State<AiChatPage> {
 
   Future<void> _send([String? preset]) async {
     final text = (preset ?? _inputCtrl.text).trim();
-    if (text.isEmpty || _sending) return;
+    final pendingImage = _pendingImage;
+    if ((text.isEmpty && pendingImage == null) || _sending) return;
+
+    String? imageBase64;
+    String? imageMimeType;
+    String? imagePath;
+    if (pendingImage != null) {
+      imagePath = pendingImage.path;
+      final bytes = await pendingImage.readAsBytes();
+      imageBase64 = base64Encode(bytes);
+      imageMimeType = pendingImage.mimeType ?? 'image/jpeg';
+    }
 
     if (preset == null) {
       _inputCtrl.clear();
     }
+    setState(() => _pendingImage = null);
+
+    final displayText = text.isNotEmpty
+        ? text
+        : (pendingImage != null ? '[图片] 请识别并推荐' : '');
 
     setState(() {
       _sending = true;
-      _messages.add(ChatMessage(text: text, isUser: true));
+      _messages.add(ChatMessage(text: displayText, isUser: true, imagePath: imagePath));
       _messages.add(ChatMessage(text: '', isUser: false, streaming: true));
     });
     final assistantIndex = _messages.length - 1;
@@ -194,6 +218,8 @@ class _AiChatPageState extends State<AiChatPage> {
         conversationId: _conversationId,
         lat: _location?.lat,
         lng: _location?.lng,
+        imageBase64: imageBase64,
+        imageMimeType: imageMimeType,
       )) {
         final type = event['type'] as String? ?? '';
         if (type == 'chunk') {
@@ -320,6 +346,30 @@ class _AiChatPageState extends State<AiChatPage> {
     });
   }
 
+  void _openMemory() {
+    Navigator.push<void>(
+      context,
+      MaterialPageRoute<void>(builder: (_) => const AiMemoryPage()),
+    );
+  }
+
+  Future<void> _pickImage() async {
+    try {
+      final file = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1280,
+        imageQuality: 85,
+      );
+      if (file != null && mounted) {
+        setState(() => _pendingImage = file);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('选图失败：$e')));
+      }
+    }
+  }
+
   void _openConversations() {
     Navigator.push<void>(
       context,
@@ -439,6 +489,11 @@ class _AiChatPageState extends State<AiChatPage> {
         title: const Text('AI 美食助手'),
         actions: [
           IconButton(
+            onPressed: _openMemory,
+            icon: const Icon(Icons.psychology_outlined),
+            tooltip: 'AI 记忆',
+          ),
+          IconButton(
             onPressed: _openConversations,
             icon: const Icon(Icons.history),
             tooltip: '对话记录',
@@ -501,12 +556,45 @@ class _AiChatPageState extends State<AiChatPage> {
               ),
             ),
           const SizedBox(height: 6),
+          if (_pendingImage != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+              child: Row(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.file(
+                      File(_pendingImage!.path),
+                      width: 56,
+                      height: 56,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  const Expanded(
+                    child: Text(
+                      '已选图片，可补充说明或直接发送',
+                      style: TextStyle(fontSize: 13, color: Color(0xFF8D919A)),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => setState(() => _pendingImage = null),
+                    icon: const Icon(Icons.close),
+                  ),
+                ],
+              ),
+            ),
           SafeArea(
             top: false,
             child: Padding(
               padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
               child: Row(
                 children: [
+                  IconButton(
+                    onPressed: _sending ? null : _pickImage,
+                    icon: const Icon(Icons.photo_camera_outlined),
+                    tooltip: '发送图片识菜',
+                  ),
                   Expanded(
                     child: TextField(
                       controller: _inputCtrl,
@@ -599,11 +687,25 @@ class _Bubble extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (isUser)
-              Text(
-                message.text,
-                style: const TextStyle(color: Colors.white, height: 1.45),
-              )
+            if (isUser) ...[
+              if (message.imagePath != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.file(
+                      File(message.imagePath!),
+                      width: 160,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+              if (message.text.isNotEmpty)
+                Text(
+                  message.text,
+                  style: const TextStyle(color: Colors.white, height: 1.45),
+                ),
+            ]
             else
               MarkdownBody(
                 data: message.text.isEmpty ? '…' : message.text,

@@ -107,6 +107,34 @@ class AiConversationItem {
   }
 }
 
+class AiUserMemoryItem {
+  AiUserMemoryItem({
+    required this.id,
+    required this.memoryType,
+    required this.content,
+    required this.source,
+    this.updatedAt,
+  });
+
+  final int id;
+  final String memoryType;
+  final String content;
+  final String source;
+  final DateTime? updatedAt;
+
+  factory AiUserMemoryItem.fromJson(Map<String, dynamic> json) {
+    return AiUserMemoryItem(
+      id: (json['id'] as num).toInt(),
+      memoryType: json['memoryType'] as String? ?? 'long_term',
+      content: json['content'] as String? ?? '',
+      source: json['source'] as String? ?? 'user',
+      updatedAt: json['updatedAt'] != null ? DateTime.tryParse(json['updatedAt'] as String) : null,
+    );
+  }
+
+  String get typeLabel => memoryType == 'episodic' ? '近期经历' : '长期记忆';
+}
+
 class ChatHistoryMessage {
   ChatHistoryMessage({
     required this.role,
@@ -179,6 +207,8 @@ class AgentRepository {
     String? conversationId,
     double? lat,
     double? lng,
+    String? imageBase64,
+    String? imageMimeType,
   }) {
     return _api.postNdjsonStream(
       '/ai/chat/stream',
@@ -188,6 +218,8 @@ class AgentRepository {
           'conversationId': conversationId,
         if (lat != null) 'lat': lat,
         if (lng != null) 'lng': lng,
+        if (imageBase64 != null && imageBase64.isNotEmpty) 'imageBase64': imageBase64,
+        if (imageMimeType != null && imageMimeType.isNotEmpty) 'imageMimeType': imageMimeType,
       },
     );
   }
@@ -335,5 +367,31 @@ class AgentRepository {
         reason: reason.isEmpty ? line : reason,
       );
     }).toList();
+  }
+
+  Future<List<AiUserMemoryItem>> listMemories({String? memoryType}) async {
+    return _api.getData<List<AiUserMemoryItem>>(
+      '/ai/memory',
+      query: memoryType != null && memoryType.isNotEmpty ? {'memoryType': memoryType} : null,
+      parser: (json) => (json as List<dynamic>)
+          .map((e) => AiUserMemoryItem.fromJson(e as Map<String, dynamic>))
+          .toList(),
+    );
+  }
+
+  Future<AiUserMemoryItem> addMemory({
+    required String content,
+    String memoryType = 'long_term',
+  }) async {
+    final data = await _api.postData<Map<String, dynamic>>(
+      '/ai/memory',
+      data: {'content': content, 'memoryType': memoryType},
+      parser: (json) => json as Map<String, dynamic>,
+    );
+    return AiUserMemoryItem.fromJson(data);
+  }
+
+  Future<void> deleteMemory(int id) async {
+    await _api.deleteVoid('/ai/memory/$id');
   }
 }

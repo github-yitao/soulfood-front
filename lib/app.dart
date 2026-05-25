@@ -12,7 +12,7 @@ import 'package:soulfood_front/features/order/orders_page.dart';
 import 'package:soulfood_front/features/preference/preference_page.dart';
 import 'package:soulfood_front/features/profile/appearance_page.dart';
 import 'package:soulfood_front/features/profile/settings_page.dart';
-import 'package:soulfood_front/features/agent/ai_conversations_page.dart';
+import 'package:soulfood_front/features/agent/ai_memory_page.dart';
 import 'package:soulfood_front/features/agent/ai_chat_page.dart';
 import 'package:soulfood_front/features/agent/ai_quick_page.dart';
 import 'package:soulfood_front/features/recipe/recipe_library_page.dart';
@@ -142,6 +142,8 @@ class _DecideMealAppState extends State<_DecideMealApp> {
         return MaterialPageRoute<void>(builder: (_) => const AiChatPage(), settings: settings);
       case AppRoutes.aiConversations:
         return MaterialPageRoute<void>(builder: (_) => const AiConversationsPage(), settings: settings);
+      case AppRoutes.aiMemory:
+        return MaterialPageRoute<void>(builder: (_) => const AiMemoryPage(), settings: settings);
       case AppRoutes.recipeLibrary:
         return MaterialPageRoute<void>(builder: (_) => const RecipeLibraryPage(), settings: settings);
       case AppRoutes.randomEat:
