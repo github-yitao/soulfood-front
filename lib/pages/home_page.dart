@@ -64,7 +64,7 @@ class HomePage extends StatelessWidget {
                     icon: Icons.place_rounded,
                     iconColor: Color(0xFF8E7BFF),
                     title: '随机吃什么',
-                    onTap: () => Navigator.pushNamed(context, AppRoutes.nearby),
+                    onTap: () => Navigator.pushNamed(context, AppRoutes.randomEat),
                   ),
                 ),
               ],

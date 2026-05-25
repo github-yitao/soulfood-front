@@ -7,6 +7,7 @@ import 'package:soulfood_front/features/favorite/favorites_page.dart';
 import 'package:soulfood_front/features/growth/about_page.dart';
 import 'package:soulfood_front/features/growth/invite_page.dart';
 import 'package:soulfood_front/features/nearby/nearby_page.dart';
+import 'package:soulfood_front/features/nearby/random_eat_page.dart';
 import 'package:soulfood_front/features/order/orders_page.dart';
 import 'package:soulfood_front/features/preference/preference_page.dart';
 import 'package:soulfood_front/features/profile/appearance_page.dart';
@@ -143,6 +144,8 @@ class _DecideMealAppState extends State<_DecideMealApp> {
         return MaterialPageRoute<void>(builder: (_) => const AiConversationsPage(), settings: settings);
       case AppRoutes.recipeLibrary:
         return MaterialPageRoute<void>(builder: (_) => const RecipeLibraryPage(), settings: settings);
+      case AppRoutes.randomEat:
+        return MaterialPageRoute<void>(builder: (_) => const RandomEatPage(), settings: settings);
       case AppRoutes.nearby:
         return MaterialPageRoute<void>(builder: (_) => const NearbyPage(), settings: settings);
       case AppRoutes.favorites:

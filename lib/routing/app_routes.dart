@@ -11,6 +11,7 @@ class AppRoutes {
   static const String aiChat = '/ai/chat';
   static const String aiConversations = '/ai/conversations';
   static const String recipeLibrary = '/recipes/library';
+  static const String randomEat = '/random-eat';
   static const String nearby = '/nearby';
   static const String favorites = '/favorites';
   static const String preference = '/preference';
