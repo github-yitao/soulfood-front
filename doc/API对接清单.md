@@ -1,6 +1,8 @@
 # DecideMeal API 对接清单
 
 > Base URL：`lib/core/config/app_config.dart`  
+> 默认 **直连本机后端**（Android 模拟器 `10.0.2.2:8080`，iOS/macOS `127.0.0.1:8080`）  
+> 真机 + Cloudflare 隧道：`flutter run --dart-define=API_BASE_URL=https://xxx.trycloudflare.com/soulfood`  
 > 鉴权：`Authorization: Bearer <JWT>`（登录/注册返回的 `token`）  
 > 兼容：`X-User-Id` 仍可作为开发兜底
 
@@ -45,8 +47,8 @@
 
 | 方法 | 路径 | Flutter |
 |------|------|---------|
-| GET | `/api/v1/friends` | `FriendsPage` 好友列表 |
-| POST | `/api/v1/friends` | `FriendsPage` 添加好友（body: `{ "inviteCode": "DM123456" }`） |
+| GET | `/api/v1/friends` | `MyFriendsPage` 好友列表 |
+| POST | `/api/v1/friends` | `MyFriendsPage` 添加好友（body: `{ "inviteCode": "DM123456" }`） |
 | GET | `/api/v1/rooms/friends` | `FriendsPage` 好友进行中的房间 |
 
 注册时填写 `inviteCode` 会自动与邀请人双向绑定好友（`source=invite`）。

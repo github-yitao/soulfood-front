@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:soulfood_front/core/api/api_client.dart';
 import 'package:soulfood_front/features/friend/friend_repository.dart';
 import 'package:soulfood_front/features/room/room_models.dart';
 import 'package:soulfood_front/features/room/room_repository.dart';
@@ -42,66 +43,18 @@ class _FriendsPageState extends State<FriendsPage> {
         _friendRooms = results[1] as List<FriendRoom>;
         _loading = false;
       });
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = e.message;
+        _loading = false;
+      });
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = '$e';
+        _error = '加载失败，请下拉刷新重试';
         _loading = false;
       });
-    }
-  }
-
-  Future<void> _showAddFriendDialog() async {
-    final controller = TextEditingController();
-    final added = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('添加好友'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('输入对方的邀请码（如 DM123456）', style: TextStyle(fontSize: 13, color: Color(0xFF6F7888))),
-            const SizedBox(height: 12),
-            TextField(
-              controller: controller,
-              textCapitalization: TextCapitalization.characters,
-              decoration: const InputDecoration(
-                labelText: '邀请码',
-                hintText: 'DM123456',
-                border: OutlineInputBorder(),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('取消')),
-          FilledButton(
-            onPressed: () async {
-              final code = controller.text.trim();
-              if (code.isEmpty) {
-                ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(content: Text('请输入邀请码')));
-                return;
-              }
-              try {
-                await _friendRepo.addFriend(code);
-                if (ctx.mounted) Navigator.pop(ctx, true);
-              } catch (e) {
-                if (ctx.mounted) {
-                  ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text('$e')));
-                }
-              }
-            },
-            child: const Text('添加'),
-          ),
-        ],
-      ),
-    );
-    controller.dispose();
-    if (added == true) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('已添加好友')));
-      _load();
     }
   }
 
@@ -132,15 +85,20 @@ class _FriendsPageState extends State<FriendsPage> {
                     onPressed: () => Navigator.pop(context),
                     icon: const Icon(Icons.arrow_back_ios_new_rounded),
                   ),
-                  const Spacer(),
-                  TextButton.icon(
-                    onPressed: _showAddFriendDialog,
-                    icon: const Icon(Icons.person_add_alt_1_rounded, size: 18),
-                    label: const Text('添加好友'),
+                  const Expanded(
+                    child: Text(
+                      '和朋友一起决定',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                    ),
                   ),
                 ],
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 8),
+              _ManageFriendsCard(
+                friendCount: _friends.length,
+                onTap: () => Navigator.pushNamed(context, AppRoutes.myFriends),
+              ),
+              const SizedBox(height: 12),
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(18),
@@ -188,7 +146,7 @@ class _FriendsPageState extends State<FriendsPage> {
                   child: Center(child: CircularProgressIndicator()),
                 )
               else if (_error != null)
-                _EmptyHint(text: _error!)
+                _ErrorHint(text: _error!, onRetry: _load)
               else if (_friendRooms.isEmpty)
                 const _EmptyHint(text: '暂无好友进行中的房间\n好友创建房间后会出现在这里')
               else
@@ -205,15 +163,81 @@ class _FriendsPageState extends State<FriendsPage> {
               _SectionHeader(title: '我的好友', count: _friends.length),
               const SizedBox(height: 8),
               if (!_loading && _error == null && _friends.isEmpty)
-                const _EmptyHint(text: '还没有好友\n注册时填邀请码，或点右上角主动添加')
-              else if (!_loading && _error == null)
-                ..._friends.map(
+                _EmptyHint(
+                  text: '还没有好友',
+                  actionLabel: '去添加好友',
+                  onAction: () => Navigator.pushNamed(context, AppRoutes.myFriends),
+                )
+              else if (!_loading && _error == null) ...[
+                ..._friends.take(3).map(
                   (friend) => Padding(
                     padding: const EdgeInsets.only(bottom: 8),
                     child: _FriendTile(friend: friend),
                   ),
                 ),
+                if (_friends.length > 3)
+                  TextButton(
+                    onPressed: () => Navigator.pushNamed(context, AppRoutes.myFriends),
+                    child: Text('查看全部 ${_friends.length} 位好友'),
+                  ),
+              ],
               const SizedBox(height: 24),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ManageFriendsCard extends StatelessWidget {
+  const _ManageFriendsCard({required this.friendCount, required this.onTap});
+
+  final int friendCount;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(18),
+      elevation: 0,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(18),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: const Color(0xFFFFD4B8)),
+            gradient: const LinearGradient(
+              colors: [Color(0xFFFFF8F2), Color(0xFFFFFFFF)],
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFF8A43),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Icon(Icons.person_add_alt_1_rounded, color: Colors.white),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('添加 / 管理好友', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+                    Text(
+                      friendCount > 0 ? '已有 $friendCount 位好友，点此添加更多' : '输入邀请码添加好友，或注册时填邀请码',
+                      style: const TextStyle(color: Color(0xFF6F7888), fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right, color: Color(0xFF6F7888)),
             ],
           ),
         ),
@@ -345,9 +369,15 @@ class _FriendTile extends StatelessWidget {
 }
 
 class _EmptyHint extends StatelessWidget {
-  const _EmptyHint({required this.text});
+  const _EmptyHint({
+    required this.text,
+    this.actionLabel,
+    this.onAction,
+  });
 
   final String text;
+  final String? actionLabel;
+  final VoidCallback? onAction;
 
   @override
   Widget build(BuildContext context) {
@@ -358,10 +388,53 @@ class _EmptyHint extends StatelessWidget {
         color: const Color(0xFFF7F9FC),
         borderRadius: BorderRadius.circular(14),
       ),
-      child: Text(
-        text,
-        textAlign: TextAlign.center,
-        style: const TextStyle(color: Color(0xFF6F7888), fontSize: 13, height: 1.5),
+      child: Column(
+        children: [
+          Text(
+            text,
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: Color(0xFF6F7888), fontSize: 13, height: 1.5),
+          ),
+          if (actionLabel != null && onAction != null) ...[
+            const SizedBox(height: 12),
+            FilledButton(
+              onPressed: onAction,
+              style: FilledButton.styleFrom(backgroundColor: const Color(0xFFFF8A43)),
+              child: Text(actionLabel!),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _ErrorHint extends StatelessWidget {
+  const _ErrorHint({required this.text, required this.onRetry});
+
+  final String text;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF5F5),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFFFD6D6)),
+      ),
+      child: Column(
+        children: [
+          Text(
+            text,
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: Color(0xFFB42318), fontSize: 13, height: 1.5),
+          ),
+          const SizedBox(height: 12),
+          OutlinedButton(onPressed: onRetry, child: const Text('重试')),
+        ],
       ),
     );
   }

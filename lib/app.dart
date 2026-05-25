@@ -14,6 +14,7 @@ import 'package:soulfood_front/features/profile/settings_page.dart';
 import 'package:soulfood_front/features/agent/ai_chat_page.dart';
 import 'package:soulfood_front/features/agent/ai_quick_page.dart';
 import 'package:soulfood_front/features/room/pages/create_room_page.dart';
+import 'package:soulfood_front/features/friend/my_friends_page.dart';
 import 'package:soulfood_front/features/room/pages/friends_page.dart';
 import 'package:soulfood_front/features/room/pages/join_room_page.dart';
 import 'package:soulfood_front/features/room/pages/recipe_result_page.dart';
@@ -98,6 +99,8 @@ class _DecideMealAppState extends State<_DecideMealApp> {
         return MaterialPageRoute<void>(builder: (_) => const LoginPage(), settings: settings);
       case AppRoutes.friends:
         return MaterialPageRoute<void>(builder: (_) => const FriendsPage(), settings: settings);
+      case AppRoutes.myFriends:
+        return MaterialPageRoute<void>(builder: (_) => const MyFriendsPage(), settings: settings);
       case AppRoutes.createRoom:
         return MaterialPageRoute<void>(builder: (_) => const CreateRoomPage(), settings: settings);
       case AppRoutes.joinRoom:

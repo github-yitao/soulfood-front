@@ -2,6 +2,7 @@ class AppRoutes {
   static const String root = '/';
   static const String login = '/login';
   static const String friends = '/friends';
+  static const String myFriends = '/friends/mine';
   static const String createRoom = '/rooms/create';
   static const String joinRoom = '/rooms/join';
   static const String vote = '/rooms/vote';

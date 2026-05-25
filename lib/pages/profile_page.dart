@@ -127,6 +127,12 @@ class _ProfilePageState extends State<ProfilePage> {
                       onTap: () => _open(const OrdersPage()),
                     ),
                     _MenuItem(
+                      icon: Icons.people_outline,
+                      label: '我的好友',
+                      trailing: '添加 / 管理',
+                      onTap: () => Navigator.pushNamed(context, AppRoutes.myFriends),
+                    ),
+                    _MenuItem(
                       icon: Icons.group_add_outlined,
                       label: '邀请好友',
                       onTap: () => Navigator.pushNamed(context, AppRoutes.invite),

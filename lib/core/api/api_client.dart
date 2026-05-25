@@ -23,7 +23,7 @@ class ApiClient {
         headers: {'Content-Type': 'application/json'},
       ),
     );
-    _dio.interceptors.add(
+    _dio.interceptors.addAll([
       InterceptorsWrapper(
         onRequest: (options, handler) {
           final token = _session.accessToken;
@@ -38,7 +38,8 @@ class ApiClient {
           handler.next(options);
         },
       ),
-    );
+      _RetryInterceptor(_dio),
+    ]);
   }
 
   final SessionStore _session;
@@ -49,8 +50,12 @@ class ApiClient {
     Map<String, dynamic>? query,
     required T Function(Object? json) parser,
   }) async {
-    final response = await _dio.get<Map<String, dynamic>>(path, queryParameters: query);
-    return _parse(response.data, parser);
+    try {
+      final response = await _dio.get<Map<String, dynamic>>(path, queryParameters: query);
+      return _parse(response.data, parser);
+    } on DioException catch (e) {
+      throw _toApiException(e);
+    }
   }
 
   Future<T> postData<T>(
@@ -58,13 +63,21 @@ class ApiClient {
     Object? data,
     required T Function(Object? json) parser,
   }) async {
-    final response = await _dio.post<Map<String, dynamic>>(path, data: data);
-    return _parse(response.data, parser);
+    try {
+      final response = await _dio.post<Map<String, dynamic>>(path, data: data);
+      return _parse(response.data, parser);
+    } on DioException catch (e) {
+      throw _toApiException(e);
+    }
   }
 
   Future<void> postVoid(String path, {Object? data}) async {
-    final response = await _dio.post<Map<String, dynamic>>(path, data: data);
-    _ensureOk(response.data);
+    try {
+      final response = await _dio.post<Map<String, dynamic>>(path, data: data);
+      _ensureOk(response.data);
+    } on DioException catch (e) {
+      throw _toApiException(e);
+    }
   }
 
   Future<T> putData<T>(
@@ -72,13 +85,21 @@ class ApiClient {
     Object? data,
     required T Function(Object? json) parser,
   }) async {
-    final response = await _dio.put<Map<String, dynamic>>(path, data: data);
-    return _parse(response.data, parser);
+    try {
+      final response = await _dio.put<Map<String, dynamic>>(path, data: data);
+      return _parse(response.data, parser);
+    } on DioException catch (e) {
+      throw _toApiException(e);
+    }
   }
 
   Future<void> deleteVoid(String path) async {
-    final response = await _dio.delete<Map<String, dynamic>>(path);
-    _ensureOk(response.data);
+    try {
+      final response = await _dio.delete<Map<String, dynamic>>(path);
+      _ensureOk(response.data);
+    } on DioException catch (e) {
+      throw _toApiException(e);
+    }
   }
 
   T _parse<T>(Map<String, dynamic>? json, T Function(Object? json) parser) {
@@ -108,5 +129,65 @@ class ApiClient {
     if (code != 0) {
       throw ApiException(json['message'] as String? ?? '请求失败', code: code);
     }
+  }
+
+  ApiException _toApiException(DioException e) {
+    final status = e.response?.statusCode;
+    if (status == 530 || status == 502 || status == 503 || status == 504) {
+      return ApiException(
+        '后端暂时不可用（$status），请确认本机后端已启动后重试。',
+        code: status ?? -1,
+      );
+    }
+    switch (e.type) {
+      case DioExceptionType.connectionTimeout:
+      case DioExceptionType.sendTimeout:
+      case DioExceptionType.receiveTimeout:
+        return ApiException('请求超时，请检查网络后重试', code: -1);
+      case DioExceptionType.connectionError:
+        return ApiException('无法连接服务器，请确认后端已在 8080 端口运行', code: -1);
+      default:
+        final msg = e.response?.data is Map
+            ? (e.response!.data as Map)['message'] as String?
+            : null;
+        return ApiException(msg ?? e.message ?? '网络请求失败', code: status ?? -1);
+    }
+  }
+}
+
+/// 瞬时网络/网关错误自动重试，避免用户手动刷新。
+class _RetryInterceptor extends Interceptor {
+  _RetryInterceptor(this._dio);
+
+  final Dio _dio;
+  static const _maxAttempts = 3;
+
+  static const _retryKey = '_api_retry_count';
+
+  @override
+  Future<void> onError(DioException err, ErrorInterceptorHandler handler) async {
+    final attempt = (err.requestOptions.extra[_retryKey] as int?) ?? 0;
+    if (attempt >= _maxAttempts - 1 || !_isTransient(err)) {
+      return handler.next(err);
+    }
+
+    err.requestOptions.extra[_retryKey] = attempt + 1;
+    await Future<void>.delayed(Duration(milliseconds: 400 * (attempt + 1)));
+
+    try {
+      final response = await _dio.fetch(err.requestOptions);
+      return handler.resolve(response);
+    } on DioException catch (e) {
+      return handler.next(e);
+    }
+  }
+
+  bool _isTransient(DioException err) {
+    final status = err.response?.statusCode;
+    if (status == 502 || status == 503 || status == 504 || status == 530) {
+      return true;
+    }
+    return err.type == DioExceptionType.connectionError ||
+        err.type == DioExceptionType.connectionTimeout;
   }
 }
