@@ -62,7 +62,7 @@ class HomePage extends StatelessWidget {
             const Spacer(),
             Center(
               child: GestureDetector(
-                onTap: () => Navigator.pushNamed(context, AppRoutes.friends),
+                onTap: () => Navigator.pushNamed(context, AppRoutes.aiQuick),
                 child: Container(
                   width: 300,
                   height: 300,

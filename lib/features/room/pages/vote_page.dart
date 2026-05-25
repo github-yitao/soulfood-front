@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:soulfood_front/features/room/room_models.dart';
 import 'package:soulfood_front/features/room/room_repository.dart';
-import 'package:soulfood_front/features/room/pages/vote_result_page.dart';
+import 'package:soulfood_front/features/agent/agent_repository.dart';
+import 'package:soulfood_front/features/room/pages/recipe_result_page.dart';
 
 class VotePage extends StatefulWidget {
   const VotePage({super.key, required this.roomCode});
@@ -14,6 +15,7 @@ class VotePage extends StatefulWidget {
 
 class _VotePageState extends State<VotePage> {
   final _repo = RoomRepository();
+  final _agent = AgentRepository();
   RoomDetail? _room;
   bool _loading = true;
   bool _submitting = false;
@@ -43,6 +45,34 @@ class _VotePageState extends State<VotePage> {
     try {
       final room = await _repo.vote(widget.roomCode, optionId);
       if (mounted) setState(() => _room = room);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+      }
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
+  }
+
+  Future<void> _aiSuggest() async {
+    final room = _room;
+    if (room == null) return;
+    setState(() => _submitting = true);
+    try {
+      final suggestions = await _agent.suggestOptions(
+        topic: room.topic,
+        existingOptions: room.options.map((o) => o.title).toList(),
+      );
+      for (final title in suggestions) {
+        await _repo.addOption(widget.roomCode, title, source: 'ai');
+      }
+      final updated = await _repo.getRoom(widget.roomCode);
+      if (mounted) {
+        setState(() => _room = updated);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('已添加 ${suggestions.length} 个 AI 选项')),
+        );
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
@@ -94,7 +124,10 @@ class _VotePageState extends State<VotePage> {
       await Navigator.push<void>(
         context,
         MaterialPageRoute<void>(
-          builder: (_) => VoteResultPage(result: result, roomCode: widget.roomCode),
+          builder: (_) => RecipeResultPage(
+            voteResult: result,
+            roomCode: widget.roomCode,
+          ),
         ),
       );
       if (mounted) await _load();
@@ -146,18 +179,28 @@ class _VotePageState extends State<VotePage> {
                           )),
                       const SizedBox(height: 8),
                       OutlinedButton.icon(
+                        onPressed: _submitting ? null : _aiSuggest,
+                        icon: const Icon(Icons.auto_awesome),
+                        label: const Text('AI 补选项'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: const Color(0xFF2B5EA8),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      OutlinedButton.icon(
                         onPressed: _submitting ? null : _addOption,
                         icon: const Icon(Icons.add),
-                        label: const Text('添加选项'),
+                        label: const Text('手动添加'),
                       ),
                       const SizedBox(height: 16),
-                      FilledButton(
+                      FilledButton.icon(
                         onPressed: _submitting ? null : _finish,
+                        icon: const Icon(Icons.restaurant_menu),
+                        label: const Text('生成菜谱推荐'),
                         style: FilledButton.styleFrom(
                           backgroundColor: const Color(0xFFFF8A43),
                           minimumSize: const Size.fromHeight(48),
                         ),
-                        child: const Text('查看投票结果'),
                       ),
                     ],
                   ),

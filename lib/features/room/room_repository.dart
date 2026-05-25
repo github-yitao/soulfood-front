@@ -40,10 +40,10 @@ class RoomRepository {
     );
   }
 
-  Future<RoomDetail> addOption(String code, String title) async {
+  Future<RoomDetail> addOption(String code, String title, {String source = 'manual'}) async {
     await _api.postData<Map<String, dynamic>>(
       '/api/v1/rooms/$code/options',
-      data: {'title': title, 'source': 'manual'},
+      data: {'title': title, 'source': source},
       parser: (json) => json as Map<String, dynamic>,
     );
     return getRoom(code);

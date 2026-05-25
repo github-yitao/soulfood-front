@@ -4,7 +4,9 @@ import 'package:soulfood_front/features/nearby/nearby_page.dart';
 import 'package:soulfood_front/features/room/pages/create_room_page.dart';
 import 'package:soulfood_front/features/room/pages/friends_page.dart';
 import 'package:soulfood_front/features/room/pages/join_room_page.dart';
-import 'package:soulfood_front/features/room/pages/vote_result_page.dart';
+import 'package:soulfood_front/features/agent/ai_quick_page.dart';
+import 'package:soulfood_front/features/room/pages/recipe_result_page.dart';
+import 'package:soulfood_front/features/room/room_models.dart';
 import 'package:soulfood_front/features/room/pages/vote_page.dart';
 import 'package:soulfood_front/pages/root_page.dart';
 import 'package:soulfood_front/routing/app_routes.dart';
@@ -55,17 +57,19 @@ class SoulFoodApp extends StatelessWidget {
               );
             case AppRoutes.recipeResult:
               final args = settings.arguments;
-              if (args is Map<String, dynamic>) {
+              if (args is RoomResult) {
                 return MaterialPageRoute<void>(
-                  builder: (_) => VoteResultPage(
-                    result: args['result'],
-                    roomCode: args['roomCode'] as String?,
-                  ),
+                  builder: (_) => RecipeResultPage(voteResult: args),
                   settings: settings,
                 );
               }
               return MaterialPageRoute<void>(
                 builder: (_) => const Scaffold(body: Center(child: Text('暂无投票结果'))),
+                settings: settings,
+              );
+            case AppRoutes.aiQuick:
+              return MaterialPageRoute<void>(
+                builder: (_) => const AiQuickPage(),
                 settings: settings,
               );
             case AppRoutes.nearby:

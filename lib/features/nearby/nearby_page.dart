@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:soulfood_front/features/agent/agent_repository.dart';
 import 'package:soulfood_front/features/nearby/nearby_repository.dart';
 import 'package:soulfood_front/features/room/room_repository.dart';
 import 'package:soulfood_front/routing/app_routes.dart';
@@ -12,7 +13,10 @@ class NearbyPage extends StatefulWidget {
 
 class _NearbyPageState extends State<NearbyPage> {
   final _repo = NearbyRepository();
+  final _agent = AgentRepository();
   final _roomRepo = RoomRepository();
+  String? _aiPickName;
+  String? _aiPickReason;
   final _searchCtrl = TextEditingController();
   List<RestaurantItem> _items = [];
   String _category = 'all';
@@ -66,6 +70,28 @@ class _NearbyPageState extends State<NearbyPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
       }
+    }
+  }
+
+  Future<void> _aiRandomPick() async {
+    if (_items.isEmpty) return;
+    setState(() => _loading = true);
+    try {
+      final pick = await _agent.randomPick(
+        candidates: _items.map((e) => e.name).toList(),
+      );
+      if (mounted) {
+        setState(() {
+          _aiPickName = pick.name;
+          _aiPickReason = pick.reason;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+      }
+    } finally {
+      if (mounted) setState(() => _loading = false);
     }
   }
 
@@ -173,8 +199,52 @@ class _NearbyPageState extends State<NearbyPage> {
                     ),
             ),
           ),
+          if (_aiPickName != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEEF4FF),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: const Color(0xFFB8D4F8)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Row(
+                      children: [
+                        Icon(Icons.casino, color: Color(0xFF2B5EA8), size: 18),
+                        SizedBox(width: 6),
+                        Text('AI 帮你选', style: TextStyle(fontWeight: FontWeight.w700)),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      _aiPickName!,
+                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+                    ),
+                    if (_aiPickReason != null && _aiPickReason!.isNotEmpty)
+                      Text(_aiPickReason!, style: const TextStyle(color: Color(0xFF5F6B7F), fontSize: 13)),
+                  ],
+                ),
+              ),
+            ),
           Padding(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+            child: OutlinedButton.icon(
+              onPressed: _loading || _items.isEmpty ? null : _aiRandomPick,
+              icon: const Icon(Icons.auto_awesome),
+              label: const Text('AI 随机帮我选'),
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size.fromHeight(44),
+                foregroundColor: const Color(0xFF2B5EA8),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
             child: FilledButton(
               onPressed: _loading || _items.isEmpty ? null : _startVote,
               style: FilledButton.styleFrom(

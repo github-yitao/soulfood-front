@@ -5,6 +5,7 @@ class AppRoutes {
   static const String joinRoom = '/rooms/join';
   static const String vote = '/rooms/vote';
   static const String recipeResult = '/recipes/result';
+  static const String aiQuick = '/ai/quick';
   static const String nearby = '/nearby';
 
   const AppRoutes._();

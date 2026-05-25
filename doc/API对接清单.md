@@ -18,14 +18,17 @@
 | 房间详情 | GET | `/api/v1/rooms/{code}` | `VotePage`（含下拉刷新） |
 | 添加选项 | POST | `/api/v1/rooms/{code}/options` | `VotePage` |
 | 投票 | POST | `/api/v1/rooms/{code}/votes` | `VotePage` |
-| 投票结果 | GET | `/api/v1/rooms/{code}/result` | `VoteResultPage` |
+| 投票结果 | GET | `/api/v1/rooms/{code}/result` | `RecipeResultPage`（含 AI 菜谱） |
 | 附近餐厅 | GET | `/api/v1/restaurants/nearby` | `NearbyPage` |
 | 想去 | POST | `/api/v1/restaurants/{id}/want` | `NearbyPage` 点击卡片 |
 | 记录概览 | GET | `/api/v1/records/overview` | `RecordsPage` |
 
-## 下一阶段（AI）
+## AI 已对接
 
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| GET | `/ai/recommend` | 菜谱推荐 |
-| POST | `/ai/chat` | 对话 / 补选项 / 随机决策 |
+| 方法 | 路径 | Flutter |
+|------|------|---------|
+| POST | `/ai/recommend/recipes` | `RecipeResultPage` / `AiQuickPage` |
+| POST | `/ai/suggest-options` | `VotePage` AI 补选项 |
+| POST | `/ai/random-pick` | `NearbyPage` 随机帮我选 |
+| POST | `/ai/chat` | 预留 |
+| GET | `/ai/recommend` | 兼容旧接口 |

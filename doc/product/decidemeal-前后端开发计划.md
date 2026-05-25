@@ -199,9 +199,9 @@ com.food.soulfoodbackend
 | 方法 | 路径 | 说明 | 优先级 |
 |------|------|------|--------|
 | GET | `/recommend` | 已有：文本推荐 | ✅ |
-| POST | `/recommend/recipes` | 结构化返回 `{items:[{name,score,reason}]}` | P0 |
-| POST | `/suggest-options` | 根据主题生成投票选项 | P0 |
-| POST | `/random-pick` | 从候选店/菜中决策 | P0 |
+| POST | `/recommend/recipes` | 结构化返回 `{items:[{name,score,reason}]}` | ✅ |
+| POST | `/suggest-options` | 根据主题生成投票选项 | ✅ |
+| POST | `/random-pick` | 从候选店/菜中决策 | ✅ |
 | POST | `/chat` | 已有 | ✅ |
 
 **`POST /ai/recommend/recipes` 请求体示例：**
