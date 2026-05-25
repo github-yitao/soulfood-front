@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:soulfood_front/features/record/record_detail_page.dart';
+import 'package:soulfood_front/features/record/record_models.dart';
 import 'package:soulfood_front/features/record/record_repository.dart';
 
 class RecordsPage extends StatefulWidget {
@@ -21,6 +23,13 @@ class _RecordsPageState extends State<RecordsPage> {
       _recordsFuture = _loadRecords();
     });
     await _recordsFuture;
+  }
+
+  void _openDetail(RecordItem record) {
+    Navigator.push<void>(
+      context,
+      MaterialPageRoute<void>(builder: (_) => RecordDetailPage(record: record)),
+    );
   }
 
   @override
@@ -79,7 +88,12 @@ class _RecordsPageState extends State<RecordsPage> {
                       color: Color(0xFF1E1F23),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 8),
+                  const Text(
+                    '点击查看详情',
+                    style: TextStyle(fontSize: 13, color: Color(0xFF8D919A)),
+                  ),
+                  const SizedBox(height: 12),
                   Expanded(
                     child: data.records.isEmpty
                         ? ListView(
@@ -93,7 +107,10 @@ class _RecordsPageState extends State<RecordsPage> {
                             itemCount: data.records.length,
                             separatorBuilder: (_, __) => const SizedBox(height: 14),
                             itemBuilder: (BuildContext context, int index) {
-                              return _RecordItem(record: data.records[index]);
+                              return _RecordItem(
+                                record: data.records[index],
+                                onTap: () => _openDetail(data.records[index]),
+                              );
                             },
                           ),
                   ),
@@ -176,109 +193,78 @@ class _EmptyRecords extends StatelessWidget {
 }
 
 class _RecordItem extends StatelessWidget {
-  const _RecordItem({required this.record});
+  const _RecordItem({required this.record, required this.onTap});
 
   final RecordItem record;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(18),
+      elevation: 0,
+      child: InkWell(
+        onTap: onTap,
         borderRadius: BorderRadius.circular(18),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x12000000),
-            blurRadius: 10,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Container(
-              width: 70,
-              height: 70,
-              color: const Color(0xFFF1F3F6),
-              alignment: Alignment.center,
-              child: const Icon(
-                Icons.restaurant_rounded,
-                color: Color(0xFFB3B8C2),
-                size: 30,
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x12000000),
+                blurRadius: 10,
+                offset: Offset(0, 4),
               ),
-            ),
+            ],
           ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  record.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF1E1F23),
-                  ),
+          child: Row(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  width: 70,
+                  height: 70,
+                  color: const Color(0xFFF1F3F6),
+                  alignment: Alignment.center,
+                  child: Icon(record.typeIcon, color: const Color(0xFFB3B8C2), size: 30),
                 ),
-                const SizedBox(height: 6),
-                Text(
-                  '${record.detail} · ${record.dateText}',
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: Color(0xFF8D919A),
-                  ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      record.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF1E1F23),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      '${record.detail} · ${record.dateText}',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF8D919A),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+              const Icon(Icons.chevron_right, color: Color(0xFFB3B8C2)),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
-}
-
-class RecordsData {
-  const RecordsData({required this.stats, required this.records});
-
-  const RecordsData.empty()
-    : stats = const <RecordStat>[],
-      records = const <RecordItem>[];
-
-  final List<RecordStat> stats;
-  final List<RecordItem> records;
-}
-
-class RecordStat {
-  const RecordStat({
-    required this.title,
-    required this.backgroundColor,
-    required this.titleColor,
-    this.count,
-  });
-
-  final String title;
-  final int? count;
-  final Color backgroundColor;
-  final Color titleColor;
-}
-
-class RecordItem {
-  const RecordItem({
-    required this.title,
-    required this.detail,
-    required this.dateText,
-  });
-
-  final String title;
-  final String detail;
-  final String dateText;
 }

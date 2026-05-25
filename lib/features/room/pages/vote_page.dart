@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:soulfood_front/features/room/room_models.dart';
-import 'package:soulfood_front/features/room/room_repository.dart';
 import 'package:soulfood_front/features/agent/agent_repository.dart';
 import 'package:soulfood_front/features/room/pages/recipe_result_page.dart';
+import 'package:soulfood_front/features/room/room_models.dart';
+import 'package:soulfood_front/features/room/room_repository.dart';
+import 'package:soulfood_front/features/room/widgets/room_invite_card.dart';
 
 class VotePage extends StatefulWidget {
   const VotePage({super.key, required this.roomCode});
@@ -117,6 +118,29 @@ class _VotePageState extends State<VotePage> {
   }
 
   Future<void> _finish() async {
+    final room = _room;
+    if (room == null) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('结束投票？'),
+        content: const Text(
+          '结束后将统计票数并选出结果，房间将关闭，好友将无法继续投票。\n\n'
+          '建议等好友都投完票后再结束。',
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('再等一会')),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: FilledButton.styleFrom(backgroundColor: const Color(0xFFFF8A43)),
+            child: const Text('结束并查看结果'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
     setState(() => _submitting = true);
     try {
       final result = await _repo.result(widget.roomCode);
@@ -140,9 +164,35 @@ class _VotePageState extends State<VotePage> {
     }
   }
 
+  Future<void> _viewResult() async {
+    final room = _room;
+    if (room == null) return;
+    setState(() => _submitting = true);
+    try {
+      final result = _repo.resultFromDetail(room);
+      if (!mounted) return;
+      await Navigator.push<void>(
+        context,
+        MaterialPageRoute<void>(
+          builder: (_) => RecipeResultPage(
+            voteResult: result,
+            roomCode: widget.roomCode,
+          ),
+        ),
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+      }
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final room = _room;
+    final isClosed = room?.status == 'closed';
     return Scaffold(
       appBar: AppBar(
         title: Text(room?.topic ?? '投票中'),
@@ -167,41 +217,71 @@ class _VotePageState extends State<VotePage> {
                 : ListView(
                     padding: const EdgeInsets.all(16),
                     children: [
+                      if (!isClosed) RoomInviteCard(roomCode: room.code),
+                      if (isClosed)
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(14),
+                          margin: const EdgeInsets.only(bottom: 12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF7F9FC),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: const Text(
+                            '投票已结束',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(fontWeight: FontWeight.w700, color: Color(0xFF6F7888)),
+                          ),
+                        ),
+                      const SizedBox(height: 12),
                       Text(
-                        '房间号 ${room.code} · ${room.participantCount} 人参与',
+                        '${room.participantCount} 人已投票 · 状态 ${room.status}',
                         style: const TextStyle(color: Color(0xFF6F7888)),
                       ),
                       const SizedBox(height: 12),
                       ...room.options.map((opt) => _OptionCard(
                             option: opt,
                             selected: room.myVoteOptionId == opt.id,
-                            onTap: _submitting ? null : () => _vote(opt.id),
+                            onTap: isClosed || _submitting ? null : () => _vote(opt.id),
                           )),
-                      const SizedBox(height: 8),
-                      OutlinedButton.icon(
-                        onPressed: _submitting ? null : _aiSuggest,
-                        icon: const Icon(Icons.auto_awesome),
-                        label: const Text('AI 补选项'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: const Color(0xFF2B5EA8),
+                      if (!isClosed) ...[
+                        const SizedBox(height: 8),
+                        OutlinedButton.icon(
+                          onPressed: _submitting ? null : _aiSuggest,
+                          icon: const Icon(Icons.auto_awesome),
+                          label: const Text('AI 补选项'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: const Color(0xFF2B5EA8),
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      OutlinedButton.icon(
-                        onPressed: _submitting ? null : _addOption,
-                        icon: const Icon(Icons.add),
-                        label: const Text('手动添加'),
-                      ),
-                      const SizedBox(height: 16),
-                      FilledButton.icon(
-                        onPressed: _submitting ? null : _finish,
-                        icon: const Icon(Icons.restaurant_menu),
-                        label: const Text('生成菜谱推荐'),
-                        style: FilledButton.styleFrom(
-                          backgroundColor: const Color(0xFFFF8A43),
-                          minimumSize: const Size.fromHeight(48),
+                        const SizedBox(height: 8),
+                        OutlinedButton.icon(
+                          onPressed: _submitting ? null : _addOption,
+                          icon: const Icon(Icons.add),
+                          label: const Text('手动添加选项'),
                         ),
-                      ),
+                        const SizedBox(height: 16),
+                        FilledButton.icon(
+                          onPressed: _submitting ? null : _finish,
+                          icon: const Icon(Icons.flag_rounded),
+                          label: const Text('结束投票，查看结果'),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: const Color(0xFFFF8A43),
+                            minimumSize: const Size.fromHeight(48),
+                          ),
+                        ),
+                      ] else ...[
+                        const SizedBox(height: 16),
+                        FilledButton.icon(
+                          onPressed: _submitting ? null : _viewResult,
+                          icon: const Icon(Icons.restaurant_menu),
+                          label: const Text('查看投票结果与菜谱'),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: const Color(0xFFFF8A43),
+                            minimumSize: const Size.fromHeight(48),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
       ),

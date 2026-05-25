@@ -65,6 +65,24 @@ class RoomRepository {
     );
   }
 
+  /// 已结束房间直接读详情，避免重复调用 result 接口
+  RoomResult resultFromDetail(RoomDetail room) {
+    if (room.options.isEmpty) {
+      throw StateError('暂无投票选项');
+    }
+    final winner = room.options.reduce(
+      (a, b) => a.voteCount >= b.voteCount ? a : b,
+    );
+    final total = room.options.fold<int>(0, (sum, o) => sum + o.voteCount);
+    final percent = total == 0 ? 0 : (winner.voteCount * 100 / total).round();
+    return RoomResult(
+      optionId: winner.id,
+      title: winner.title,
+      voteCount: winner.voteCount,
+      percent: percent,
+    );
+  }
+
   Future<List<FriendRoom>> listFriendRooms() async {
     final data = await _api.getData<List<dynamic>>(
       '/api/v1/rooms/friends',

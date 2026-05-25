@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:soulfood_front/core/api/api_client.dart';
 import 'package:soulfood_front/core/app_bootstrap.dart';
-import 'package:soulfood_front/pages/records_page.dart';
+import 'package:soulfood_front/features/record/record_models.dart';
 
 class RecordRepository {
   RecordRepository() : _api = AppServices.I.api;
@@ -28,14 +28,9 @@ class RecordRepository {
       );
     }).toList();
 
-    final records = recentJson.map((raw) {
-      final item = raw as Map<String, dynamic>;
-      return RecordItem(
-        title: item['title'] as String? ?? '',
-        detail: item['summary'] as String? ?? '',
-        dateText: item['occurredAt'] as String? ?? '',
-      );
-    }).toList();
+    final records = recentJson
+        .map((raw) => RecordItem.fromJson(raw as Map<String, dynamic>))
+        .toList();
 
     return RecordsData(stats: stats, records: records);
   }

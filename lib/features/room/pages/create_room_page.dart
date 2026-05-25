@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:soulfood_front/features/room/room_repository.dart';
+import 'package:soulfood_front/features/room/widgets/room_invite_card.dart';
 import 'package:soulfood_front/routing/app_routes.dart';
 
 class CreateRoomPage extends StatefulWidget {
@@ -24,6 +25,8 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
         maxPeople: _maxPeople,
         durationMin: _durationMin,
       );
+      if (!mounted) return;
+      await showRoomCreatedDialog(context, room.code);
       if (!mounted) return;
       Navigator.pushReplacementNamed(
         context,
