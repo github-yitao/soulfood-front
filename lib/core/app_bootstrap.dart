@@ -66,24 +66,61 @@ class _AppBootstrapState extends State<AppBootstrap> {
     }
   }
 
+  Future<void> _retry() async {
+    setState(() {
+      _error = null;
+      _ready = false;
+    });
+    await _start();
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_error != null) {
-      return MaterialApp(
-        home: Scaffold(
-          body: Center(
+      return Scaffold(
+        body: SafeArea(
+          child: Center(
             child: Padding(
               padding: const EdgeInsets.all(24),
-              child: Text('启动失败：$_error\n\n请确认后端已启动且 baseUrl 正确'),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    '启动失败',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    _error!,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Color(0xFF646871)),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    '请确认 Cloudflare 隧道和后端服务可用',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Color(0xFF8D919A), fontSize: 13),
+                  ),
+                  const SizedBox(height: 20),
+                  FilledButton(onPressed: _retry, child: const Text('重试')),
+                ],
+              ),
             ),
           ),
         ),
       );
     }
     if (!_ready) {
-      return const MaterialApp(
-        home: Scaffold(
-          body: Center(child: CircularProgressIndicator()),
+      return const Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 16),
+              Text('DecideMeal 加载中…', style: TextStyle(color: Color(0xFF646871))),
+            ],
+          ),
         ),
       );
     }

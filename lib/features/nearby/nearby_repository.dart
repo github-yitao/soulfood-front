@@ -1,3 +1,4 @@
+import 'package:soulfood_front/core/api/api_client.dart';
 import 'package:soulfood_front/core/app_bootstrap.dart';
 
 class RestaurantItem {
@@ -32,10 +33,10 @@ class RestaurantItem {
 class NearbyRepository {
   NearbyRepository() : _api = AppServices.I.api;
 
-  final dynamic _api;
+  final ApiClient _api;
 
   Future<List<RestaurantItem>> list({String? category, String? keyword}) async {
-    return _api.getData(
+    return _api.getData<List<RestaurantItem>>(
       '/api/v1/restaurants/nearby',
       query: {
         if (category != null && category.isNotEmpty) 'category': category,

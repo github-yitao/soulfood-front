@@ -1,10 +1,11 @@
+import 'package:soulfood_front/core/api/api_client.dart';
 import 'package:soulfood_front/core/app_bootstrap.dart';
 import 'package:soulfood_front/features/room/room_models.dart';
 
 class RoomRepository {
   RoomRepository() : _api = AppServices.I.api;
 
-  final dynamic _api;
+  final ApiClient _api;
 
   Future<RoomDetail> createRoom({
     required String topic,
@@ -27,14 +28,14 @@ class RoomRepository {
   }
 
   Future<RoomDetail> joinRoom(String code) async {
-    return _api.postData(
+    return _api.postData<RoomDetail>(
       '/api/v1/rooms/$code/join',
       parser: (json) => RoomDetail.fromJson(json as Map<String, dynamic>),
     );
   }
 
   Future<RoomDetail> getRoom(String code) async {
-    return _api.getData(
+    return _api.getData<RoomDetail>(
       '/api/v1/rooms/$code',
       parser: (json) => RoomDetail.fromJson(json as Map<String, dynamic>),
     );
@@ -50,7 +51,7 @@ class RoomRepository {
   }
 
   Future<RoomDetail> vote(String code, int optionId) async {
-    return _api.postData(
+    return _api.postData<RoomDetail>(
       '/api/v1/rooms/$code/votes',
       data: {'optionId': optionId},
       parser: (json) => RoomDetail.fromJson(json as Map<String, dynamic>),
@@ -58,7 +59,7 @@ class RoomRepository {
   }
 
   Future<RoomResult> result(String code) async {
-    return _api.getData(
+    return _api.getData<RoomResult>(
       '/api/v1/rooms/$code/result',
       parser: (json) => RoomResult.fromJson(json as Map<String, dynamic>),
     );

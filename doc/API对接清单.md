@@ -4,7 +4,9 @@
 
 ## 后端 Base URL
 
-`http://<host>:8080/soulfood`  
+默认：`https://wine-doug-broadcast-downloading.trycloudflare.com/soulfood`  
+（见 `lib/core/config/app_config.dart`，可用 `--dart-define=API_BASE_URL=...` 覆盖）
+
 请求头：`X-User-Id: <userId>`（Mock 登录后由客户端自动带上）
 
 ## 已对接

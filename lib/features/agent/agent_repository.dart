@@ -1,3 +1,4 @@
+import 'package:soulfood_front/core/api/api_client.dart';
 import 'package:soulfood_front/core/app_bootstrap.dart';
 
 class RecipeItem {
@@ -33,7 +34,7 @@ class RandomPickResult {
 class AgentRepository {
   AgentRepository() : _api = AppServices.I.api;
 
-  final dynamic _api;
+  final ApiClient _api;
 
   Future<List<RecipeItem>> recommendRecipes({
     String preference = '清淡、家常菜',
@@ -79,7 +80,7 @@ class AgentRepository {
     required List<String> candidates,
     String preference = '',
   }) async {
-    return _api.postData(
+    return _api.postData<RandomPickResult>(
       '/ai/random-pick',
       data: {
         'candidates': candidates,

@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:soulfood_front/core/api/api_client.dart';
 import 'package:soulfood_front/core/app_bootstrap.dart';
 import 'package:soulfood_front/pages/records_page.dart';
 
 class RecordRepository {
   RecordRepository() : _api = AppServices.I.api;
 
-  final dynamic _api;
+  final ApiClient _api;
 
   Future<RecordsData> loadOverview() async {
     final data = await _api.getData<Map<String, dynamic>>(
