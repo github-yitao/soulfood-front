@@ -137,7 +137,9 @@ class _FriendsPageState extends State<FriendsPage> {
                 secondaryLabel: '加入房间',
                 onSecondary: () => Navigator.pushNamed(context, AppRoutes.joinRoom),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 12),
+              const _VoteFlowHint(),
+              const SizedBox(height: 8),
               _SectionHeader(title: '好友的房间', count: _friendRooms.length),
               const SizedBox(height: 8),
               if (_loading)
@@ -185,6 +187,36 @@ class _FriendsPageState extends State<FriendsPage> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _VoteFlowHint extends StatelessWidget {
+  const _VoteFlowHint();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF7F9FC),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFEDF1F6)),
+      ),
+      child: const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('组局投票流程', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800)),
+          SizedBox(height: 8),
+          Text(
+            '1. 创建房间 → 复制房间号发给好友\n'
+            '2. 大家进入投票页点选选项\n'
+            '3. 底部点「结束投票，查看结果」→ 看胜出项 + AI 菜谱',
+            style: TextStyle(fontSize: 12, color: Color(0xFF6F7888), height: 1.55),
+          ),
+        ],
       ),
     );
   }

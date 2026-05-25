@@ -5,6 +5,7 @@ import 'package:soulfood_front/features/room/room_models.dart';
 import 'package:soulfood_front/features/room/room_repository.dart';
 import 'package:soulfood_front/features/room/widgets/room_invite_card.dart';
 
+/// 组局投票：选选项 → 好友加入 → 结束看结果
 class VotePage extends StatefulWidget {
   const VotePage({super.key, required this.roomCode});
 
@@ -24,12 +25,13 @@ class _VotePageState extends State<VotePage> {
   @override
   void initState() {
     super.initState();
-    _load();
+    _enterRoom();
   }
 
-  Future<void> _load() async {
+  Future<void> _enterRoom() async {
     setState(() => _loading = true);
     try {
+      await _repo.joinRoom(widget.roomCode);
       final room = await _repo.getRoom(widget.roomCode);
       if (mounted) setState(() => _room = room);
     } catch (e) {
@@ -45,7 +47,14 @@ class _VotePageState extends State<VotePage> {
     setState(() => _submitting = true);
     try {
       final room = await _repo.vote(widget.roomCode, optionId);
-      if (mounted) setState(() => _room = room);
+      if (!mounted) return;
+      setState(() => _room = room);
+      final picked = room.options.where((o) => o.id == optionId).map((o) => o.title).firstOrNull;
+      if (picked != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('已投票：$picked')),
+        );
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
@@ -118,16 +127,14 @@ class _VotePageState extends State<VotePage> {
   }
 
   Future<void> _finish() async {
-    final room = _room;
-    if (room == null) return;
+    if (_room == null) return;
 
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('结束投票？'),
         content: const Text(
-          '结束后将统计票数并选出结果，房间将关闭，好友将无法继续投票。\n\n'
-          '建议等好友都投完票后再结束。',
+          '结束后将统计票数、关闭房间，并进入结果页。\n好友将无法继续投票。',
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('再等一会')),
@@ -154,7 +161,7 @@ class _VotePageState extends State<VotePage> {
           ),
         ),
       );
-      if (mounted) await _load();
+      if (mounted) await _enterRoom();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
@@ -189,70 +196,126 @@ class _VotePageState extends State<VotePage> {
     }
   }
 
+  String? get _myPickTitle {
+    final room = _room;
+    if (room == null || room.myVoteOptionId == null) return null;
+    return room.options
+        .where((o) => o.id == room.myVoteOptionId)
+        .map((o) => o.title)
+        .firstOrNull;
+  }
+
   @override
   Widget build(BuildContext context) {
     final room = _room;
     final isClosed = room?.status == 'closed';
+    final hasVoted = room?.myVoteOptionId != null;
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(room?.topic ?? '投票中'),
+        title: Text(room?.topic ?? '组局投票'),
         actions: [
-          IconButton(onPressed: _loading ? null : _load, icon: const Icon(Icons.refresh)),
+          IconButton(onPressed: _loading ? null : _enterRoom, icon: const Icon(Icons.refresh)),
         ],
       ),
-      body: RefreshIndicator(
-        onRefresh: _load,
-        child: _loading && room == null
-            ? ListView(
-                children: const [
-                  SizedBox(height: 200, child: Center(child: CircularProgressIndicator())),
-                ],
-              )
-            : room == null
-                ? ListView(
-                    children: const [
-                      SizedBox(height: 200, child: Center(child: Text('房间加载失败'))),
-                    ],
-                  )
-                : ListView(
-                    padding: const EdgeInsets.all(16),
+      bottomNavigationBar: room == null || _loading
+          ? null
+          : _VoteBottomBar(
+              isClosed: isClosed,
+              hasVoted: hasVoted,
+              submitting: _submitting,
+              onFinish: _finish,
+              onViewResult: _viewResult,
+            ),
+      body: _loading && room == null
+          ? const Center(child: CircularProgressIndicator())
+          : room == null
+              ? Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      if (!isClosed) RoomInviteCard(roomCode: room.code),
+                      const Text('房间加载失败'),
+                      const SizedBox(height: 12),
+                      FilledButton(onPressed: _enterRoom, child: const Text('重试')),
+                    ],
+                  ),
+                )
+              : RefreshIndicator(
+                  onRefresh: _enterRoom,
+                  child: ListView(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+                    children: [
+                      _VoteFlowSteps(isClosed: isClosed, hasVoted: hasVoted),
+                      const SizedBox(height: 12),
+                      if (!isClosed) RoomInviteCard(roomCode: room.code, compact: true),
                       if (isClosed)
                         Container(
                           width: double.infinity,
                           padding: const EdgeInsets.all(14),
                           margin: const EdgeInsets.only(bottom: 12),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFF7F9FC),
+                            color: const Color(0xFFE8F5E9),
                             borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: const Color(0xFFB7DFC0)),
                           ),
-                          child: const Text(
-                            '投票已结束',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(fontWeight: FontWeight.w700, color: Color(0xFF6F7888)),
+                          child: const Row(
+                            children: [
+                              Icon(Icons.check_circle_outline, color: Color(0xFF2E7D32)),
+                              SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  '投票已结束，点击下方按钮查看结果',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFF2E7D32),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
+                      if (_myPickTitle != null) ...[
+                        const SizedBox(height: 8),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFFF4E8),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            '你的选择：$_myPickTitle',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFFD86A00),
+                            ),
+                          ),
+                        ),
+                      ],
                       const SizedBox(height: 12),
                       Text(
-                        '${room.participantCount} 人已投票 · 状态 ${room.status}',
-                        style: const TextStyle(color: Color(0xFF6F7888)),
+                        '${room.participantCount} 人已投票',
+                        style: const TextStyle(color: Color(0xFF6F7888), fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        '点选一项即完成投票（可改选）',
+                        style: TextStyle(color: Color(0xFF8D919A), fontSize: 13),
                       ),
                       const SizedBox(height: 12),
-                      ...room.options.map((opt) => _OptionCard(
-                            option: opt,
-                            selected: room.myVoteOptionId == opt.id,
-                            onTap: isClosed || _submitting ? null : () => _vote(opt.id),
-                          )),
+                      ...room.options.map(
+                        (opt) => _OptionCard(
+                          option: opt,
+                          selected: room.myVoteOptionId == opt.id,
+                          onTap: isClosed || _submitting ? null : () => _vote(opt.id),
+                        ),
+                      ),
                       if (!isClosed) ...[
                         const SizedBox(height: 8),
                         OutlinedButton.icon(
                           onPressed: _submitting ? null : _aiSuggest,
                           icon: const Icon(Icons.auto_awesome),
                           label: const Text('AI 补选项'),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: const Color(0xFF2B5EA8),
-                          ),
                         ),
                         const SizedBox(height: 8),
                         OutlinedButton.icon(
@@ -260,30 +323,171 @@ class _VotePageState extends State<VotePage> {
                           icon: const Icon(Icons.add),
                           label: const Text('手动添加选项'),
                         ),
-                        const SizedBox(height: 16),
-                        FilledButton.icon(
-                          onPressed: _submitting ? null : _finish,
-                          icon: const Icon(Icons.flag_rounded),
-                          label: const Text('结束投票，查看结果'),
-                          style: FilledButton.styleFrom(
-                            backgroundColor: const Color(0xFFFF8A43),
-                            minimumSize: const Size.fromHeight(48),
-                          ),
-                        ),
-                      ] else ...[
-                        const SizedBox(height: 16),
-                        FilledButton.icon(
-                          onPressed: _submitting ? null : _viewResult,
-                          icon: const Icon(Icons.restaurant_menu),
-                          label: const Text('查看投票结果与菜谱'),
-                          style: FilledButton.styleFrom(
-                            backgroundColor: const Color(0xFFFF8A43),
-                            minimumSize: const Size.fromHeight(48),
-                          ),
-                        ),
                       ],
                     ],
                   ),
+                ),
+    );
+  }
+}
+
+class _VoteFlowSteps extends StatelessWidget {
+  const _VoteFlowSteps({required this.isClosed, required this.hasVoted});
+
+  final bool isClosed;
+  final bool hasVoted;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: const [
+          BoxShadow(color: Color(0x10000000), blurRadius: 10, offset: Offset(0, 4)),
+        ],
+      ),
+      child: Row(
+        children: [
+          _StepDot(label: '1', title: '选选项', active: !hasVoted && !isClosed, done: hasVoted || isClosed),
+          _StepLine(done: hasVoted || isClosed),
+          _StepDot(label: '2', title: '好友加入', active: hasVoted && !isClosed, done: isClosed),
+          _StepLine(done: isClosed),
+          _StepDot(label: '3', title: '结束看结果', active: isClosed, done: isClosed),
+        ],
+      ),
+    );
+  }
+}
+
+class _StepDot extends StatelessWidget {
+  const _StepDot({
+    required this.label,
+    required this.title,
+    required this.active,
+    required this.done,
+  });
+
+  final String label;
+  final String title;
+  final bool active;
+  final bool done;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = done
+        ? const Color(0xFF2E7D32)
+        : active
+            ? const Color(0xFFFF8A43)
+            : const Color(0xFFB3B8C2);
+    return Expanded(
+      child: Column(
+        children: [
+          CircleAvatar(
+            radius: 14,
+            backgroundColor: color.withValues(alpha: 0.15),
+            child: Text(label, style: TextStyle(fontWeight: FontWeight.w800, color: color, fontSize: 12)),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: color),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StepLine extends StatelessWidget {
+  const _StepLine({required this.done});
+
+  final bool done;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Container(
+        height: 2,
+        margin: const EdgeInsets.only(bottom: 18),
+        color: done ? const Color(0xFF2E7D32) : const Color(0xFFE0E4EA),
+      ),
+    );
+  }
+}
+
+class _VoteBottomBar extends StatelessWidget {
+  const _VoteBottomBar({
+    required this.isClosed,
+    required this.hasVoted,
+    required this.submitting,
+    required this.onFinish,
+    required this.onViewResult,
+  });
+
+  final bool isClosed;
+  final bool hasVoted;
+  final bool submitting;
+  final VoidCallback onFinish;
+  final VoidCallback onViewResult;
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.06),
+              blurRadius: 12,
+              offset: const Offset(0, -4),
+            ),
+          ],
+        ),
+        child: isClosed
+            ? FilledButton.icon(
+                onPressed: submitting ? null : onViewResult,
+                icon: const Icon(Icons.emoji_events_outlined),
+                label: const Text('查看投票结果与菜谱'),
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFFFF8A43),
+                  minimumSize: const Size.fromHeight(50),
+                ),
+              )
+            : Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (!hasVoted)
+                    const Padding(
+                      padding: EdgeInsets.only(bottom: 8),
+                      child: Text(
+                        '请先点选一个选项完成投票',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Color(0xFF8D919A), fontSize: 12),
+                      ),
+                    ),
+                  FilledButton.icon(
+                    onPressed: submitting ? null : onFinish,
+                    icon: submitting
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                          )
+                        : const Icon(Icons.flag_rounded),
+                    label: const Text('结束投票，查看结果'),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFFFF8A43),
+                      minimumSize: const Size.fromHeight(50),
+                    ),
+                  ),
+                ],
+              ),
       ),
     );
   }
@@ -304,6 +508,13 @@ class _OptionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: selected ? const Color(0xFFFF8A43) : Colors.transparent,
+          width: 2,
+        ),
+      ),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
@@ -314,6 +525,11 @@ class _OptionCard extends StatelessWidget {
             children: [
               Row(
                 children: [
+                  if (selected)
+                    const Padding(
+                      padding: EdgeInsets.only(right: 6),
+                      child: Icon(Icons.check_circle, color: Color(0xFFFF8A43), size: 20),
+                    ),
                   Expanded(
                     child: Text(
                       option.title,

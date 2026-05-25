@@ -83,7 +83,7 @@ class _RecipeResultPageState extends State<RecipeResultPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('推荐菜谱'),
+        title: const Text('投票结果'),
         actions: [
           TextButton(
             onPressed: _loadingRecipes ? null : _loadRecipes,
