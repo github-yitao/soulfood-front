@@ -12,6 +12,7 @@ import 'package:soulfood_front/features/order/orders_page.dart';
 import 'package:soulfood_front/features/preference/preference_page.dart';
 import 'package:soulfood_front/features/profile/appearance_page.dart';
 import 'package:soulfood_front/features/profile/settings_page.dart';
+import 'package:soulfood_front/features/agent/ai_conversations_page.dart';
 import 'package:soulfood_front/features/agent/ai_memory_page.dart';
 import 'package:soulfood_front/features/agent/ai_chat_page.dart';
 import 'package:soulfood_front/features/agent/ai_quick_page.dart';
