@@ -45,6 +45,9 @@ class ChatActionCard {
   final String name;
   final String? subtitle;
 
+  /// vote_room 类型的房间号存在 subtitle
+  String? get roomCode => type == 'vote_room' ? subtitle : null;
+
   factory ChatActionCard.fromJson(Map<String, dynamic> json) {
     return ChatActionCard(
       type: json['type'] as String? ?? '',
@@ -83,12 +86,14 @@ class AiConversationItem {
     required this.id,
     required this.title,
     required this.preview,
+    this.sceneTag,
     this.updatedAt,
   });
 
   final String id;
   final String title;
   final String preview;
+  final String? sceneTag;
   final DateTime? updatedAt;
 
   factory AiConversationItem.fromJson(Map<String, dynamic> json) {
@@ -96,21 +101,31 @@ class AiConversationItem {
       id: json['id'] as String? ?? '',
       title: json['title'] as String? ?? '新对话',
       preview: json['preview'] as String? ?? '',
+      sceneTag: json['sceneTag'] as String?,
       updatedAt: json['updatedAt'] != null ? DateTime.tryParse(json['updatedAt'] as String) : null,
     );
   }
 }
 
 class ChatHistoryMessage {
-  ChatHistoryMessage({required this.role, required this.content});
+  ChatHistoryMessage({
+    required this.role,
+    required this.content,
+    this.cards = const [],
+  });
 
   final String role;
   final String content;
+  final List<ChatActionCard> cards;
 
   factory ChatHistoryMessage.fromJson(Map<String, dynamic> json) {
+    final rawCards = json['cards'] as List<dynamic>? ?? [];
     return ChatHistoryMessage(
       role: json['role'] as String? ?? 'assistant',
       content: json['content'] as String? ?? '',
+      cards: rawCards
+          .map((e) => ChatActionCard.fromJson(e as Map<String, dynamic>))
+          .toList(),
     );
   }
 }
@@ -182,12 +197,33 @@ class AgentRepository {
     await saveConversationId(null);
   }
 
-  Future<List<AiConversationItem>> listConversations() async {
+  Future<List<AiConversationItem>> listConversations({
+    String? keyword,
+    String? sceneTag,
+  }) async {
     return _api.getData<List<AiConversationItem>>(
       '/ai/conversations',
+      query: {
+        if (keyword != null && keyword.isNotEmpty) 'keyword': keyword,
+        if (sceneTag != null && sceneTag.isNotEmpty) 'sceneTag': sceneTag,
+      },
       parser: (json) => (json as List<dynamic>)
           .map((e) => AiConversationItem.fromJson(e as Map<String, dynamic>))
           .toList(),
+    );
+  }
+
+  Future<void> updateConversation(
+    String conversationId, {
+    String? title,
+    String? sceneTag,
+  }) async {
+    await _api.patchVoid(
+      '/ai/conversations/$conversationId',
+      data: {
+        if (title != null && title.isNotEmpty) 'title': title,
+        if (sceneTag != null) 'sceneTag': sceneTag,
+      },
     );
   }
 

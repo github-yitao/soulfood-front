@@ -105,6 +105,15 @@ class ApiClient {
     }
   }
 
+  Future<void> patchVoid(String path, {Object? data}) async {
+    try {
+      final response = await _dio.patch<Map<String, dynamic>>(path, data: data);
+      _ensureOk(response.data);
+    } on DioException catch (e) {
+      throw _toApiException(e);
+    }
+  }
+
   /// NDJSON 流式 POST，每行一个 JSON 对象
   Stream<Map<String, dynamic>> postNdjsonStream(String path, {Object? data}) async* {
     try {

@@ -6,9 +6,12 @@ import 'package:soulfood_front/core/location/location_service.dart';
 import 'package:soulfood_front/features/agent/agent_repository.dart';
 import 'package:soulfood_front/features/agent/ai_conversations_page.dart';
 import 'package:soulfood_front/features/favorite/favorite_repository.dart';
+import 'package:soulfood_front/features/nearby/nearby_repository.dart';
 import 'package:soulfood_front/features/nearby/restaurant_detail_page.dart';
 import 'package:soulfood_front/features/preference/preference_repository.dart';
 import 'package:soulfood_front/features/recipe/recipe_detail_page.dart';
+import 'package:soulfood_front/features/room/room_repository.dart';
+import 'package:soulfood_front/routing/app_routes.dart';
 
 class ChatMessage {
   ChatMessage({
@@ -42,6 +45,8 @@ class _AiChatPageState extends State<AiChatPage> {
   final _agent = AgentRepository();
   final _prefRepo = PreferenceRepository();
   final _favRepo = FavoriteRepository();
+  final _nearbyRepo = NearbyRepository();
+  final _roomRepo = RoomRepository();
   final _inputCtrl = TextEditingController();
   final _scrollCtrl = ScrollController();
 
@@ -124,6 +129,7 @@ class _AiChatPageState extends State<AiChatPage> {
               (m) => ChatMessage(
                 text: m.content,
                 isUser: m.role == 'user',
+                cards: m.cards,
               ),
             ),
           );
@@ -321,6 +327,100 @@ class _AiChatPageState extends State<AiChatPage> {
     );
   }
 
+  void _openCard(ChatActionCard card) {
+    if (card.type == 'recipe') {
+      Navigator.push<void>(
+        context,
+        MaterialPageRoute<void>(
+          builder: (_) => RecipeDetailPage(recipeId: card.id),
+        ),
+      );
+    } else if (card.type == 'restaurant') {
+      Navigator.push<void>(
+        context,
+        MaterialPageRoute<void>(
+          builder: (_) => RestaurantDetailPage(restaurantId: card.id),
+        ),
+      );
+    } else if (card.type == 'vote_room' && card.roomCode != null) {
+      Navigator.pushNamed(context, AppRoutes.vote, arguments: card.roomCode);
+    }
+  }
+
+  Future<void> _markWant(ChatActionCard card) async {
+    if (card.type != 'restaurant') return;
+    try {
+      await _nearbyRepo.markWant(card.id);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('已标记「${card.name}」为想去')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+      }
+    }
+  }
+
+  Future<void> _favoriteItem(ChatActionCard card) async {
+    try {
+      if (card.type == 'recipe') {
+        await _favRepo.addRecipe(title: card.name, recipeId: card.id, category: card.subtitle);
+      } else if (card.type == 'restaurant') {
+        await _favRepo.addRestaurant(
+          restaurantId: card.id,
+          title: card.name,
+          category: card.subtitle,
+        );
+      } else {
+        return;
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('已收藏「${card.name}」')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+      }
+    }
+  }
+
+  void _continueAsk(ChatActionCard card) {
+    _inputCtrl.text = '请详细介绍一下「${card.name}」';
+    _inputCtrl.selection = TextSelection.collapsed(offset: _inputCtrl.text.length);
+  }
+
+  Future<void> _startVoteFromCards(List<ChatActionCard> cards) async {
+    final options = cards
+        .where((c) => c.type == 'restaurant')
+        .map((c) => c.name)
+        .toSet()
+        .toList();
+    if (options.length < 2) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('至少需要 2 家餐厅才能发起投票')),
+        );
+      }
+      return;
+    }
+    try {
+      final room = await _roomRepo.createRoom(
+        topic: 'AI 推荐 · 今晚吃什么',
+        initialOptions: options,
+      );
+      if (!mounted) return;
+      Navigator.pushNamed(context, AppRoutes.vote, arguments: room.code);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+      }
+    }
+  }
+
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_scrollCtrl.hasClients) return;
@@ -366,6 +466,13 @@ class _AiChatPageState extends State<AiChatPage> {
                         thinkingElapsed: msg.streaming && msg.text.isEmpty ? _thinkingElapsed : null,
                         onFavorite: !msg.isUser && !msg.streaming
                             ? () => _favoriteReply(index)
+                            : null,
+                        onOpenCard: _openCard,
+                        onMarkWant: _markWant,
+                        onFavoriteItem: _favoriteItem,
+                        onContinueAsk: _continueAsk,
+                        onStartVote: !msg.isUser && !msg.streaming
+                            ? () => _startVoteFromCards(msg.cards)
                             : null,
                       );
                     },
@@ -444,29 +551,25 @@ class _AiChatPageState extends State<AiChatPage> {
 }
 
 class _Bubble extends StatelessWidget {
-  const _Bubble({required this.message, this.onFavorite, this.thinkingElapsed});
+  const _Bubble({
+    required this.message,
+    this.onFavorite,
+    this.thinkingElapsed,
+    this.onOpenCard,
+    this.onMarkWant,
+    this.onFavoriteItem,
+    this.onContinueAsk,
+    this.onStartVote,
+  });
 
   final ChatMessage message;
   final VoidCallback? onFavorite;
   final double? thinkingElapsed;
-
-  void _openCard(BuildContext context, ChatActionCard card) {
-    if (card.type == 'recipe') {
-      Navigator.push<void>(
-        context,
-        MaterialPageRoute<void>(
-          builder: (_) => RecipeDetailPage(recipeId: card.id),
-        ),
-      );
-    } else if (card.type == 'restaurant') {
-      Navigator.push<void>(
-        context,
-        MaterialPageRoute<void>(
-          builder: (_) => RestaurantDetailPage(restaurantId: card.id),
-        ),
-      );
-    }
-  }
+  final void Function(ChatActionCard card)? onOpenCard;
+  final Future<void> Function(ChatActionCard card)? onMarkWant;
+  final Future<void> Function(ChatActionCard card)? onFavoriteItem;
+  final void Function(ChatActionCard card)? onContinueAsk;
+  final VoidCallback? onStartVote;
 
   @override
   Widget build(BuildContext context) {
@@ -509,20 +612,27 @@ class _Bubble extends StatelessWidget {
               ),
             if (!isUser && message.cards.isNotEmpty) ...[
               const SizedBox(height: 10),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: message.cards.map((card) {
-                  final icon = card.type == 'recipe'
-                      ? Icons.restaurant_menu_outlined
-                      : Icons.storefront_outlined;
-                  return ActionChip(
-                    avatar: Icon(icon, size: 16, color: const Color(0xFF2B5EA8)),
-                    label: Text(card.name),
-                    onPressed: () => _openCard(context, card),
-                  );
-                }).toList(),
-              ),
+              ...message.cards.map((card) => _CardBlock(
+                    card: card,
+                    onOpenCard: onOpenCard,
+                    onMarkWant: onMarkWant,
+                    onFavoriteItem: onFavoriteItem,
+                    onContinueAsk: onContinueAsk,
+                  )),
+              if (onStartVote != null &&
+                  message.cards.where((c) => c.type == 'restaurant').length >= 2)
+                Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: OutlinedButton.icon(
+                    onPressed: onStartVote,
+                    icon: const Icon(Icons.how_to_vote_outlined, size: 16),
+                    label: const Text('用这些店发起投票'),
+                    style: OutlinedButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                      foregroundColor: const Color(0xFF2B5EA8),
+                    ),
+                  ),
+                ),
             ],
             if (!isUser && !message.streaming) ...[
               const SizedBox(height: 4),
@@ -577,6 +687,83 @@ class _Bubble extends StatelessWidget {
   );
 
   static String _formatThinking(double seconds) => '${seconds.toStringAsFixed(2)} 秒';
+}
+
+class _CardBlock extends StatelessWidget {
+  const _CardBlock({
+    required this.card,
+    this.onOpenCard,
+    this.onMarkWant,
+    this.onFavoriteItem,
+    this.onContinueAsk,
+  });
+
+  final ChatActionCard card;
+  final void Function(ChatActionCard card)? onOpenCard;
+  final Future<void> Function(ChatActionCard card)? onMarkWant;
+  final Future<void> Function(ChatActionCard card)? onFavoriteItem;
+  final void Function(ChatActionCard card)? onContinueAsk;
+
+  @override
+  Widget build(BuildContext context) {
+    final icon = switch (card.type) {
+      'recipe' => Icons.restaurant_menu_outlined,
+      'vote_room' => Icons.how_to_vote_outlined,
+      _ => Icons.storefront_outlined,
+    };
+    final label = card.type == 'vote_room' && card.roomCode != null
+        ? '${card.name} · ${card.roomCode}'
+        : card.name;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ActionChip(
+            avatar: Icon(icon, size: 16, color: const Color(0xFF2B5EA8)),
+            label: Text(label),
+            onPressed: onOpenCard != null ? () => onOpenCard!(card) : null,
+          ),
+          if (card.type != 'vote_room')
+            Wrap(
+              spacing: 4,
+              children: [
+                if (card.type == 'restaurant' && onMarkWant != null)
+                  _MiniAction(label: '想去', onTap: () => onMarkWant!(card)),
+                if ((card.type == 'recipe' || card.type == 'restaurant') && onFavoriteItem != null)
+                  _MiniAction(label: '收藏', onTap: () => onFavoriteItem!(card)),
+                if (onContinueAsk != null)
+                  _MiniAction(label: '追问', onTap: () => onContinueAsk!(card)),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MiniAction extends StatelessWidget {
+  const _MiniAction({required this.label, required this.onTap});
+
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextButton(
+      onPressed: onTap,
+      style: TextButton.styleFrom(
+        visualDensity: VisualDensity.compact,
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        minimumSize: Size.zero,
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        foregroundColor: const Color(0xFF8D919A),
+        textStyle: const TextStyle(fontSize: 12),
+      ),
+      child: Text(label),
+    );
+  }
 }
 
 class _ThinkingBubble extends StatelessWidget {
