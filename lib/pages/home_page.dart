@@ -70,6 +70,12 @@ class HomePage extends StatelessWidget {
               ],
             ),
             const Spacer(),
+            TextButton.icon(
+              onPressed: () => Navigator.pushNamed(context, AppRoutes.recipeLibrary),
+              icon: const Icon(Icons.menu_book_outlined, size: 18),
+              label: const Text('浏览菜品库'),
+            ),
+            const SizedBox(height: 8),
           ],
         ),
       ),
@@ -89,7 +95,7 @@ class _AiChatEntryCardState extends State<_AiChatEntryCard> {
   bool _pressed = false;
 
   void _openAiChat() {
-    Navigator.pushNamed(context, AppRoutes.aiChat);
+    Navigator.pushNamed(context, AppRoutes.aiChat, arguments: 'new');
   }
 
   @override

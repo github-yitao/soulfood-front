@@ -6,29 +6,38 @@ class FavoriteItem {
     required this.id,
     required this.targetType,
     required this.title,
+    this.targetId,
     this.subtitle,
     this.category,
     this.score,
     this.duration,
+    this.content,
+    this.conversationId,
   });
 
   final int id;
   final String targetType;
+  final int? targetId;
   final String title;
   final String? subtitle;
   final String? category;
   final String? score;
   final String? duration;
+  final String? content;
+  final String? conversationId;
 
   factory FavoriteItem.fromJson(Map<String, dynamic> json) {
     return FavoriteItem(
       id: (json['id'] as num).toInt(),
       targetType: json['targetType'] as String? ?? 'recipe',
+      targetId: (json['targetId'] as num?)?.toInt(),
       title: json['title'] as String? ?? '',
       subtitle: json['subtitle'] as String?,
       category: json['category'] as String?,
       score: json['score'] as String?,
       duration: json['duration'] as String?,
+      content: json['content'] as String?,
+      conversationId: json['conversationId'] as String?,
     );
   }
 }
@@ -51,6 +60,7 @@ class FavoriteRepository {
 
   Future<FavoriteItem> addRecipe({
     required String title,
+    int? recipeId,
     String? reason,
     String? score,
     String? category,
@@ -61,6 +71,7 @@ class FavoriteRepository {
       data: {
         'targetType': 'recipe',
         'title': title,
+        if (recipeId != null) 'targetId': recipeId,
         if (reason != null) 'subtitle': reason,
         if (score != null) 'score': score,
         if (category != null) 'category': category,
@@ -93,11 +104,32 @@ class FavoriteRepository {
     return FavoriteItem.fromJson(data);
   }
 
+  Future<FavoriteItem> addAiReply({
+    required String content,
+    String? conversationId,
+  }) async {
+    final data = await _api.postData<Map<String, dynamic>>(
+      '/api/v1/favorites',
+      data: {
+        'targetType': 'ai_reply',
+        'title': content.split('\n').firstWhere((l) => l.trim().isNotEmpty, orElse: () => 'AI 回复'),
+        'content': content,
+        if (conversationId != null && conversationId.isNotEmpty) 'conversationId': conversationId,
+      },
+      parser: (json) => json as Map<String, dynamic>,
+    );
+    return FavoriteItem.fromJson(data);
+  }
+
   Future<void> remove(int id) async {
     await _api.deleteVoid('/api/v1/favorites/$id');
   }
 
   Future<void> removeRestaurant(int restaurantId) async {
     await _api.deleteVoid('/api/v1/favorites/target/restaurant/$restaurantId');
+  }
+
+  Future<void> removeRecipe(int recipeId) async {
+    await _api.deleteVoid('/api/v1/favorites/target/recipe/$recipeId');
   }
 }

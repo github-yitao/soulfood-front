@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:soulfood_front/features/agent/agent_repository.dart';
+import 'package:soulfood_front/features/agent/ai_conversations_page.dart';
+import 'package:soulfood_front/features/favorite/favorite_repository.dart';
 import 'package:soulfood_front/features/preference/preference_repository.dart';
 
 class ChatMessage {
@@ -10,16 +12,20 @@ class ChatMessage {
     required this.text,
     required this.isUser,
     this.thinkingSeconds,
+    this.favorited = false,
   });
 
   final String text;
   final bool isUser;
-  /// AI 回复耗时（秒），保留两位小数展示
   final double? thinkingSeconds;
+  final bool favorited;
 }
 
 class AiChatPage extends StatefulWidget {
-  const AiChatPage({super.key});
+  const AiChatPage({super.key, this.conversationId, this.isNewChat = false});
+
+  final String? conversationId;
+  final bool isNewChat;
 
   @override
   State<AiChatPage> createState() => _AiChatPageState();
@@ -28,6 +34,7 @@ class AiChatPage extends StatefulWidget {
 class _AiChatPageState extends State<AiChatPage> {
   final _agent = AgentRepository();
   final _prefRepo = PreferenceRepository();
+  final _favRepo = FavoriteRepository();
   final _inputCtrl = TextEditingController();
   final _scrollCtrl = ScrollController();
 
@@ -35,6 +42,7 @@ class _AiChatPageState extends State<AiChatPage> {
   String? _conversationId;
   bool _sending = false;
   bool _prefLoaded = false;
+  bool _historyLoaded = false;
   String _preferenceText = '';
   double _thinkingElapsed = 0;
   Timer? _thinkingTimer;
@@ -46,26 +54,71 @@ class _AiChatPageState extends State<AiChatPage> {
   }
 
   Future<void> _bootstrap() async {
-    _conversationId = await _agent.loadConversationId();
+    if (widget.isNewChat) {
+      _conversationId = null;
+    } else if (widget.conversationId != null && widget.conversationId!.isNotEmpty) {
+      _conversationId = widget.conversationId;
+    } else {
+      _conversationId = await _agent.loadConversationId();
+    }
+
     try {
       _preferenceText = await _prefRepo.preferenceText();
     } catch (_) {
       _preferenceText = '清淡、家常菜';
     }
+
+    if (_conversationId != null && _conversationId!.isNotEmpty) {
+      await _loadHistory();
+    } else {
+      _addWelcomeMessage();
+    }
+
     if (mounted) {
       setState(() {
         _prefLoaded = true;
-        if (_messages.isEmpty) {
-          _messages.add(
-            ChatMessage(
-              text: '你好，我是 DecideMeal 美食助手。'
-                  '你可以问我「今晚吃什么」「微辣家常菜推荐」等问题。'
-                  '${_preferenceText.isNotEmpty ? '\n\n已读取你的偏好：$_preferenceText' : ''}',
-              isUser: false,
+        _historyLoaded = true;
+      });
+    }
+  }
+
+  void _addWelcomeMessage() {
+    if (_messages.isNotEmpty) return;
+    _messages.add(
+      ChatMessage(
+        text: '你好，我是 DecideMeal 美食助手。'
+            '你可以问我「今晚吃什么」「微辣家常菜推荐」等问题。'
+            '${_preferenceText.isNotEmpty ? '\n\n已读取你的偏好：$_preferenceText' : ''}',
+        isUser: false,
+      ),
+    );
+  }
+
+  Future<void> _loadHistory() async {
+    final id = _conversationId;
+    if (id == null || id.isEmpty) return;
+    try {
+      final history = await _agent.loadHistory(id);
+      if (!mounted) return;
+      setState(() {
+        _messages
+          ..clear()
+          ..addAll(
+            history.map(
+              (m) => ChatMessage(
+                text: m.content,
+                isUser: m.role == 'user',
+              ),
             ),
           );
-        }
       });
+      if (_messages.isEmpty) _addWelcomeMessage();
+      _scrollToBottom();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('加载历史失败：$e')));
+        _addWelcomeMessage();
+      }
     }
   }
 
@@ -122,6 +175,9 @@ class _AiChatPageState extends State<AiChatPage> {
           ),
         );
       });
+      if (!widget.isNewChat && widget.conversationId == null) {
+        await _agent.saveConversationId(reply.conversationId);
+      }
       _scrollToBottom();
     } catch (e) {
       stopwatch.stop();
@@ -140,6 +196,34 @@ class _AiChatPageState extends State<AiChatPage> {
     } finally {
       _stopThinkingTimer();
       if (mounted) setState(() => _sending = false);
+    }
+  }
+
+  Future<void> _favoriteReply(int index) async {
+    final msg = _messages[index];
+    if (msg.isUser || msg.favorited) return;
+    try {
+      await _favRepo.addAiReply(
+        content: msg.text,
+        conversationId: _conversationId,
+      );
+      if (mounted) {
+        setState(() {
+          _messages[index] = ChatMessage(
+            text: msg.text,
+            isUser: false,
+            thinkingSeconds: msg.thinkingSeconds,
+            favorited: true,
+          );
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('已收藏 AI 回复，可在「我的收藏」查看')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+      }
     }
   }
 
@@ -181,6 +265,13 @@ class _AiChatPageState extends State<AiChatPage> {
     });
   }
 
+  void _openConversations() {
+    Navigator.push<void>(
+      context,
+      MaterialPageRoute<void>(builder: (_) => const AiConversationsPage()),
+    );
+  }
+
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_scrollCtrl.hasClients) return;
@@ -199,6 +290,11 @@ class _AiChatPageState extends State<AiChatPage> {
         title: const Text('AI 美食助手'),
         actions: [
           IconButton(
+            onPressed: _openConversations,
+            icon: const Icon(Icons.history),
+            tooltip: '对话记录',
+          ),
+          IconButton(
             onPressed: _sending ? null : _clearChat,
             icon: const Icon(Icons.delete_outline),
             tooltip: '清空对话',
@@ -208,7 +304,7 @@ class _AiChatPageState extends State<AiChatPage> {
       body: Column(
         children: [
           Expanded(
-            child: !_prefLoaded
+            child: !_prefLoaded || !_historyLoaded
                 ? const Center(child: CircularProgressIndicator())
                 : ListView.builder(
                     controller: _scrollCtrl,
@@ -219,7 +315,10 @@ class _AiChatPageState extends State<AiChatPage> {
                         return _ThinkingBubble(elapsed: _thinkingElapsed);
                       }
                       final msg = _messages[index];
-                      return _Bubble(message: msg);
+                      return _Bubble(
+                        message: msg,
+                        onFavorite: !msg.isUser ? () => _favoriteReply(index) : null,
+                      );
                     },
                   ),
           ),
@@ -278,9 +377,10 @@ class _AiChatPageState extends State<AiChatPage> {
 }
 
 class _Bubble extends StatelessWidget {
-  const _Bubble({required this.message});
+  const _Bubble({required this.message, this.onFavorite});
 
   final ChatMessage message;
+  final VoidCallback? onFavorite;
 
   @override
   Widget build(BuildContext context) {
@@ -318,11 +418,32 @@ class _Bubble extends StatelessWidget {
                 selectable: true,
                 styleSheet: _assistantMarkdownStyle,
               ),
-            if (!isUser && message.thinkingSeconds != null) ...[
-              const SizedBox(height: 6),
-              Text(
-                '思考 ${_formatThinking(message.thinkingSeconds!)}',
-                style: const TextStyle(fontSize: 11, color: Color(0xFF8D919A)),
+            if (!isUser) ...[
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  if (message.thinkingSeconds != null)
+                    Text(
+                      '思考 ${_formatThinking(message.thinkingSeconds!)}',
+                      style: const TextStyle(fontSize: 11, color: Color(0xFF8D919A)),
+                    ),
+                  const Spacer(),
+                  if (onFavorite != null)
+                    InkWell(
+                      onTap: message.favorited ? null : onFavorite,
+                      borderRadius: BorderRadius.circular(8),
+                      child: Padding(
+                        padding: const EdgeInsets.all(4),
+                        child: Icon(
+                          message.favorited ? Icons.favorite : Icons.favorite_border,
+                          size: 18,
+                          color: message.favorited
+                              ? const Color(0xFFFF7A22)
+                              : const Color(0xFF8D919A),
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ],
           ],

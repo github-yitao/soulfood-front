@@ -117,6 +117,11 @@ class _ProfilePageState extends State<ProfilePage> {
                       onTap: () => _open(const FavoritesPage()),
                     ),
                     _MenuItem(
+                      icon: Icons.menu_book_outlined,
+                      label: '菜品库',
+                      onTap: () => Navigator.pushNamed(context, AppRoutes.recipeLibrary),
+                    ),
+                    _MenuItem(
                       icon: Icons.restaurant_menu_outlined,
                       label: '我的口味偏好',
                       onTap: () => _open(const PreferencePage()),
@@ -158,9 +163,14 @@ class _ProfilePageState extends State<ProfilePage> {
                 _MenuCard(
                   items: [
                     _MenuItem(
+                      icon: Icons.forum_outlined,
+                      label: 'AI 对话记录',
+                      onTap: () => Navigator.pushNamed(context, AppRoutes.aiConversations),
+                    ),
+                    _MenuItem(
                       icon: Icons.chat_bubble_outline,
-                      label: 'AI 对话',
-                      onTap: () => Navigator.pushNamed(context, AppRoutes.aiChat),
+                      label: 'AI 美食助手',
+                      onTap: () => Navigator.pushNamed(context, AppRoutes.aiChat, arguments: 'new'),
                     ),
                     _MenuItem(
                       icon: Icons.smart_toy_outlined,

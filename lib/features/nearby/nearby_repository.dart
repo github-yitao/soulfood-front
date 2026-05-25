@@ -54,4 +54,11 @@ class NearbyRepository {
   Future<void> markWant(int restaurantId) async {
     await _api.postVoid('/api/v1/restaurants/$restaurantId/want');
   }
+
+  Future<RestaurantItem> getById(int restaurantId) async {
+    return _api.getData<RestaurantItem>(
+      '/api/v1/restaurants/$restaurantId',
+      parser: (json) => RestaurantItem.fromJson(json as Map<String, dynamic>),
+    );
+  }
 }

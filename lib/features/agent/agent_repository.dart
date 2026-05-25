@@ -46,6 +46,43 @@ class ChatReply {
   }
 }
 
+class AiConversationItem {
+  AiConversationItem({
+    required this.id,
+    required this.title,
+    required this.preview,
+    this.updatedAt,
+  });
+
+  final String id;
+  final String title;
+  final String preview;
+  final DateTime? updatedAt;
+
+  factory AiConversationItem.fromJson(Map<String, dynamic> json) {
+    return AiConversationItem(
+      id: json['id'] as String? ?? '',
+      title: json['title'] as String? ?? '新对话',
+      preview: json['preview'] as String? ?? '',
+      updatedAt: json['updatedAt'] != null ? DateTime.tryParse(json['updatedAt'] as String) : null,
+    );
+  }
+}
+
+class ChatHistoryMessage {
+  ChatHistoryMessage({required this.role, required this.content});
+
+  final String role;
+  final String content;
+
+  factory ChatHistoryMessage.fromJson(Map<String, dynamic> json) {
+    return ChatHistoryMessage(
+      role: json['role'] as String? ?? 'assistant',
+      content: json['content'] as String? ?? '',
+    );
+  }
+}
+
 class AgentRepository {
   AgentRepository() : _api = AppServices.I.api;
 
@@ -89,6 +126,24 @@ class AgentRepository {
   Future<void> clearConversation(String conversationId) async {
     await _api.deleteVoid('/ai/chat/$conversationId');
     await saveConversationId(null);
+  }
+
+  Future<List<AiConversationItem>> listConversations() async {
+    return _api.getData<List<AiConversationItem>>(
+      '/ai/conversations',
+      parser: (json) => (json as List<dynamic>)
+          .map((e) => AiConversationItem.fromJson(e as Map<String, dynamic>))
+          .toList(),
+    );
+  }
+
+  Future<List<ChatHistoryMessage>> loadHistory(String conversationId) async {
+    return _api.getData<List<ChatHistoryMessage>>(
+      '/ai/chat/$conversationId/history',
+      parser: (json) => (json as List<dynamic>)
+          .map((e) => ChatHistoryMessage.fromJson(e as Map<String, dynamic>))
+          .toList(),
+    );
   }
 
   Future<List<RecipeItem>> recommendRecipes({
