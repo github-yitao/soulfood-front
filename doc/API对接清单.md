@@ -33,6 +33,8 @@
 { "message": "今晚吃什么", "conversationId": "optional-uuid" }
 ```
 
+对话上下文持久化在 PostgreSQL（`sf_ai_conversation` / `sf_ai_chat_message`），保留最近 20 条消息窗口；重启后端不会丢失。
+
 响应：
 
 ```json

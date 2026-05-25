@@ -37,8 +37,8 @@ class HomePage extends StatelessWidget {
               ],
             ),
             const Spacer(),
-            const Center(child: _AiChatHeroButton()),
-            const SizedBox(height: 34),
+            const Center(child: _AiChatEntryCard()),
+            const SizedBox(height: 28),
             Row(
               children: [
                 Expanded(
@@ -77,15 +77,15 @@ class HomePage extends StatelessWidget {
   }
 }
 
-/// 首页主入口：进入 AI 对话（明确可点击）
-class _AiChatHeroButton extends StatefulWidget {
-  const _AiChatHeroButton();
+/// 首页主入口：圆盘视觉 + 底部明确 CTA，整体可点击进入 AI 对话
+class _AiChatEntryCard extends StatefulWidget {
+  const _AiChatEntryCard();
 
   @override
-  State<_AiChatHeroButton> createState() => _AiChatHeroButtonState();
+  State<_AiChatEntryCard> createState() => _AiChatEntryCardState();
 }
 
-class _AiChatHeroButtonState extends State<_AiChatHeroButton> {
+class _AiChatEntryCardState extends State<_AiChatEntryCard> {
   bool _pressed = false;
 
   void _openAiChat() {
@@ -96,161 +96,98 @@ class _AiChatHeroButtonState extends State<_AiChatHeroButton> {
   Widget build(BuildContext context) {
     return Semantics(
       button: true,
-      label: '开始 AI 对话，帮我决定吃什么',
+      label: '开始 AI 对话',
       child: GestureDetector(
         onTapDown: (_) => setState(() => _pressed = true),
         onTapUp: (_) => setState(() => _pressed = false),
         onTapCancel: () => setState(() => _pressed = false),
         onTap: _openAiChat,
         child: AnimatedScale(
-          scale: _pressed ? 0.96 : 1,
+          scale: _pressed ? 0.98 : 1,
           duration: const Duration(milliseconds: 120),
           child: Container(
             width: 300,
+            padding: const EdgeInsets.fromLTRB(20, 22, 20, 18),
             decoration: BoxDecoration(
-              shape: BoxShape.circle,
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(28),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFFFFD966).withValues(alpha: 0.55),
-                  blurRadius: _pressed ? 8 : 22,
+                  color: Colors.black.withValues(alpha: _pressed ? 0.06 : 0.1),
+                  blurRadius: _pressed ? 12 : 24,
                   offset: Offset(0, _pressed ? 4 : 10),
-                ),
-                const BoxShadow(
-                  color: Color(0x26000000),
-                  blurRadius: 18,
-                  offset: Offset(0, 8),
                 ),
               ],
             ),
-            child: Container(
-              width: 300,
-              height: 300,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: const Color(0xFFFFD966),
-                border: Border.all(color: const Color(0xFFFFB800), width: 3),
-              ),
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  const Positioned(
-                    top: 28,
-                    child: _AiBadge(),
+            child: Column(
+              children: [
+                Container(
+                  width: 200,
+                  height: 200,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      center: Alignment(-0.2, -0.35),
+                      radius: 1.05,
+                      colors: [Color(0xFFFBF0A8), Color(0xFFF6CF57)],
+                    ),
                   ),
-                  Column(
+                  child: const Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const SizedBox(height: 8),
-                      Container(
-                        padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.45),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.chat_bubble_rounded,
-                          size: 40,
-                          color: Color(0xFF18191D),
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      const Text('🍜', style: TextStyle(fontSize: 36)),
-                      const SizedBox(height: 6),
-                      const Text(
-                        'AI 帮我决定',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 34,
-                          height: 1.15,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF18191D),
-                        ),
-                      ),
-                      const SizedBox(height: 4),
+                      Text('🍜', style: TextStyle(fontSize: 56)),
+                      SizedBox(height: 8),
                       Text(
-                        '吃什么',
+                        '帮我决定\n吃什么',
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          fontSize: 34,
-                          height: 1.15,
-                          fontWeight: FontWeight.w800,
-                          color: const Color(0xFF18191D).withValues(alpha: 0.85),
+                          fontSize: 28,
+                          height: 1.12,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: -0.5,
+                          color: Color(0xFF12151D),
                         ),
                       ),
                     ],
                   ),
-                  const Positioned(
-                    bottom: 26,
-                    child: _StartChatChip(),
+                ),
+                const SizedBox(height: 18),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF1E2430), Color(0xFF2D3748)],
+                    ),
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                ],
-              ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.auto_awesome_rounded, color: Color(0xFFFFD966), size: 18),
+                      SizedBox(width: 8),
+                      Text(
+                        '开始 AI 对话',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      SizedBox(width: 4),
+                      Icon(Icons.arrow_forward_rounded, color: Colors.white70, size: 18),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 10),
+                const Text(
+                  '告诉我口味和心情，帮你推荐',
+                  style: TextStyle(fontSize: 12, color: Color(0xFF8D919A)),
+                ),
+              ],
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _AiBadge extends StatelessWidget {
-  const _AiBadge();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1E1F23),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: const Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.auto_awesome, size: 14, color: Color(0xFFFFD966)),
-          SizedBox(width: 4),
-          Text(
-            'AI 对话',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _StartChatChip extends StatelessWidget {
-  const _StartChatChip();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(999),
-        boxShadow: const [
-          BoxShadow(color: Color(0x18000000), blurRadius: 8, offset: Offset(0, 2)),
-        ],
-      ),
-      child: const Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            '点击开始聊天',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w800,
-              color: Color(0xFF18191D),
-            ),
-          ),
-          SizedBox(width: 4),
-          Icon(Icons.arrow_forward_rounded, size: 16, color: Color(0xFF18191D)),
-        ],
       ),
     );
   }
