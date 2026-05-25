@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:soulfood_front/features/agent/agent_repository.dart';
+import 'package:soulfood_front/features/preference/preference_repository.dart';
 
 /// 首页「帮我决定」— 直接 AI 推荐菜谱
 class AiQuickPage extends StatefulWidget {
@@ -11,6 +12,7 @@ class AiQuickPage extends StatefulWidget {
 
 class _AiQuickPageState extends State<AiQuickPage> {
   final _agent = AgentRepository();
+  final _prefRepo = PreferenceRepository();
   List<RecipeItem> _recipes = [];
   bool _loading = true;
 
@@ -23,7 +25,8 @@ class _AiQuickPageState extends State<AiQuickPage> {
   Future<void> _load() async {
     setState(() => _loading = true);
     try {
-      final items = await _agent.recommendRecipes();
+      final pref = await _prefRepo.preferenceText();
+      final items = await _agent.recommendRecipes(preference: pref);
       if (mounted) setState(() => _recipes = items);
     } catch (e) {
       if (mounted) {

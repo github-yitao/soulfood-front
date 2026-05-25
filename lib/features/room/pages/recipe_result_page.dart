@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:soulfood_front/features/agent/agent_repository.dart';
+import 'package:soulfood_front/features/favorite/favorite_repository.dart';
+import 'package:soulfood_front/features/preference/preference_repository.dart';
 import 'package:soulfood_front/features/room/room_models.dart';
 
 /// 投票结果 + AI 菜谱推荐
@@ -21,9 +23,13 @@ class RecipeResultPage extends StatefulWidget {
 
 class _RecipeResultPageState extends State<RecipeResultPage> {
   final _agent = AgentRepository();
+  final _prefRepo = PreferenceRepository();
+  final _favRepo = FavoriteRepository();
   List<RecipeItem> _recipes = [];
   bool _loadingRecipes = true;
   String? _error;
+  String _preferenceText = '清淡、家常菜';
+  final Set<String> _favorited = {};
 
   @override
   void initState() {
@@ -37,8 +43,10 @@ class _RecipeResultPageState extends State<RecipeResultPage> {
       _error = null;
     });
     try {
+      final pref = widget.preference ?? await _prefRepo.preferenceText();
+      _preferenceText = pref;
       final items = await _agent.recommendRecipes(
-        preference: widget.preference ?? '清淡、家常菜',
+        preference: pref,
         voteWinner: widget.voteResult.title,
       );
       if (mounted) setState(() => _recipes = items);
@@ -46,6 +54,28 @@ class _RecipeResultPageState extends State<RecipeResultPage> {
       if (mounted) setState(() => _error = '$e');
     } finally {
       if (mounted) setState(() => _loadingRecipes = false);
+    }
+  }
+
+  Future<void> _favorite(RecipeItem item) async {
+    if (_favorited.contains(item.name)) return;
+    try {
+      await _favRepo.addRecipe(
+        title: item.name,
+        reason: item.reason,
+        score: item.score,
+        category: '家常菜',
+      );
+      if (mounted) {
+        setState(() => _favorited.add(item.name));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('已收藏 ${item.name}')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+      }
     }
   }
 
@@ -97,7 +127,10 @@ class _RecipeResultPageState extends State<RecipeResultPage> {
           const SizedBox(height: 20),
           const Text('AI 推荐菜谱', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
           const SizedBox(height: 4),
-          const Text('根据投票结果与你的偏好生成', style: TextStyle(color: Color(0xFF8D919A), fontSize: 13)),
+          Text(
+            '偏好：$_preferenceText',
+            style: const TextStyle(color: Color(0xFF8D919A), fontSize: 13),
+          ),
           const SizedBox(height: 12),
           if (_loadingRecipes)
             const Padding(
@@ -129,7 +162,19 @@ class _RecipeResultPageState extends State<RecipeResultPage> {
                   ),
                   title: Text(item.name, style: const TextStyle(fontWeight: FontWeight.w700)),
                   subtitle: Text(item.reason, maxLines: 2, overflow: TextOverflow.ellipsis),
-                  trailing: Text('${item.score}分'),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text('${item.score}分'),
+                      IconButton(
+                        icon: Icon(
+                          _favorited.contains(item.name) ? Icons.favorite : Icons.favorite_border,
+                          color: const Color(0xFFFF7A22),
+                        ),
+                        onPressed: () => _favorite(item),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),

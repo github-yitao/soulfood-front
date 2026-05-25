@@ -62,6 +62,20 @@ class ApiClient {
     _ensureOk(response.data);
   }
 
+  Future<T> putData<T>(
+    String path, {
+    Object? data,
+    required T Function(Object? json) parser,
+  }) async {
+    final response = await _dio.put<Map<String, dynamic>>(path, data: data);
+    return _parse(response.data, parser);
+  }
+
+  Future<void> deleteVoid(String path) async {
+    final response = await _dio.delete<Map<String, dynamic>>(path);
+    _ensureOk(response.data);
+  }
+
   T _parse<T>(Map<String, dynamic>? json, T Function(Object? json) parser) {
     final result = _parseResult(json, parser);
     if (result.data == null) {

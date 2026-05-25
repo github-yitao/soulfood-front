@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:soulfood_front/core/app_bootstrap.dart';
 import 'package:soulfood_front/features/agent/ai_quick_page.dart';
+import 'package:soulfood_front/features/favorite/favorites_page.dart';
 import 'package:soulfood_front/features/nearby/nearby_page.dart';
+import 'package:soulfood_front/features/order/orders_page.dart';
+import 'package:soulfood_front/features/preference/preference_page.dart';
 import 'package:soulfood_front/features/room/pages/create_room_page.dart';
 import 'package:soulfood_front/features/room/pages/friends_page.dart';
 import 'package:soulfood_front/features/room/pages/join_room_page.dart';
@@ -77,6 +80,21 @@ class SoulFoodApp extends StatelessWidget {
       case AppRoutes.nearby:
         return MaterialPageRoute<void>(
           builder: (_) => const NearbyPage(),
+          settings: settings,
+        );
+      case AppRoutes.favorites:
+        return MaterialPageRoute<void>(
+          builder: (_) => const FavoritesPage(),
+          settings: settings,
+        );
+      case AppRoutes.preference:
+        return MaterialPageRoute<void>(
+          builder: (_) => const PreferencePage(),
+          settings: settings,
+        );
+      case AppRoutes.orders:
+        return MaterialPageRoute<void>(
+          builder: (_) => const OrdersPage(),
           settings: settings,
         );
       default:

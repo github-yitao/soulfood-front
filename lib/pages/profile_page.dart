@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:soulfood_front/core/app_bootstrap.dart';
 import 'package:soulfood_front/features/auth/auth_repository.dart';
+import 'package:soulfood_front/features/favorite/favorites_page.dart';
+import 'package:soulfood_front/features/order/orders_page.dart';
+import 'package:soulfood_front/features/preference/preference_page.dart';
+import 'package:soulfood_front/routing/app_routes.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -18,6 +22,10 @@ class _ProfilePageState extends State<ProfilePage> {
       _profileFuture = _auth.getProfile();
     });
     await _profileFuture;
+  }
+
+  void _open(Widget page) {
+    Navigator.push<void>(context, MaterialPageRoute<void>(builder: (_) => page));
   }
 
   @override
@@ -84,14 +92,11 @@ class _ProfilePageState extends State<ProfilePage> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              'ID ${profile.userId}',
+                              profile.signature?.isNotEmpty == true
+                                  ? profile.signature!
+                                  : '让选择变得更简单',
                               style: const TextStyle(color: Color(0xFF8D919A)),
                             ),
-                            if (profile.signature != null && profile.signature!.isNotEmpty)
-                              Padding(
-                                padding: const EdgeInsets.only(top: 6),
-                                child: Text(profile.signature!),
-                              ),
                           ],
                         ),
                       ),
@@ -99,8 +104,52 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                _InfoTile(label: '接口', value: 'GET /api/v1/auth/me'),
-                _InfoTile(label: '登录', value: 'POST /api/v1/auth/login/mock'),
+                _MenuCard(
+                  items: [
+                    _MenuItem(
+                      icon: Icons.favorite_outline,
+                      label: '我的收藏',
+                      onTap: () => _open(const FavoritesPage()),
+                    ),
+                    _MenuItem(
+                      icon: Icons.restaurant_menu_outlined,
+                      label: '我的口味偏好',
+                      onTap: () => _open(const PreferencePage()),
+                    ),
+                    _MenuItem(
+                      icon: Icons.receipt_long_outlined,
+                      label: '历史订单',
+                      onTap: () => _open(const OrdersPage()),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                _MenuCard(
+                  items: [
+                    _MenuItem(
+                      icon: Icons.settings_outlined,
+                      label: '设置',
+                      trailing: 'P2',
+                      onTap: () {},
+                    ),
+                    _MenuItem(
+                      icon: Icons.info_outline,
+                      label: '关于我们',
+                      trailing: 'P2',
+                      onTap: () {},
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                _MenuCard(
+                  items: [
+                    _MenuItem(
+                      icon: Icons.smart_toy_outlined,
+                      label: 'AI 快捷推荐',
+                      onTap: () => Navigator.pushNamed(context, AppRoutes.aiQuick),
+                    ),
+                  ],
+                ),
               ],
             ),
           );
@@ -110,28 +159,60 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 }
 
-class _InfoTile extends StatelessWidget {
-  const _InfoTile({required this.label, required this.value});
+class _MenuCard extends StatelessWidget {
+  const _MenuCard({required this.items});
 
-  final String label;
-  final String value;
+  final List<_MenuItem> items;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Row(
-        children: [
-          Text(label, style: const TextStyle(fontWeight: FontWeight.w700)),
-          const Spacer(),
-          Text(value, style: const TextStyle(color: Color(0xFF6F7888), fontSize: 12)),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: const [
+          BoxShadow(color: Color(0x0A000000), blurRadius: 8, offset: Offset(0, 2)),
         ],
       ),
+      child: Column(
+        children: [
+          for (var i = 0; i < items.length; i++) ...[
+            if (i > 0) const Divider(height: 1, indent: 52),
+            items[i],
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _MenuItem extends StatelessWidget {
+  const _MenuItem({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.trailing,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  final String? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      leading: Icon(icon, color: const Color(0xFF5D6677)),
+      title: Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (trailing != null)
+            Text(trailing!, style: const TextStyle(color: Color(0xFFB3B8C2), fontSize: 12)),
+          const Icon(Icons.chevron_right, color: Color(0xFFB3B8C2)),
+        ],
+      ),
+      onTap: onTap,
     );
   }
 }

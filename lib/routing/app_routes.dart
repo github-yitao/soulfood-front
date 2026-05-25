@@ -7,6 +7,9 @@ class AppRoutes {
   static const String recipeResult = '/recipes/result';
   static const String aiQuick = '/ai/quick';
   static const String nearby = '/nearby';
+  static const String favorites = '/favorites';
+  static const String preference = '/preference';
+  static const String orders = '/orders';
 
   const AppRoutes._();
 }
