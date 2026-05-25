@@ -1,10 +1,88 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:soulfood_front/core/app_bootstrap.dart';
+import 'package:soulfood_front/core/settings/appearance_store.dart';
 import 'package:soulfood_front/features/auth/login_page.dart';
 import 'package:soulfood_front/routing/app_routes.dart';
 
-class SettingsPage extends StatelessWidget {
+class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
+
+  @override
+  State<SettingsPage> createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends State<SettingsPage> {
+  static const _keyNotifications = 'settings_notifications_enabled';
+
+  bool _notificationsEnabled = true;
+  String _locationStatus = '检测中…';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPrefs();
+    _refreshLocationStatus();
+    AppServices.I.themeNotifier.addListener(_onThemeChanged);
+  }
+
+  @override
+  void dispose() {
+    AppServices.I.themeNotifier.removeListener(_onThemeChanged);
+    super.dispose();
+  }
+
+  void _onThemeChanged() {
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _loadPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (mounted) {
+      setState(() => _notificationsEnabled = prefs.getBool(_keyNotifications) ?? true);
+    }
+  }
+
+  Future<void> _saveNotifications(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_keyNotifications, value);
+    if (mounted) setState(() => _notificationsEnabled = value);
+  }
+
+  Future<void> _refreshLocationStatus() async {
+    final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      if (mounted) setState(() => _locationStatus = '未开启');
+      return;
+    }
+    final permission = await Geolocator.checkPermission();
+    final label = switch (permission) {
+      LocationPermission.always || LocationPermission.whileInUse => '使用中',
+      LocationPermission.denied => '未授权',
+      LocationPermission.deniedForever => '已拒绝',
+      _ => '未知',
+    };
+    if (mounted) setState(() => _locationStatus = label);
+  }
+
+  Future<void> _handleLocationTap() async {
+    final permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      await Geolocator.requestPermission();
+    } else if (permission == LocationPermission.deniedForever) {
+      await Geolocator.openAppSettings();
+    } else {
+      await Geolocator.openAppSettings();
+    }
+    await _refreshLocationStatus();
+  }
+
+  String _themeModeLabel(AppThemeMode mode) => switch (mode) {
+        AppThemeMode.light => '浅色模式',
+        AppThemeMode.dark => '深色模式',
+        AppThemeMode.system => '跟随系统',
+      };
 
   Future<void> _logout(BuildContext context) async {
     final confirmed = await showDialog<bool>(
@@ -27,44 +105,218 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
+  void _showAccountSecurity() {
+    final username = AppServices.I.session.username ?? '未登录';
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('账号与安全'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('当前账号：$username'),
+            const SizedBox(height: 12),
+            const Text('修改密码、绑定手机等功能即将上线。', style: TextStyle(color: Color(0xFF6F7889), fontSize: 13)),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('知道了')),
+        ],
+      ),
+    );
+  }
+
+  void _showNotifications() {
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('通知设置', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('接收推送通知'),
+                subtitle: const Text('投票结果、好友邀请等消息提醒'),
+                value: _notificationsEnabled,
+                onChanged: (value) {
+                  _saveNotifications(value);
+                  Navigator.pop(ctx);
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showLanguage() {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('语言设置'),
+        content: const Text('当前仅支持简体中文，更多语言即将上线。'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('知道了')),
+        ],
+      ),
+    );
+  }
+
+  void _showHelp() {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('帮助与反馈'),
+        content: const Text(
+          '如有问题或建议，欢迎通过应用商店评价或邮件联系我们：\n\nsupport@decidemeal.app',
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('关闭')),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final username = AppServices.I.session.username;
+    final themeLabel = _themeModeLabel(AppServices.I.themeNotifier.value);
+
     return Scaffold(
       appBar: AppBar(title: const Text('设置')),
       body: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
         children: [
-          if (username != null)
-            ListTile(
-              leading: const Icon(Icons.person_outline),
-              title: const Text('当前账号'),
-              subtitle: Text(username),
-            ),
-          ListTile(
-            leading: const Icon(Icons.palette_outlined),
-            title: const Text('外观设置'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => Navigator.pushNamed(context, AppRoutes.appearance),
+          _SettingsGroup(
+            children: [
+              _SettingsTile(
+                icon: Icons.person_outline,
+                title: '账号与安全',
+                onTap: _showAccountSecurity,
+              ),
+              _SettingsTile(
+                icon: Icons.notifications_outlined,
+                title: '通知设置',
+                onTap: _showNotifications,
+              ),
+              _SettingsTile(
+                icon: Icons.location_on_outlined,
+                title: '位置权限',
+                trailing: _locationStatus,
+                onTap: _handleLocationTap,
+              ),
+              _SettingsTile(
+                icon: Icons.palette_outlined,
+                title: '外观设置',
+                trailing: themeLabel,
+                onTap: () async {
+                  await Navigator.pushNamed(context, AppRoutes.appearance);
+                  if (mounted) setState(() {});
+                },
+              ),
+              _SettingsTile(
+                icon: Icons.language_outlined,
+                title: '语言设置',
+                trailing: '简体中文',
+                onTap: _showLanguage,
+              ),
+            ],
           ),
-          ListTile(
-            leading: const Icon(Icons.info_outline),
-            title: const Text('关于 DecideMeal'),
-            trailing: const Text('v1.0.0'),
-            onTap: () => Navigator.pushNamed(context, AppRoutes.about),
+          const SizedBox(height: 12),
+          _SettingsGroup(
+            children: [
+              _SettingsTile(
+                icon: Icons.help_outline,
+                title: '帮助与反馈',
+                onTap: _showHelp,
+              ),
+              _SettingsTile(
+                icon: Icons.info_outline,
+                title: '关于 DecideMeal',
+                trailing: 'v1.0.0',
+                showChevron: false,
+                onTap: () => Navigator.pushNamed(context, AppRoutes.about),
+              ),
+            ],
           ),
           const SizedBox(height: 24),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: OutlinedButton(
-              onPressed: () => _logout(context),
-              style: OutlinedButton.styleFrom(
-                minimumSize: const Size.fromHeight(48),
-                foregroundColor: const Color(0xFFE05252),
-                side: const BorderSide(color: Color(0xFFE05252)),
-              ),
-              child: const Text('退出登录'),
+          OutlinedButton(
+            onPressed: () => _logout(context),
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size.fromHeight(48),
+              foregroundColor: const Color(0xFFE05252),
+              side: const BorderSide(color: Color(0xFFE05252)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
             ),
+            child: const Text('退出登录', style: TextStyle(fontWeight: FontWeight.w700)),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SettingsGroup extends StatelessWidget {
+  const _SettingsGroup({required this.children});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFEDF1F6)),
+      ),
+      child: Column(
+        children: [
+          for (var i = 0; i < children.length; i++) ...[
+            if (i > 0) const Divider(height: 1, color: Color(0xFFF2F4F8)),
+            children[i],
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _SettingsTile extends StatelessWidget {
+  const _SettingsTile({
+    required this.icon,
+    required this.title,
+    this.trailing,
+    this.showChevron = true,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final String? trailing;
+  final bool showChevron;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      onTap: onTap,
+      leading: Icon(icon, color: const Color(0xFF1F2430)),
+      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF1F2430))),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (trailing != null)
+            Text(trailing!, style: const TextStyle(fontSize: 13, color: Color(0xFF758095))),
+          if (showChevron) ...[
+            if (trailing != null) const SizedBox(width: 4),
+            const Icon(Icons.chevron_right, color: Color(0xFF758095)),
+          ],
         ],
       ),
     );
