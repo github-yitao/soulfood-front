@@ -9,73 +9,114 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 18, 20, 8),
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Column(
+            Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'DecideMeal',
-                  style: TextStyle(
-                    fontSize: 38,
-                    fontWeight: FontWeight.w800,
-                    height: 1.05,
-                    color: Color(0xFF1E1F23),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'DecideMeal',
+                        style: TextStyle(
+                          fontSize: 26,
+                          fontWeight: FontWeight.w800,
+                          height: 1.1,
+                          letterSpacing: -0.2,
+                          color: Color(0xFF1E1F23),
+                        ),
+                      ),
+                      SizedBox(height: 6),
+                      Text(
+                        '帮你更快决定吃什么 🙂',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Color(0xFF747B87),
+                          fontWeight: FontWeight.w500,
+                          height: 1.2,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                SizedBox(height: 8),
-                Text(
-                  '帮你更快决定吃什么 🙂',
-                  style: TextStyle(
-                    fontSize: 22,
-                    color: Color(0xFF4D515A),
-                    fontWeight: FontWeight.w500,
+                Material(
+                  color: Colors.white,
+                  shape: CircleBorder(
+                    side: BorderSide(color: Colors.grey.shade200),
+                  ),
+                  child: InkWell(
+                    customBorder: const CircleBorder(),
+                    onTap: () => Navigator.pushNamed(context, AppRoutes.settings),
+                    child: const Padding(
+                      padding: EdgeInsets.all(6),
+                      child: Icon(Icons.settings_outlined, size: 20, color: Color(0xFF4D515A)),
+                    ),
                   ),
                 ),
               ],
             ),
-            const Spacer(),
-            const Center(child: _AiChatEntryCard()),
-            const SizedBox(height: 28),
+            const Spacer(flex: 2),
+            const Center(child: _HomeHero()),
+            const SizedBox(height: 14),
             Row(
               children: [
                 Expanded(
                   child: FeatureCard(
                     icon: Icons.groups_rounded,
-                    iconColor: Color(0xFFFD7E7E),
+                    iconColor: Color(0xFFFF6268),
                     title: '和朋友一起\n决定',
                     onTap: () => Navigator.pushNamed(context, AppRoutes.friends),
                   ),
                 ),
-                const SizedBox(width: 14),
+                const SizedBox(width: 8),
                 Expanded(
                   child: FeatureCard(
-                    icon: Icons.soup_kitchen_rounded,
-                    iconColor: Color(0xFF38BF7F),
+                    icon: Icons.touch_app_rounded,
+                    iconColor: Color(0xFF3ABC77),
                     title: '附近觅食\n(探店用呀)',
                     onTap: () => Navigator.pushNamed(context, AppRoutes.nearby),
                   ),
                 ),
-                const SizedBox(width: 14),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
                 Expanded(
                   child: FeatureCard(
-                    icon: Icons.place_rounded,
-                    iconColor: Color(0xFF8E7BFF),
+                    icon: Icons.location_on_rounded,
+                    iconColor: Color(0xFF8D6DF2),
                     title: '随机吃什么',
                     onTap: () => Navigator.pushNamed(context, AppRoutes.randomEat),
                   ),
                 ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: FeatureCard(
+                    icon: Icons.auto_awesome_rounded,
+                    iconColor: Color(0xFF2B5EA8),
+                    title: 'AI 推荐\n菜谱',
+                    backgroundColor: Color(0xFFEEF4FF),
+                    borderColor: Color(0xFFB8D4F8),
+                    textColor: Color(0xFF2B5EA8),
+                    onTap: () => Navigator.pushNamed(context, AppRoutes.aiQuick),
+                  ),
+                ),
               ],
             ),
-            const Spacer(),
-            TextButton.icon(
-              onPressed: () => Navigator.pushNamed(context, AppRoutes.recipeLibrary),
-              icon: const Icon(Icons.menu_book_outlined, size: 18),
-              label: const Text('浏览菜品库'),
+            const Spacer(flex: 3),
+            Center(
+              child: TextButton.icon(
+                onPressed: () => Navigator.pushNamed(context, AppRoutes.recipeLibrary),
+                icon: const Icon(Icons.menu_book_outlined, size: 16),
+                label: const Text('浏览菜品库', style: TextStyle(fontSize: 13)),
+                style: TextButton.styleFrom(foregroundColor: const Color(0xFF8D919A)),
+              ),
             ),
-            const SizedBox(height: 8),
           ],
         ),
       ),
@@ -83,15 +124,15 @@ class HomePage extends StatelessWidget {
   }
 }
 
-/// 首页主入口：圆盘视觉 + 底部明确 CTA，整体可点击进入 AI 对话
-class _AiChatEntryCard extends StatefulWidget {
-  const _AiChatEntryCard();
+/// 原型 home-hero：黄圆 + 插画 + 文案，点击进入 AI 对话
+class _HomeHero extends StatefulWidget {
+  const _HomeHero();
 
   @override
-  State<_AiChatEntryCard> createState() => _AiChatEntryCardState();
+  State<_HomeHero> createState() => _HomeHeroState();
 }
 
-class _AiChatEntryCardState extends State<_AiChatEntryCard> {
+class _HomeHeroState extends State<_HomeHero> {
   bool _pressed = false;
 
   void _openAiChat() {
@@ -102,93 +143,48 @@ class _AiChatEntryCardState extends State<_AiChatEntryCard> {
   Widget build(BuildContext context) {
     return Semantics(
       button: true,
-      label: '开始 AI 对话',
+      label: '帮我决定吃什么',
       child: GestureDetector(
         onTapDown: (_) => setState(() => _pressed = true),
         onTapUp: (_) => setState(() => _pressed = false),
         onTapCancel: () => setState(() => _pressed = false),
         onTap: _openAiChat,
         child: AnimatedScale(
-          scale: _pressed ? 0.98 : 1,
+          scale: _pressed ? 0.97 : 1,
           duration: const Duration(milliseconds: 120),
           child: Container(
-            width: 300,
-            padding: const EdgeInsets.fromLTRB(20, 22, 20, 18),
+            width: 236,
+            height: 236,
             decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(28),
+              shape: BoxShape.circle,
+              gradient: const RadialGradient(
+                center: Alignment(0.36, 0.24),
+                radius: 0.78,
+                colors: [Color(0xFFFBF0A8), Color(0xFFF6CF57)],
+              ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: _pressed ? 0.06 : 0.1),
-                  blurRadius: _pressed ? 12 : 24,
-                  offset: Offset(0, _pressed ? 4 : 10),
+                  color: Colors.black.withValues(alpha: _pressed ? 0.03 : 0.04),
+                  blurRadius: 18,
+                  offset: const Offset(0, 12),
                 ),
               ],
             ),
-            child: Column(
+            child: const Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Container(
-                  width: 200,
-                  height: 200,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      center: Alignment(-0.2, -0.35),
-                      radius: 1.05,
-                      colors: [Color(0xFFFBF0A8), Color(0xFFF6CF57)],
-                    ),
+                Text('🍜', style: TextStyle(fontSize: 48)),
+                SizedBox(height: 12),
+                Text(
+                  '帮我决定\n吃什么',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 30,
+                    height: 1.08,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -0.6,
+                    color: Color(0xFF12151D),
                   ),
-                  child: const Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text('🍜', style: TextStyle(fontSize: 56)),
-                      SizedBox(height: 8),
-                      Text(
-                        '帮我决定\n吃什么',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 28,
-                          height: 1.12,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: -0.5,
-                          color: Color(0xFF12151D),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 18),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF1E2430), Color(0xFF2D3748)],
-                    ),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.auto_awesome_rounded, color: Color(0xFFFFD966), size: 18),
-                      SizedBox(width: 8),
-                      Text(
-                        '开始 AI 对话',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      SizedBox(width: 4),
-                      Icon(Icons.arrow_forward_rounded, color: Colors.white70, size: 18),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 10),
-                const Text(
-                  '告诉我口味和心情，帮你推荐',
-                  style: TextStyle(fontSize: 12, color: Color(0xFF8D919A)),
                 ),
               ],
             ),

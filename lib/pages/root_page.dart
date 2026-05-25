@@ -40,8 +40,8 @@ class _RootPageState extends State<RootPage> {
             label: '首页',
           ),
           NavigationDestination(
-            icon: Icon(Icons.access_time_outlined),
-            selectedIcon: Icon(Icons.access_time_filled_rounded),
+            icon: Icon(Icons.history_outlined),
+            selectedIcon: Icon(Icons.history_rounded),
             label: '记录',
           ),
           NavigationDestination(
