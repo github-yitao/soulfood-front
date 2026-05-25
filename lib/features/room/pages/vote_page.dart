@@ -6,6 +6,7 @@ import 'package:soulfood_front/features/room/pages/recipe_result_page.dart';
 import 'package:soulfood_front/features/room/room_models.dart';
 import 'package:soulfood_front/features/room/room_repository.dart';
 import 'package:soulfood_front/features/room/widgets/room_invite_card.dart';
+import 'package:soulfood_front/features/room/widgets/vote_option_thumb.dart';
 
 /// 组局投票：选选项 → 好友加入 → 结束看结果
 class VotePage extends StatefulWidget {
@@ -23,6 +24,7 @@ class _VotePageState extends State<VotePage> {
   RoomDetail? _room;
   bool _loading = true;
   bool _submitting = false;
+  bool _previewLoading = false;
   Timer? _countdownTimer;
   int _remainingSeconds = 0;
 
@@ -213,6 +215,44 @@ class _VotePageState extends State<VotePage> {
     }
   }
 
+  Future<void> _previewRecipes() async {
+    final room = _room;
+    if (room == null || room.options.isEmpty) return;
+
+    final RoomOption target;
+    if (room.myVoteOptionId != null) {
+      target = room.options.firstWhere((o) => o.id == room.myVoteOptionId);
+    } else if (room.options.any((o) => o.voteCount > 0)) {
+      target = room.options.reduce((a, b) => a.voteCount >= b.voteCount ? a : b);
+    } else {
+      target = room.options.first;
+    }
+
+    final preview = RoomResult(
+      optionId: target.id,
+      title: target.title,
+      voteCount: target.voteCount,
+      percent: target.percent,
+    );
+
+    setState(() => _previewLoading = true);
+    try {
+      if (!mounted) return;
+      await Navigator.push<void>(
+        context,
+        MaterialPageRoute<void>(
+          builder: (_) => RecipeResultPage(
+            voteResult: preview,
+            roomCode: widget.roomCode,
+            isPreview: !room.isClosed,
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _previewLoading = false);
+    }
+  }
+
   Future<void> _viewResult() async {
     final room = _room;
     if (room == null) return;
@@ -288,6 +328,21 @@ class _VotePageState extends State<VotePage> {
                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
                     children: [
                       _VoteFlowSteps(isClosed: isClosed, hasVoted: hasVoted),
+                      const SizedBox(height: 12),
+                      Text(
+                        room.topic,
+                        style: const TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.w800,
+                          height: 1.15,
+                          color: Color(0xFF1E1F23),
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        '房间号：${room.code}　　${room.participantCount} 人参与',
+                        style: const TextStyle(fontSize: 13, color: Color(0xFF8D919A)),
+                      ),
                       const SizedBox(height: 12),
                       if (!isClosed && _remainingSeconds > 0)
                         Container(
@@ -399,12 +454,34 @@ class _VotePageState extends State<VotePage> {
                           onPressed: _submitting ? null : _aiSuggest,
                           icon: const Icon(Icons.auto_awesome),
                           label: const Text('AI 补选项'),
+                          style: OutlinedButton.styleFrom(
+                            minimumSize: const Size.fromHeight(44),
+                            foregroundColor: const Color(0xFF2B5EA8),
+                            side: const BorderSide(color: Color(0xFFCFE0FF)),
+                            backgroundColor: const Color(0xFFF0F6FF),
+                          ),
                         ),
                         const SizedBox(height: 8),
                         OutlinedButton.icon(
                           onPressed: _submitting ? null : _addOption,
                           icon: const Icon(Icons.add),
                           label: const Text('手动添加选项'),
+                        ),
+                        const SizedBox(height: 12),
+                        FilledButton.icon(
+                          onPressed: (_submitting || _previewLoading) ? null : _previewRecipes,
+                          icon: _previewLoading
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                )
+                              : const Icon(Icons.restaurant_menu_outlined),
+                          label: const Text('生成菜谱（Agent）'),
+                          style: FilledButton.styleFrom(
+                            minimumSize: const Size.fromHeight(48),
+                            backgroundColor: const Color(0xFFFF8A43),
+                          ),
                         ),
                       ],
                     ],
@@ -589,53 +666,81 @@ class _OptionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    final meta = option.source == 'ai'
+        ? 'AI 建议 · ${option.voteCount}票'
+        : '${option.voteCount} 票';
+
+    return Container(
       margin: const EdgeInsets.only(bottom: 10),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: selected ? const Color(0xFFFF8A43) : Colors.transparent,
-          width: 2,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: selected ? const Color(0xFFFF8A43) : const Color(0xFFEFF2F6),
+          width: selected ? 2 : 1,
         ),
+        boxShadow: const [
+          BoxShadow(color: Color(0x08000000), blurRadius: 8, offset: Offset(0, 3)),
+        ],
       ),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         child: Padding(
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.all(10),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
-                  if (selected)
-                    const Padding(
-                      padding: EdgeInsets.only(right: 6),
-                      child: Icon(Icons.check_circle, color: Color(0xFFFF8A43), size: 20),
-                    ),
+                  VoteOptionThumb(title: option.title, source: option.source),
+                  const SizedBox(width: 10),
                   Expanded(
-                    child: Text(
-                      option.title,
-                      style: TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w700,
-                        color: selected ? const Color(0xFFD86A00) : const Color(0xFF1E1F23),
-                      ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            if (selected)
+                              const Padding(
+                                padding: EdgeInsets.only(right: 4),
+                                child: Icon(Icons.check_circle, color: Color(0xFFFF8A43), size: 18),
+                              ),
+                            Expanded(
+                              child: Text(
+                                option.title,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                  color: selected ? const Color(0xFFD86A00) : const Color(0xFF1E1F23),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 2),
+                        Text(meta, style: const TextStyle(fontSize: 12, color: Color(0xFF8D919A))),
+                      ],
                     ),
                   ),
-                  Text('${option.percent}%'),
+                  Text(
+                    option.voteCount > 0 ? '${option.percent}%' : '—',
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+                  ),
                 ],
               ),
-              const SizedBox(height: 6),
-              LinearProgressIndicator(
-                value: option.percent / 100,
-                backgroundColor: const Color(0xFFEFF2F6),
-                color: const Color(0xFFFF8A43),
-                minHeight: 8,
-                borderRadius: BorderRadius.circular(4),
-              ),
-              const SizedBox(height: 4),
-              Text('${option.voteCount} 票', style: const TextStyle(color: Color(0xFF8D919A), fontSize: 12)),
+              if (option.voteCount > 0) ...[
+                const SizedBox(height: 8),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: option.percent / 100,
+                    backgroundColor: const Color(0xFFEFF2F6),
+                    color: const Color(0xFFFF8A43),
+                    minHeight: 8,
+                  ),
+                ),
+              ],
             ],
           ),
         ),

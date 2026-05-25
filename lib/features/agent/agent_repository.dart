@@ -18,6 +18,13 @@ class RecipeItem {
   }
 }
 
+class RecommendRecipesResult {
+  RecommendRecipesResult({required this.items, required this.fromApi});
+
+  final List<RecipeItem> items;
+  final bool fromApi;
+}
+
 class RandomPickResult {
   RandomPickResult({required this.name, required this.reason});
 
@@ -273,6 +280,19 @@ class AgentRepository {
     String? voteWinner,
     int? participants,
   }) async {
+    final result = await recommendRecipesDetailed(
+      preference: preference,
+      voteWinner: voteWinner,
+      participants: participants,
+    );
+    return result.items;
+  }
+
+  Future<RecommendRecipesResult> recommendRecipesDetailed({
+    String preference = '清淡、家常菜',
+    String? voteWinner,
+    int? participants,
+  }) async {
     try {
       final data = await _api.postData<Map<String, dynamic>>(
         '/ai/recommend/recipes',
@@ -285,17 +305,23 @@ class AgentRepository {
       );
       final items = data['items'] as List<dynamic>? ?? [];
       if (items.isNotEmpty) {
-        return items
-            .map((e) => RecipeItem.fromJson(e as Map<String, dynamic>))
-            .toList();
+        return RecommendRecipesResult(
+          items: items.map((e) => RecipeItem.fromJson(e as Map<String, dynamic>)).toList(),
+          fromApi: true,
+        );
       }
       final raw = data['rawReply'] as String? ?? '';
       final parsed = _parseRecipesFromText(raw);
-      if (parsed.isNotEmpty) return parsed;
+      if (parsed.isNotEmpty) {
+        return RecommendRecipesResult(items: parsed, fromApi: true);
+      }
     } catch (_) {
       // fallback below
     }
-    return _fallbackRecipes(voteWinner);
+    return RecommendRecipesResult(
+      items: _fallbackRecipes(voteWinner),
+      fromApi: false,
+    );
   }
 
   List<RecipeItem> _fallbackRecipes(String? voteWinner) {
