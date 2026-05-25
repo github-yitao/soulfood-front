@@ -41,6 +41,17 @@
 
 见此前章节：房间、餐厅、偏好、收藏、订单、邀请、设置等均已对接。
 
+## 好友
+
+| 方法 | 路径 | Flutter |
+|------|------|---------|
+| GET | `/api/v1/friends` | `FriendsPage` 好友列表 |
+| POST | `/api/v1/friends` | `FriendsPage` 添加好友（body: `{ "inviteCode": "DM123456" }`） |
+| GET | `/api/v1/rooms/friends` | `FriendsPage` 好友进行中的房间 |
+
+注册时填写 `inviteCode` 会自动与邀请人双向绑定好友（`source=invite`）。
+主动添加好友使用对方在个人页「邀请好友」中的邀请码（`source=manual`）。
+
 ## 环境变量（后端）
 
 | 变量 | 说明 |

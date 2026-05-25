@@ -78,3 +78,35 @@ class RoomResult {
     );
   }
 }
+
+class FriendRoom {
+  FriendRoom({
+    required this.code,
+    required this.topic,
+    required this.status,
+    required this.ownerId,
+    required this.ownerNickname,
+    required this.participantCount,
+    required this.createdAt,
+  });
+
+  final String code;
+  final String topic;
+  final String status;
+  final int ownerId;
+  final String ownerNickname;
+  final int participantCount;
+  final String createdAt;
+
+  factory FriendRoom.fromJson(Map<String, dynamic> json) {
+    return FriendRoom(
+      code: json['code'] as String? ?? '',
+      topic: json['topic'] as String? ?? '',
+      status: json['status'] as String? ?? '',
+      ownerId: (json['ownerId'] as num?)?.toInt() ?? 0,
+      ownerNickname: json['ownerNickname'] as String? ?? '好友',
+      participantCount: (json['participantCount'] as num?)?.toInt() ?? 0,
+      createdAt: json['createdAt'] as String? ?? '',
+    );
+  }
+}

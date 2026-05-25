@@ -64,4 +64,12 @@ class RoomRepository {
       parser: (json) => RoomResult.fromJson(json as Map<String, dynamic>),
     );
   }
+
+  Future<List<FriendRoom>> listFriendRooms() async {
+    final data = await _api.getData<List<dynamic>>(
+      '/api/v1/rooms/friends',
+      parser: (json) => json as List<dynamic>,
+    );
+    return data.map((e) => FriendRoom.fromJson(e as Map<String, dynamic>)).toList();
+  }
 }

@@ -1,12 +1,20 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:soulfood_front/features/agent/agent_repository.dart';
 import 'package:soulfood_front/features/preference/preference_repository.dart';
 
 class ChatMessage {
-  ChatMessage({required this.text, required this.isUser});
+  ChatMessage({
+    required this.text,
+    required this.isUser,
+    this.thinkingSeconds,
+  });
 
   final String text;
   final bool isUser;
+  /// AI 回复耗时（秒），保留两位小数展示
+  final double? thinkingSeconds;
 }
 
 class AiChatPage extends StatefulWidget {
@@ -27,6 +35,8 @@ class _AiChatPageState extends State<AiChatPage> {
   bool _sending = false;
   bool _prefLoaded = false;
   String _preferenceText = '';
+  double _thinkingElapsed = 0;
+  Timer? _thinkingTimer;
 
   @override
   void initState() {
@@ -60,9 +70,24 @@ class _AiChatPageState extends State<AiChatPage> {
 
   @override
   void dispose() {
+    _thinkingTimer?.cancel();
     _inputCtrl.dispose();
     _scrollCtrl.dispose();
     super.dispose();
+  }
+
+  void _startThinkingTimer(Stopwatch stopwatch) {
+    _thinkingElapsed = 0;
+    _thinkingTimer?.cancel();
+    _thinkingTimer = Timer.periodic(const Duration(milliseconds: 50), (_) {
+      if (!mounted) return;
+      setState(() => _thinkingElapsed = stopwatch.elapsedMilliseconds / 1000);
+    });
+  }
+
+  void _stopThinkingTimer() {
+    _thinkingTimer?.cancel();
+    _thinkingTimer = null;
   }
 
   Future<void> _send() async {
@@ -74,6 +99,8 @@ class _AiChatPageState extends State<AiChatPage> {
       _messages.add(ChatMessage(text: text, isUser: true));
       _inputCtrl.clear();
     });
+    final stopwatch = Stopwatch()..start();
+    _startThinkingTimer(stopwatch);
     _scrollToBottom();
 
     try {
@@ -81,19 +108,36 @@ class _AiChatPageState extends State<AiChatPage> {
         message: text,
         conversationId: _conversationId,
       );
+      stopwatch.stop();
+      final thinkingSeconds = stopwatch.elapsedMilliseconds / 1000;
       if (!mounted) return;
       setState(() {
         _conversationId = reply.conversationId;
-        _messages.add(ChatMessage(text: reply.reply, isUser: false));
+        _messages.add(
+          ChatMessage(
+            text: reply.reply,
+            isUser: false,
+            thinkingSeconds: thinkingSeconds,
+          ),
+        );
       });
       _scrollToBottom();
     } catch (e) {
+      stopwatch.stop();
+      final thinkingSeconds = stopwatch.elapsedMilliseconds / 1000;
       if (mounted) {
         setState(() {
-          _messages.add(ChatMessage(text: '发送失败：$e', isUser: false));
+          _messages.add(
+            ChatMessage(
+              text: '发送失败：$e',
+              isUser: false,
+              thinkingSeconds: thinkingSeconds,
+            ),
+          );
         });
       }
     } finally {
+      _stopThinkingTimer();
       if (mounted) setState(() => _sending = false);
     }
   }
@@ -168,8 +212,11 @@ class _AiChatPageState extends State<AiChatPage> {
                 : ListView.builder(
                     controller: _scrollCtrl,
                     padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-                    itemCount: _messages.length,
+                    itemCount: _messages.length + (_sending ? 1 : 0),
                     itemBuilder: (context, index) {
+                      if (_sending && index == _messages.length) {
+                        return _ThinkingBubble(elapsed: _thinkingElapsed);
+                      }
                       final msg = _messages[index];
                       return _Bubble(message: msg);
                     },
@@ -257,12 +304,68 @@ class _Bubble extends StatelessWidget {
             BoxShadow(color: Color(0x0F000000), blurRadius: 6, offset: Offset(0, 2)),
           ],
         ),
-        child: Text(
-          message.text,
-          style: TextStyle(
-            color: isUser ? Colors.white : const Color(0xFF1E1F23),
-            height: 1.45,
-          ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              message.text,
+              style: TextStyle(
+                color: isUser ? Colors.white : const Color(0xFF1E1F23),
+                height: 1.45,
+              ),
+            ),
+            if (!isUser && message.thinkingSeconds != null) ...[
+              const SizedBox(height: 6),
+              Text(
+                '思考 ${_formatThinking(message.thinkingSeconds!)}',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: isUser ? Colors.white70 : const Color(0xFF8D919A),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  static String _formatThinking(double seconds) => '${seconds.toStringAsFixed(2)} 秒';
+}
+
+class _ThinkingBubble extends StatelessWidget {
+  const _ThinkingBubble({required this.elapsed});
+
+  final double elapsed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: const [
+            BoxShadow(color: Color(0x0F000000), blurRadius: 6, offset: Offset(0, 2)),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(
+              width: 14,
+              height: 14,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              '思考中 ${elapsed.toStringAsFixed(2)} 秒',
+              style: const TextStyle(color: Color(0xFF8D919A), fontSize: 13),
+            ),
+          ],
         ),
       ),
     );
