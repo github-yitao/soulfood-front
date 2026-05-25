@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:soulfood_front/features/agent/agent_repository.dart';
 import 'package:soulfood_front/features/preference/preference_repository.dart';
 
@@ -284,14 +285,13 @@ class _Bubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isUser = message.isUser;
+    final maxWidth = MediaQuery.sizeOf(context).width * (isUser ? 0.78 : 0.92);
     return Align(
       alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        constraints: BoxConstraints(
-          maxWidth: MediaQuery.sizeOf(context).width * 0.78,
-        ),
+        constraints: BoxConstraints(maxWidth: maxWidth),
         decoration: BoxDecoration(
           color: isUser ? const Color(0xFFFF8A43) : Colors.white,
           borderRadius: BorderRadius.only(
@@ -307,21 +307,22 @@ class _Bubble extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              message.text,
-              style: TextStyle(
-                color: isUser ? Colors.white : const Color(0xFF1E1F23),
-                height: 1.45,
+            if (isUser)
+              Text(
+                message.text,
+                style: const TextStyle(color: Colors.white, height: 1.45),
+              )
+            else
+              MarkdownBody(
+                data: message.text,
+                selectable: true,
+                styleSheet: _assistantMarkdownStyle,
               ),
-            ),
             if (!isUser && message.thinkingSeconds != null) ...[
               const SizedBox(height: 6),
               Text(
                 '思考 ${_formatThinking(message.thinkingSeconds!)}',
-                style: TextStyle(
-                  fontSize: 11,
-                  color: isUser ? Colors.white70 : const Color(0xFF8D919A),
-                ),
+                style: const TextStyle(fontSize: 11, color: Color(0xFF8D919A)),
               ),
             ],
           ],
@@ -329,6 +330,24 @@ class _Bubble extends StatelessWidget {
       ),
     );
   }
+
+  static final MarkdownStyleSheet _assistantMarkdownStyle = MarkdownStyleSheet(
+    p: const TextStyle(color: Color(0xFF1E1F23), height: 1.5, fontSize: 15),
+    strong: const TextStyle(
+      fontWeight: FontWeight.w800,
+      color: Color(0xFF1E1F23),
+    ),
+    em: const TextStyle(fontStyle: FontStyle.italic, color: Color(0xFF1E1F23)),
+    h1: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Color(0xFF1E1F23)),
+    h2: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Color(0xFF1E1F23)),
+    h3: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFF1E1F23)),
+    listBullet: const TextStyle(color: Color(0xFF1E1F23), fontSize: 15),
+    listIndent: 22,
+    blockSpacing: 10,
+    horizontalRuleDecoration: BoxDecoration(
+      border: Border(top: BorderSide(color: Color(0xFFE8EBF0))),
+    ),
+  );
 
   static String _formatThinking(double seconds) => '${seconds.toStringAsFixed(2)} 秒';
 }
