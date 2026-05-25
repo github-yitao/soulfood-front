@@ -46,7 +46,8 @@ class RoomInviteCard extends StatelessWidget {
             const SizedBox(height: 4),
             const Text(
               '① 首页 → 和朋友一起决定 → 加入房间\n'
-              '② 首页 → 和朋友一起决定 → 好友的房间（需先加好友）',
+              '② 首页 → 和朋友一起决定 → 好友的房间（需先加好友）\n'
+              '③ 创建后 30 分钟内有效，超时自动结束',
               style: TextStyle(fontSize: 12, color: Color(0xFF6F7888), height: 1.5),
             ),
           ],

@@ -213,7 +213,8 @@ class _VoteFlowHint extends StatelessWidget {
           Text(
             '1. 创建房间 → 复制房间号发给好友\n'
             '2. 大家进入投票页点选选项\n'
-            '3. 底部点「结束投票，查看结果」→ 看胜出项 + AI 菜谱',
+            '3. 底部点「结束投票，查看结果」→ 看胜出项 + AI 菜谱\n'
+            '（创建后 30 分钟内有效，超时自动结束）',
             style: TextStyle(fontSize: 12, color: Color(0xFF6F7888), height: 1.55),
           ),
         ],

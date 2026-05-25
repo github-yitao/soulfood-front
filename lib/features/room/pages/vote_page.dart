@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:soulfood_front/features/agent/agent_repository.dart';
 import 'package:soulfood_front/features/room/pages/recipe_result_page.dart';
@@ -21,6 +23,8 @@ class _VotePageState extends State<VotePage> {
   RoomDetail? _room;
   bool _loading = true;
   bool _submitting = false;
+  Timer? _countdownTimer;
+  int _remainingSeconds = 0;
 
   @override
   void initState() {
@@ -28,12 +32,49 @@ class _VotePageState extends State<VotePage> {
     _enterRoom();
   }
 
+  @override
+  void dispose() {
+    _countdownTimer?.cancel();
+    super.dispose();
+  }
+
+  void _syncCountdown(RoomDetail room) {
+    _remainingSeconds = room.remainingSeconds;
+    _countdownTimer?.cancel();
+    if (room.isClosed || _remainingSeconds <= 0) {
+      return;
+    }
+    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!mounted) return;
+      if (_remainingSeconds <= 1) {
+        _countdownTimer?.cancel();
+        _enterRoom();
+        return;
+      }
+      setState(() => _remainingSeconds -= 1);
+    });
+  }
+
+  String get _remainingLabel {
+    final m = _remainingSeconds ~/ 60;
+    final s = _remainingSeconds % 60;
+    return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
+  }
+
   Future<void> _enterRoom() async {
     setState(() => _loading = true);
     try {
       await _repo.joinRoom(widget.roomCode);
       final room = await _repo.getRoom(widget.roomCode);
-      if (mounted) setState(() => _room = room);
+      if (mounted) {
+        setState(() => _room = room);
+        _syncCountdown(room);
+        if (room.isClosed && room.remainingSeconds == 0) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('投票已超时自动结束（30分钟）')),
+          );
+        }
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
@@ -49,6 +90,7 @@ class _VotePageState extends State<VotePage> {
       final room = await _repo.vote(widget.roomCode, optionId);
       if (!mounted) return;
       setState(() => _room = room);
+      _syncCountdown(room);
       final picked = room.options.where((o) => o.id == optionId).map((o) => o.title).firstOrNull;
       if (picked != null) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -247,6 +289,47 @@ class _VotePageState extends State<VotePage> {
                     children: [
                       _VoteFlowSteps(isClosed: isClosed, hasVoted: hasVoted),
                       const SizedBox(height: 12),
+                      if (!isClosed && _remainingSeconds > 0)
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                          margin: const EdgeInsets.only(bottom: 8),
+                          decoration: BoxDecoration(
+                            color: _remainingSeconds <= 300
+                                ? const Color(0xFFFFF5F5)
+                                : const Color(0xFFF0F7FF),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: _remainingSeconds <= 300
+                                  ? const Color(0xFFFFD6D6)
+                                  : const Color(0xFFB8D4F0),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.timer_outlined,
+                                size: 18,
+                                color: _remainingSeconds <= 300
+                                    ? const Color(0xFFB42318)
+                                    : const Color(0xFF2B5EA8),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  '剩余 $_remainingLabel · 超时后自动结束（最长30分钟）',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: _remainingSeconds <= 300
+                                        ? const Color(0xFFB42318)
+                                        : const Color(0xFF2B5EA8),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       if (!isClosed) RoomInviteCard(roomCode: room.code, compact: true),
                       if (isClosed)
                         Container(
@@ -264,7 +347,7 @@ class _VotePageState extends State<VotePage> {
                               SizedBox(width: 8),
                               Expanded(
                                 child: Text(
-                                  '投票已结束，点击下方按钮查看结果',
+                                  '投票已结束（手动结束或超过30分钟自动结束）',
                                   style: TextStyle(
                                     fontWeight: FontWeight.w700,
                                     color: Color(0xFF2E7D32),

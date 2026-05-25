@@ -32,14 +32,22 @@ class RoomDetail {
     required this.participantCount,
     required this.myVoteOptionId,
     required this.options,
+    this.durationMin,
+    this.expiresAt,
+    this.remainingSeconds = 0,
   });
 
   final String code;
   final String topic;
   final String status;
   final int participantCount;
+  final int? durationMin;
   final int? myVoteOptionId;
+  final String? expiresAt;
+  final int remainingSeconds;
   final List<RoomOption> options;
+
+  bool get isClosed => status == 'closed';
 
   factory RoomDetail.fromJson(Map<String, dynamic> json) {
     final list = json['options'] as List<dynamic>? ?? [];
@@ -48,7 +56,10 @@ class RoomDetail {
       topic: json['topic'] as String? ?? '',
       status: json['status'] as String? ?? '',
       participantCount: (json['participantCount'] as num?)?.toInt() ?? 0,
+      durationMin: (json['durationMin'] as num?)?.toInt(),
       myVoteOptionId: (json['myVoteOptionId'] as num?)?.toInt(),
+      expiresAt: json['expiresAt'] as String?,
+      remainingSeconds: (json['remainingSeconds'] as num?)?.toInt() ?? 0,
       options: list
           .map((e) => RoomOption.fromJson(e as Map<String, dynamic>))
           .toList(),
