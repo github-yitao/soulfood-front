@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:soulfood_front/core/theme/app_semantic_colors.dart';
 import 'package:soulfood_front/features/room/room_deep_link.dart';
 import 'package:soulfood_front/l10n/app_localizations.dart';
+import 'package:soulfood_front/pages/discover_page.dart';
 import 'package:soulfood_front/pages/home_page.dart';
 import 'package:soulfood_front/pages/profile_page.dart';
 import 'package:soulfood_front/pages/records_page.dart';
@@ -26,6 +27,7 @@ class _RootPageState extends State<RootPage> {
 
   static const List<Widget> _tabs = <Widget>[
     HomePage(),
+    DiscoverPage(),
     RecordsPage(),
     ProfilePage(),
   ];
@@ -40,18 +42,22 @@ class _RootPageState extends State<RootPage> {
       bottomNavigationBar: NavigationBar(
         selectedIndex: _selectedIndex,
         onDestinationSelected: (int index) {
-          setState(() {
-            _selectedIndex = index;
-          });
+          setState(() => _selectedIndex = index);
         },
         height: 84,
         backgroundColor: colors.navBackground,
         indicatorColor: colors.navIndicator,
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
         destinations: [
           NavigationDestination(
             icon: const Icon(Icons.home_outlined),
             selectedIcon: const Icon(Icons.home_rounded),
             label: l10n.tabHome,
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.restaurant_outlined),
+            selectedIcon: const Icon(Icons.restaurant_rounded),
+            label: l10n.tabDiscover,
           ),
           NavigationDestination(
             icon: const Icon(Icons.history_outlined),

@@ -2,6 +2,7 @@
   "@@locale": "zh",
   "appTitle": "DecideMeal",
   "tabHome": "首页",
+  "tabDiscover": "觅食",
   "tabRecords": "记录",
   "tabMine": "我的",
   "settings": "设置",

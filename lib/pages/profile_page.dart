@@ -3,9 +3,7 @@ import 'package:soulfood_front/core/app_bootstrap.dart';
 import 'package:soulfood_front/core/theme/app_semantic_colors.dart';
 import 'package:soulfood_front/core/theme/theme_widgets.dart';
 import 'package:soulfood_front/features/auth/auth_repository.dart';
-import 'package:soulfood_front/features/favorite/favorites_page.dart';
-import 'package:soulfood_front/features/notification/notification_repository.dart';
-import 'package:soulfood_front/features/order/orders_page.dart';
+import 'package:soulfood_front/features/friend/my_friends_page.dart';
 import 'package:soulfood_front/features/preference/preference_page.dart';
 import 'package:soulfood_front/features/profile/profile_edit_page.dart';
 import 'package:soulfood_front/routing/app_routes.dart';
@@ -19,31 +17,13 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   final _auth = AuthRepository(AppServices.I.api, AppServices.I.session);
-  final _notificationRepo = NotificationRepository(AppServices.I.api);
   late Future<UserProfile> _profileFuture = _auth.getProfile();
-  int _unreadNotifications = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadUnreadCount();
-  }
-
-  Future<void> _loadUnreadCount() async {
-    try {
-      final overview = await _notificationRepo.load();
-      if (mounted) setState(() => _unreadNotifications = overview.unreadCount);
-    } catch (_) {
-      // 未读数加载失败不影响主流程
-    }
-  }
 
   Future<void> _reload() async {
     setState(() {
       _profileFuture = _auth.getProfile();
     });
     await _profileFuture;
-    await _loadUnreadCount();
   }
 
   void _open(Widget page) {
@@ -84,7 +64,12 @@ class _ProfilePageState extends State<ProfilePage> {
                   '我的',
                   style: TextStyle(fontSize: 36, fontWeight: FontWeight.w800, color: colors.textPrimary),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 8),
+                Text(
+                  '账号与偏好',
+                  style: TextStyle(fontSize: 13, color: colors.textSecondary),
+                ),
+                const SizedBox(height: 20),
                 Container(
                   padding: const EdgeInsets.all(18),
                   decoration: BoxDecoration(
@@ -173,44 +158,15 @@ class _ProfilePageState extends State<ProfilePage> {
                   colors: colors,
                   items: [
                     _MenuItem(
-                      icon: Icons.favorite_outline,
-                      label: '我的收藏',
-                      onTap: () => _open(const FavoritesPage()),
-                    ),
-                    _MenuItem(
-                      icon: Icons.menu_book_outlined,
-                      label: '菜品库',
-                      onTap: () => Navigator.pushNamed(context, AppRoutes.recipeLibrary),
-                    ),
-                    _MenuItem(
                       icon: Icons.restaurant_menu_outlined,
                       label: '我的口味偏好',
                       onTap: () => _open(const PreferencePage()),
                     ),
                     _MenuItem(
-                      icon: Icons.receipt_long_outlined,
-                      label: '历史订单',
-                      onTap: () => _open(const OrdersPage()),
-                    ),
-                    _MenuItem(
                       icon: Icons.people_outline,
                       label: '我的好友',
                       trailing: '添加 / 管理',
-                      onTap: () => Navigator.pushNamed(context, AppRoutes.myFriends),
-                    ),
-                    _MenuItem(
-                      icon: Icons.group_add_outlined,
-                      label: '邀请好友',
-                      onTap: () => Navigator.pushNamed(context, AppRoutes.invite),
-                    ),
-                    _MenuItem(
-                      icon: Icons.notifications_outlined,
-                      label: '消息通知',
-                      trailing: _unreadNotifications > 0 ? '$_unreadNotifications 条未读' : null,
-                      onTap: () async {
-                        await Navigator.pushNamed(context, AppRoutes.notifications);
-                        _loadUnreadCount();
-                      },
+                      onTap: () => _open(const MyFriendsPage()),
                     ),
                   ],
                 ),
@@ -227,27 +183,6 @@ class _ProfilePageState extends State<ProfilePage> {
                       icon: Icons.info_outline,
                       label: '关于我们',
                       onTap: () => Navigator.pushNamed(context, AppRoutes.about),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                _MenuCard(
-                  colors: colors,
-                  items: [
-                    _MenuItem(
-                      icon: Icons.forum_outlined,
-                      label: 'AI 对话记录',
-                      onTap: () => Navigator.pushNamed(context, AppRoutes.aiConversations),
-                    ),
-                    _MenuItem(
-                      icon: Icons.chat_bubble_outline,
-                      label: 'AI 美食助手',
-                      onTap: () => Navigator.pushNamed(context, AppRoutes.aiChat, arguments: 'new'),
-                    ),
-                    _MenuItem(
-                      icon: Icons.smart_toy_outlined,
-                      label: 'AI 快捷推荐',
-                      onTap: () => Navigator.pushNamed(context, AppRoutes.aiQuick),
                     ),
                   ],
                 ),

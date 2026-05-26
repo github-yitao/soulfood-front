@@ -15,6 +15,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get tabHome => '首页';
 
   @override
+  String get tabDiscover => '觅食';
+
+  @override
   String get tabRecords => '记录';
 
   @override

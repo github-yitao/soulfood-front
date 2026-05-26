@@ -3,11 +3,38 @@ import 'package:soulfood_front/core/app_bootstrap.dart';
 import 'package:soulfood_front/core/theme/app_semantic_colors.dart';
 import 'package:soulfood_front/core/theme/app_theme_variant.dart';
 import 'package:soulfood_front/core/theme/ghoul_eye_mark.dart';
+import 'package:soulfood_front/features/notification/notification_repository.dart';
 import 'package:soulfood_front/routing/app_routes.dart';
 import 'package:soulfood_front/widgets/feature_card.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  final _notificationRepo = NotificationRepository(AppServices.I.api);
+  int _unreadNotifications = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUnreadCount();
+  }
+
+  Future<void> _loadUnreadCount() async {
+    try {
+      final overview = await _notificationRepo.load();
+      if (mounted) setState(() => _unreadNotifications = overview.unreadCount);
+    } catch (_) {}
+  }
+
+  Future<void> _openNotifications() async {
+    await Navigator.pushNamed(context, AppRoutes.notifications);
+    _loadUnreadCount();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -15,8 +42,8 @@ class HomePage extends StatelessWidget {
     final isGhoul = AppServices.I.appearance.variant == AppThemeVariant.ghoul;
 
     return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -50,25 +77,26 @@ class HomePage extends StatelessWidget {
                     ],
                   ),
                 ),
-                Material(
-                  color: colors.cardBackground,
-                  shape: CircleBorder(
-                    side: BorderSide(color: colors.cardBorder),
-                  ),
-                  child: InkWell(
-                    customBorder: const CircleBorder(),
-                    onTap: () => Navigator.pushNamed(context, AppRoutes.settings),
-                    child: Padding(
-                      padding: const EdgeInsets.all(6),
-                      child: Icon(Icons.settings_outlined, size: 20, color: colors.textSecondary),
-                    ),
-                  ),
+                _HeaderIconButton(
+                  icon: Icons.notifications_outlined,
+                  badge: _unreadNotifications > 0 ? _unreadNotifications : null,
+                  onTap: _openNotifications,
+                ),
+                const SizedBox(width: 6),
+                _HeaderIconButton(
+                  icon: Icons.settings_outlined,
+                  onTap: () => Navigator.pushNamed(context, AppRoutes.settings),
                 ),
               ],
             ),
-            const Spacer(flex: 2),
+            const SizedBox(height: 28),
             const Center(child: _HomeHero()),
-            const SizedBox(height: 14),
+            const SizedBox(height: 20),
+            Text(
+              '一起决定',
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: colors.textPrimary),
+            ),
+            const SizedBox(height: 10),
             Row(
               children: [
                 Expanded(
@@ -82,26 +110,22 @@ class HomePage extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: FeatureCard(
-                    icon: Icons.touch_app_rounded,
-                    iconColor: isGhoul ? colors.accentSecondary : colors.successText,
-                    title: '附近觅食\n(探店用呀)',
-                    onTap: () => Navigator.pushNamed(context, AppRoutes.nearby),
+                    icon: Icons.group_add_outlined,
+                    iconColor: colors.warningText,
+                    title: '邀请好友\n一起组局',
+                    onTap: () => Navigator.pushNamed(context, AppRoutes.invite),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 20),
+            Text(
+              'AI 助手',
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: colors.textPrimary),
+            ),
+            const SizedBox(height: 10),
             Row(
               children: [
-                Expanded(
-                  child: FeatureCard(
-                    icon: Icons.location_on_rounded,
-                    iconColor: colors.textSecondary,
-                    title: '随机吃什么',
-                    onTap: () => Navigator.pushNamed(context, AppRoutes.randomEat),
-                  ),
-                ),
-                const SizedBox(width: 8),
                 Expanded(
                   child: FeatureCard(
                     icon: Icons.auto_awesome_rounded,
@@ -113,26 +137,51 @@ class HomePage extends StatelessWidget {
                     onTap: () => Navigator.pushNamed(context, AppRoutes.aiQuick),
                   ),
                 ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: FeatureCard(
+                    icon: Icons.forum_outlined,
+                    iconColor: colors.textSecondary,
+                    title: 'AI 对话\n记录',
+                    onTap: () => Navigator.pushNamed(context, AppRoutes.aiConversations),
+                  ),
+                ),
               ],
             ),
-            const Spacer(flex: 3),
-            Center(
-              child: TextButton.icon(
-                onPressed: () => Navigator.pushNamed(context, AppRoutes.recipeLibrary),
-                icon: const Icon(Icons.menu_book_outlined, size: 16),
-                label: const Text('浏览菜品库', style: TextStyle(fontSize: 13)),
-                style: TextButton.styleFrom(foregroundColor: colors.textSecondary),
-              ),
-            ),
-            Center(
-              child: TextButton.icon(
-                onPressed: () => Navigator.pushNamed(context, AppRoutes.cookMode),
-                icon: const Icon(Icons.soup_kitchen_outlined, size: 16),
-                label: const Text('烹饪模式 · 选食材出菜谱', style: TextStyle(fontSize: 13)),
-                style: TextButton.styleFrom(foregroundColor: colors.textSecondary),
-              ),
-            ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _HeaderIconButton extends StatelessWidget {
+  const _HeaderIconButton({
+    required this.icon,
+    required this.onTap,
+    this.badge,
+  });
+
+  final IconData icon;
+  final VoidCallback onTap;
+  final int? badge;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+    return Material(
+      color: colors.cardBackground,
+      shape: CircleBorder(side: BorderSide(color: colors.cardBorder)),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(6),
+          child: Badge(
+            isLabelVisible: badge != null && badge! > 0,
+            label: Text('${badge ?? 0}'),
+            child: Icon(icon, size: 20, color: colors.textSecondary),
+          ),
         ),
       ),
     );
@@ -170,8 +219,8 @@ class _HomeHeroState extends State<_HomeHero> {
           scale: _pressed ? 0.97 : 1,
           duration: const Duration(milliseconds: 120),
           child: Container(
-            width: 236,
-            height: 236,
+            width: 220,
+            height: 220,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               gradient: isGhoul
@@ -200,15 +249,15 @@ class _HomeHeroState extends State<_HomeHero> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 if (isGhoul)
-                  const GhoulEyeMark(size: 88, glow: true)
+                  const GhoulEyeMark(size: 80, glow: true)
                 else
-                  const Text('🍜', style: TextStyle(fontSize: 48)),
-                SizedBox(height: isGhoul ? 10 : 12),
+                  const Text('🍜', style: TextStyle(fontSize: 44)),
+                SizedBox(height: isGhoul ? 8 : 10),
                 Text(
-                  isGhoul ? '帮我决定\n吃什么' : '帮我决定\n吃什么',
+                  '帮我决定\n吃什么',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: isGhoul ? 26 : 30,
+                    fontSize: isGhoul ? 24 : 28,
                     height: 1.08,
                     fontWeight: FontWeight.w900,
                     letterSpacing: isGhoul ? 0.2 : -0.6,

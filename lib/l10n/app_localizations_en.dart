@@ -15,6 +15,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tabHome => 'Home';
 
   @override
+  String get tabDiscover => 'Explore';
+
+  @override
   String get tabRecords => 'Records';
 
   @override

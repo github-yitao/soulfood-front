@@ -110,6 +110,12 @@ abstract class AppLocalizations {
   /// **'首页'**
   String get tabHome;
 
+  /// No description provided for @tabDiscover.
+  ///
+  /// In zh, this message translates to:
+  /// **'觅食'**
+  String get tabDiscover;
+
   /// No description provided for @tabRecords.
   ///
   /// In zh, this message translates to:

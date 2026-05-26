@@ -2,6 +2,7 @@
   "@@locale": "en",
   "appTitle": "DecideMeal",
   "tabHome": "Home",
+  "tabDiscover": "Explore",
   "tabRecords": "Records",
   "tabMine": "Me",
   "settings": "Settings",
