@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:soulfood_front/core/app_bootstrap.dart';
 import 'package:soulfood_front/features/auth/register_page.dart';
+import 'package:soulfood_front/features/room/room_deep_link.dart';
 import 'package:soulfood_front/pages/root_page.dart';
 
 class LoginPage extends StatefulWidget {
@@ -36,6 +37,8 @@ class _LoginPageState extends State<LoginPage> {
     try {
       await AppServices.I.auth.login(username: username, password: password);
       if (!mounted) return;
+      final joined = await RoomDeepLinkListener.tryConsumePendingJoin(context);
+      if (!mounted || joined) return;
       Navigator.of(context).pushReplacement(
         MaterialPageRoute<void>(builder: (_) => const RootPage()),
       );

@@ -10,6 +10,7 @@ import 'package:soulfood_front/features/nearby/nearby_page.dart';
 import 'package:soulfood_front/features/nearby/random_eat_page.dart';
 import 'package:soulfood_front/features/order/orders_page.dart';
 import 'package:soulfood_front/features/preference/preference_page.dart';
+import 'package:soulfood_front/features/growth/legal_document_page.dart';
 import 'package:soulfood_front/features/profile/appearance_page.dart';
 import 'package:soulfood_front/features/profile/settings_page.dart';
 import 'package:soulfood_front/features/agent/ai_conversations_page.dart';
@@ -21,6 +22,7 @@ import 'package:soulfood_front/features/room/pages/create_room_page.dart';
 import 'package:soulfood_front/features/friend/my_friends_page.dart';
 import 'package:soulfood_front/features/room/pages/friends_page.dart';
 import 'package:soulfood_front/features/room/pages/join_room_page.dart';
+import 'package:soulfood_front/features/room/pages/scan_join_room_page.dart';
 import 'package:soulfood_front/features/room/pages/recipe_result_page.dart';
 import 'package:soulfood_front/features/room/pages/vote_page.dart';
 import 'package:soulfood_front/features/room/room_models.dart';
@@ -109,6 +111,8 @@ class _DecideMealAppState extends State<_DecideMealApp> {
         return MaterialPageRoute<void>(builder: (_) => const CreateRoomPage(), settings: settings);
       case AppRoutes.joinRoom:
         return MaterialPageRoute<void>(builder: (_) => const JoinRoomPage(), settings: settings);
+      case AppRoutes.scanJoinRoom:
+        return MaterialPageRoute<void>(builder: (_) => const ScanJoinRoomPage(), settings: settings);
       case AppRoutes.vote:
         final code = settings.arguments as String? ?? '';
         return MaterialPageRoute<void>(builder: (_) => VotePage(roomCode: code), settings: settings);
@@ -165,6 +169,16 @@ class _DecideMealAppState extends State<_DecideMealApp> {
         return MaterialPageRoute<void>(builder: (_) => const AboutPage(), settings: settings);
       case AppRoutes.invite:
         return MaterialPageRoute<void>(builder: (_) => const InvitePage(), settings: settings);
+      case AppRoutes.legalTerms:
+        return MaterialPageRoute<void>(
+          builder: (_) => const LegalDocumentPage(type: LegalDocumentType.terms),
+          settings: settings,
+        );
+      case AppRoutes.legalPrivacy:
+        return MaterialPageRoute<void>(
+          builder: (_) => const LegalDocumentPage(type: LegalDocumentType.privacy),
+          settings: settings,
+        );
       default:
         return MaterialPageRoute<void>(
           builder: (_) => const SplashPage(),

@@ -4,6 +4,7 @@ import 'package:soulfood_front/features/auth/auth_repository.dart';
 import 'package:soulfood_front/features/favorite/favorites_page.dart';
 import 'package:soulfood_front/features/order/orders_page.dart';
 import 'package:soulfood_front/features/preference/preference_page.dart';
+import 'package:soulfood_front/features/profile/profile_edit_page.dart';
 import 'package:soulfood_front/routing/app_routes.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -73,14 +74,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                   child: Row(
                     children: [
-                      CircleAvatar(
-                        radius: 32,
-                        backgroundColor: const Color(0xFFFFEFBC),
-                        child: Text(
-                          profile.nickname.isNotEmpty ? profile.nickname.substring(0, 1) : '?',
-                          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
-                        ),
-                      ),
+                      _ProfileAvatar(profile: profile),
                       const SizedBox(width: 16),
                       Expanded(
                         child: Column(
@@ -104,6 +98,19 @@ class _ProfilePageState extends State<ProfilePage> {
                             ),
                           ],
                         ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.edit_outlined),
+                        tooltip: '编辑资料',
+                        onPressed: () async {
+                          final updated = await Navigator.push<bool>(
+                            context,
+                            MaterialPageRoute<bool>(
+                              builder: (_) => ProfileEditPage(profile: profile),
+                            ),
+                          );
+                          if (updated == true) _reload();
+                        },
                       ),
                     ],
                   ),
@@ -183,6 +190,39 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+class _ProfileAvatar extends StatelessWidget {
+  const _ProfileAvatar({required this.profile});
+
+  final UserProfile profile;
+
+  @override
+  Widget build(BuildContext context) {
+    final url = profile.avatarUrl;
+    if (url != null && url.isNotEmpty) {
+      return CircleAvatar(
+        radius: 32,
+        backgroundColor: const Color(0xFFFFEFBC),
+        backgroundImage: NetworkImage(url),
+        onBackgroundImageError: (_, _) {},
+        child: url.isEmpty
+            ? Text(
+                profile.nickname.isNotEmpty ? profile.nickname.substring(0, 1) : '?',
+                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
+              )
+            : null,
+      );
+    }
+    return CircleAvatar(
+      radius: 32,
+      backgroundColor: const Color(0xFFFFEFBC),
+      child: Text(
+        profile.nickname.isNotEmpty ? profile.nickname.substring(0, 1) : '?',
+        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
       ),
     );
   }

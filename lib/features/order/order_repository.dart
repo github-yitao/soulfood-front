@@ -7,12 +7,14 @@ class OrderOverview {
     required this.totalAmount,
     required this.topCategory,
     required this.days,
+    required this.hasDemoOrders,
   });
 
   final int orderCount;
   final double totalAmount;
   final String topCategory;
   final List<OrderDayGroup> days;
+  final bool hasDemoOrders;
 
   factory OrderOverview.fromJson(Map<String, dynamic> json) {
     final daysJson = json['days'] as List<dynamic>? ?? [];
@@ -20,6 +22,7 @@ class OrderOverview {
       orderCount: (json['orderCount'] as num?)?.toInt() ?? 0,
       totalAmount: (json['totalAmount'] as num?)?.toDouble() ?? 0,
       topCategory: json['topCategory'] as String? ?? '—',
+      hasDemoOrders: json['hasDemoOrders'] as bool? ?? false,
       days: daysJson
           .map((e) => OrderDayGroup.fromJson(e as Map<String, dynamic>))
           .toList(),
@@ -59,6 +62,7 @@ class OrderItem {
     this.itemSummary,
     this.timeText,
     this.statusText,
+    this.source,
   });
 
   final int id;
@@ -68,6 +72,9 @@ class OrderItem {
   final String? itemSummary;
   final String? timeText;
   final String? statusText;
+  final String? source;
+
+  bool get isDemo => source == 'demo';
 
   factory OrderItem.fromJson(Map<String, dynamic> json) {
     return OrderItem(
@@ -78,6 +85,7 @@ class OrderItem {
       itemSummary: json['itemSummary'] as String?,
       timeText: json['timeText'] as String?,
       statusText: json['statusText'] as String?,
+      source: json['source'] as String?,
     );
   }
 }
@@ -94,5 +102,23 @@ class OrderRepository {
       parser: (json) => json as Map<String, dynamic>,
     );
     return OrderOverview.fromJson(data);
+  }
+
+  Future<void> createManual({
+    required String restaurantName,
+    required double amount,
+    String? category,
+    String? itemSummary,
+  }) async {
+    await _api.postData<Map<String, dynamic>>(
+      '/api/v1/orders',
+      data: {
+        'restaurantName': restaurantName,
+        'amount': amount,
+        if (category != null && category.isNotEmpty) 'category': category,
+        if (itemSummary != null && itemSummary.isNotEmpty) 'itemSummary': itemSummary,
+      },
+      parser: (json) => json as Map<String, dynamic>,
+    );
   }
 }

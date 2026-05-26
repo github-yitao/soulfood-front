@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:soulfood_front/core/app_bootstrap.dart';
 import 'package:soulfood_front/features/auth/login_page.dart';
+import 'package:soulfood_front/features/room/room_deep_link.dart';
 import 'package:soulfood_front/pages/root_page.dart';
 
 class SplashPage extends StatefulWidget {
@@ -18,13 +19,23 @@ class _SplashPageState extends State<SplashPage> {
   }
 
   Future<void> _goNext() async {
+    await RoomDeepLinkListener.captureInitialLink();
     await Future<void>.delayed(const Duration(milliseconds: 1200));
     if (!mounted) return;
+
     final loggedIn = AppServices.I.auth.isLoggedIn;
+    if (!loggedIn) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute<void>(builder: (_) => const LoginPage()),
+      );
+      return;
+    }
+
+    final joined = await RoomDeepLinkListener.tryConsumePendingJoin(context);
+    if (!mounted || joined) return;
+
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute<void>(
-        builder: (_) => loggedIn ? const RootPage() : const LoginPage(),
-      ),
+      MaterialPageRoute<void>(builder: (_) => const RootPage()),
     );
   }
 

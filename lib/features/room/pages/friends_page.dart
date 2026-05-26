@@ -134,8 +134,9 @@ class _FriendsPageState extends State<FriendsPage> {
                 subtitle: '自定义主题、人数和时长',
                 primaryLabel: '创建房间',
                 onPrimary: () => Navigator.pushNamed(context, AppRoutes.createRoom),
-                secondaryLabel: '加入房间',
+                secondaryLabel: '输入房间号加入',
                 onSecondary: () => Navigator.pushNamed(context, AppRoutes.joinRoom),
+                onScan: () => Navigator.pushNamed(context, AppRoutes.scanJoinRoom),
               ),
               const SizedBox(height: 12),
               const _VoteFlowHint(),
@@ -481,6 +482,7 @@ class _ActionCard extends StatelessWidget {
     required this.onPrimary,
     required this.secondaryLabel,
     required this.onSecondary,
+    required this.onScan,
   });
 
   final String title;
@@ -489,6 +491,7 @@ class _ActionCard extends StatelessWidget {
   final VoidCallback onPrimary;
   final String secondaryLabel;
   final VoidCallback onSecondary;
+  final VoidCallback onScan;
 
   @override
   Widget build(BuildContext context) {
@@ -517,6 +520,15 @@ class _ActionCard extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 14),
               ),
               child: Text(primaryLabel),
+            ),
+          ),
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: onScan,
+              icon: const Icon(Icons.qr_code_scanner),
+              label: const Text('扫码入房'),
             ),
           ),
           const SizedBox(height: 10),

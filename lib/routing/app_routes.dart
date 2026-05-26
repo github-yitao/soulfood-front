@@ -5,6 +5,7 @@ class AppRoutes {
   static const String myFriends = '/friends/mine';
   static const String createRoom = '/rooms/create';
   static const String joinRoom = '/rooms/join';
+  static const String scanJoinRoom = '/rooms/scan';
   static const String vote = '/rooms/vote';
   static const String recipeResult = '/recipes/result';
   static const String aiQuick = '/ai/quick';
@@ -21,6 +22,9 @@ class AppRoutes {
   static const String appearance = '/appearance';
   static const String about = '/about';
   static const String invite = '/invite';
+  static const String profileEdit = '/profile/edit';
+  static const String legalTerms = '/legal/terms';
+  static const String legalPrivacy = '/legal/privacy';
 
   const AppRoutes._();
 }

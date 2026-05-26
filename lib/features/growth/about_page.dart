@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:soulfood_front/routing/app_routes.dart';
 
 class AboutPage extends StatelessWidget {
   const AboutPage({super.key});
@@ -46,6 +47,26 @@ class AboutPage extends StatelessWidget {
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: const Text('Version 1.0.0', style: TextStyle(fontSize: 12, color: Color(0xFF5F697A))),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          Card(
+            child: Column(
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.description_outlined),
+                  title: const Text('用户协议'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => Navigator.pushNamed(context, AppRoutes.legalTerms),
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.privacy_tip_outlined),
+                  title: const Text('隐私政策'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => Navigator.pushNamed(context, AppRoutes.legalPrivacy),
                 ),
               ],
             ),

@@ -93,11 +93,106 @@ class _OrdersPageState extends State<OrdersPage> {
         _ => raw,
       };
 
+  Future<void> _addManualOrder() async {
+    final nameCtrl = TextEditingController();
+    final amountCtrl = TextEditingController();
+    final summaryCtrl = TextEditingController();
+    var category = 'food';
+
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('记一笔消费'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameCtrl,
+                  decoration: const InputDecoration(labelText: '餐厅/店铺名称'),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: amountCtrl,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  decoration: const InputDecoration(labelText: '金额（元）'),
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  initialValue: category,
+                  decoration: const InputDecoration(labelText: '分类'),
+                  items: const [
+                    DropdownMenuItem(value: 'food', child: Text('餐厅')),
+                    DropdownMenuItem(value: 'drink', child: Text('饮品')),
+                    DropdownMenuItem(value: 'fast', child: Text('快餐')),
+                  ],
+                  onChanged: (v) => setDialogState(() => category = v ?? 'food'),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: summaryCtrl,
+                  decoration: const InputDecoration(labelText: '备注（可选）', hintText: '2人 · 堂食'),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('取消')),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('保存'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (saved != true) {
+      nameCtrl.dispose();
+      amountCtrl.dispose();
+      summaryCtrl.dispose();
+      return;
+    }
+
+    final name = nameCtrl.text.trim();
+    final amount = double.tryParse(amountCtrl.text.trim());
+    final summary = summaryCtrl.text.trim();
+    nameCtrl.dispose();
+    amountCtrl.dispose();
+    summaryCtrl.dispose();
+
+    if (name.isEmpty || amount == null || amount <= 0) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('请填写有效的店铺名称和金额')));
+      }
+      return;
+    }
+
+    try {
+      await _repo.createManual(
+        restaurantName: name,
+        amount: amount,
+        category: category,
+        itemSummary: summary.isEmpty ? null : summary,
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('已记录')));
+        _load();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final overview = _overview;
     final filteredDays = overview == null ? <OrderDayGroup>[] : _filteredDays(overview);
     final stats = _monthStats(filteredDays);
+    final hasDemo = overview?.hasDemoOrders ?? false;
 
     return Scaffold(
       appBar: AppBar(
@@ -110,18 +205,48 @@ class _OrdersPageState extends State<OrdersPage> {
           ),
         ],
       ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _addManualOrder,
+        backgroundColor: const Color(0xFFFF8A43),
+        icon: const Icon(Icons.add),
+        label: const Text('记一笔'),
+      ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
               onRefresh: _load,
               child: ListView(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 88),
                 children: [
+                  if (hasDemo)
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFF8EB),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFFFFE0A8)),
+                      ),
+                      child: const Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(Icons.info_outline, size: 18, color: Color(0xFFD86A00)),
+                          SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              '列表中含示例订单（仅供体验），可通过「记一笔」添加真实消费记录。',
+                              style: TextStyle(fontSize: 13, color: Color(0xFF8A5A12), height: 1.45),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   _OverviewCard(
                     month: _selectedMonth.month,
                     orderCount: stats.count,
                     totalAmount: stats.total,
                     topCategory: stats.topCategory,
+                    hasDemo: hasDemo,
                   ),
                   const SizedBox(height: 12),
                   SizedBox(
@@ -186,12 +311,14 @@ class _OverviewCard extends StatelessWidget {
     required this.orderCount,
     required this.totalAmount,
     required this.topCategory,
+    this.hasDemo = false,
   });
 
   final int month;
   final int orderCount;
   final double totalAmount;
   final String topCategory;
+  final bool hasDemo;
 
   @override
   Widget build(BuildContext context) {
@@ -213,7 +340,7 @@ class _OverviewCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                '$month 月消费概览',
+                '$month 月消费概览${hasDemo ? '（含示例）' : ''}',
                 style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 16),
               ),
               const Text('近 30 天', style: TextStyle(color: Color(0xCCFFFFFF), fontSize: 12)),
@@ -372,6 +499,21 @@ class _OrderCard extends StatelessWidget {
                   item.restaurantName,
                   style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: Color(0xFF1F2633)),
                 ),
+                if (item.isDemo) ...[
+                  const SizedBox(height: 4),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFF4E8),
+                      borderRadius: BorderRadius.circular(999),
+                      border: Border.all(color: const Color(0xFFFFD8B1)),
+                    ),
+                    child: const Text(
+                      '示例',
+                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Color(0xFFCF6C16)),
+                    ),
+                  ),
+                ],
                 if (metaParts.isNotEmpty) ...[
                   const SizedBox(height: 5),
                   Wrap(

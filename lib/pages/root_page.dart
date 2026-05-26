@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:soulfood_front/features/room/room_deep_link.dart';
 import 'package:soulfood_front/pages/home_page.dart';
 import 'package:soulfood_front/pages/profile_page.dart';
 import 'package:soulfood_front/pages/records_page.dart';
@@ -12,6 +13,14 @@ class RootPage extends StatefulWidget {
 
 class _RootPageState extends State<RootPage> {
   int _selectedIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) RoomDeepLinkListener.listenWhileMounted(context);
+    });
+  }
 
   static const List<Widget> _tabs = <Widget>[
     HomePage(),

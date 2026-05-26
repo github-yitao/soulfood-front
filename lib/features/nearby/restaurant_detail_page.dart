@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:soulfood_front/features/favorite/favorite_repository.dart';
 import 'package:soulfood_front/features/nearby/nearby_repository.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class RestaurantDetailPage extends StatefulWidget {
   const RestaurantDetailPage({super.key, required this.restaurantId});
@@ -35,6 +36,35 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
       }
     } finally {
       if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _launch(Uri uri) async {
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('无法打开链接')));
+      }
+    }
+  }
+
+  Future<void> _call(String phone) async {
+    final normalized = phone.split(';').first.trim();
+    await _launch(Uri(scheme: 'tel', path: normalized));
+  }
+
+  Future<void> _navigate(RestaurantItem item) async {
+    if (item.lat != null && item.lng != null) {
+      final uri = Uri.parse(
+        'https://uri.amap.com/marker?position=${item.lng},${item.lat}&name=${Uri.encodeComponent(item.name)}',
+      );
+      await _launch(uri);
+      return;
+    }
+    if (item.address != null && item.address!.isNotEmpty) {
+      final uri = Uri.parse(
+        'https://uri.amap.com/search?query=${Uri.encodeComponent(item.address!)}',
+      );
+      await _launch(uri);
     }
   }
 
@@ -105,62 +135,155 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
       );
     }
 
+    final phone = item.phone?.split(';').first.trim();
+
     return Scaffold(
       appBar: AppBar(title: Text(item.name)),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: double.infinity,
+      body: Column(
+        children: [
+          Expanded(
+            child: ListView(
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFFEDF0F6)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(item.category, style: const TextStyle(color: Color(0xFFD86A00), fontWeight: FontWeight.w700)),
-                  const SizedBox(height: 8),
-                  Text('评分 ${item.rating ?? '-'} · 距离 ${item.distanceKm ?? '-'} km'),
-                  if (item.address != null && item.address!.isNotEmpty) ...[
-                    const SizedBox(height: 8),
-                    Text(item.address!, style: const TextStyle(color: Color(0xFF737C8B), fontSize: 13)),
-                  ],
-                  if (item.wanted)
-                    const Padding(
-                      padding: EdgeInsets.only(top: 8),
-                      child: Text('已标记想去', style: TextStyle(color: Color(0xFFD86A00), fontSize: 13)),
-                    ),
-                ],
-              ),
-            ),
-            const Spacer(),
-            Row(
               children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: _busy || item.wanted ? null : _want,
-                    icon: const Icon(Icons.flag_outlined),
-                    label: Text(item.wanted ? '已想去' : '标记想去'),
+                if (item.photoUrl != null && item.photoUrl!.isNotEmpty)
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: AspectRatio(
+                      aspectRatio: 16 / 9,
+                      child: Image.network(
+                        item.photoUrl!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, _, _) => _PhotoPlaceholder(name: item.name),
+                      ),
+                    ),
+                  )
+                else
+                  _PhotoPlaceholder(name: item.name),
+                const SizedBox(height: 12),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xFFEDF0F6)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(item.category, style: const TextStyle(color: Color(0xFFD86A00), fontWeight: FontWeight.w700)),
+                      const SizedBox(height: 8),
+                      Text('评分 ${item.rating ?? '-'} · 距离 ${item.distanceKm ?? '-'} km'),
+                      if (item.address != null && item.address!.isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Icon(Icons.place_outlined, size: 16, color: Color(0xFF737C8B)),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(item.address!, style: const TextStyle(color: Color(0xFF737C8B), fontSize: 13)),
+                            ),
+                          ],
+                        ),
+                      ],
+                      if (phone != null && phone.isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            const Icon(Icons.phone_outlined, size: 16, color: Color(0xFF737C8B)),
+                            const SizedBox(width: 6),
+                            Text(phone, style: const TextStyle(color: Color(0xFF737C8B), fontSize: 13)),
+                          ],
+                        ),
+                      ],
+                      if (item.wanted)
+                        const Padding(
+                          padding: EdgeInsets.only(top: 8),
+                          child: Text('已标记想去', style: TextStyle(color: Color(0xFFD86A00), fontSize: 13)),
+                        ),
+                    ],
                   ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: FilledButton.icon(
-                    onPressed: _busy ? null : _toggleFavorite,
-                    icon: Icon(item.favorited ? Icons.favorite : Icons.favorite_border),
-                    label: Text(item.favorited ? '已收藏' : '收藏店铺'),
-                    style: FilledButton.styleFrom(backgroundColor: const Color(0xFFFF8A43)),
-                  ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    if (phone != null && phone.isNotEmpty)
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: _busy ? null : () => _call(phone),
+                          icon: const Icon(Icons.phone_outlined),
+                          label: const Text('拨打电话'),
+                        ),
+                      ),
+                    if (phone != null && phone.isNotEmpty) const SizedBox(width: 12),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: _busy ? null : () => _navigate(item),
+                        icon: const Icon(Icons.navigation_outlined),
+                        label: const Text('导航'),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
-          ],
+          ),
+          SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: _busy || item.wanted ? null : _want,
+                      icon: const Icon(Icons.flag_outlined),
+                      label: Text(item.wanted ? '已想去' : '标记想去'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: FilledButton.icon(
+                      onPressed: _busy ? null : _toggleFavorite,
+                      icon: Icon(item.favorited ? Icons.favorite : Icons.favorite_border),
+                      label: Text(item.favorited ? '已收藏' : '收藏店铺'),
+                      style: FilledButton.styleFrom(backgroundColor: const Color(0xFFFF8A43)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PhotoPlaceholder extends StatelessWidget {
+  const _PhotoPlaceholder({required this.name});
+
+  final String name;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 160,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        gradient: const LinearGradient(
+          colors: [Color(0xFFFFF4E8), Color(0xFFFFE0CC)],
         ),
+      ),
+      alignment: Alignment.center,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.restaurant, size: 40, color: Color(0xFFFF8A43)),
+          const SizedBox(height: 8),
+          Text(name, style: const TextStyle(fontWeight: FontWeight.w700, color: Color(0xFFD86A00))),
+        ],
       ),
     );
   }

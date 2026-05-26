@@ -89,6 +89,25 @@ class AuthRepository {
     );
   }
 
+  Future<UserProfile> updateProfile({
+    String? nickname,
+    String? avatarUrl,
+    String? signature,
+  }) async {
+    final data = <String, dynamic>{};
+    if (nickname != null) data['nickname'] = nickname;
+    if (avatarUrl != null) data['avatarUrl'] = avatarUrl;
+    if (signature != null) data['signature'] = signature;
+
+    final profile = await _api.patchData<UserProfile>(
+      '/api/v1/auth/me',
+      data: data,
+      parser: (json) => UserProfile.fromJson(json as Map<String, dynamic>),
+    );
+    await _session.updateNickname(profile.nickname);
+    return profile;
+  }
+
   Future<void> _saveFromResponse(Map<String, dynamic> data, {String? username}) async {
     final userId = (data['userId'] as num).toInt();
     final nickname = data['nickname'] as String? ?? username ?? '用户';

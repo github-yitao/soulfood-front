@@ -1,16 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:qr_flutter/qr_flutter.dart';
+import 'package:soulfood_front/features/room/room_join_link.dart';
 
-/// 房间号展示 + 复制 + 好友加入说明
+/// 房间号展示 + 二维码 + 复制 + 好友加入说明
 class RoomInviteCard extends StatelessWidget {
   const RoomInviteCard({
     super.key,
     required this.roomCode,
     this.compact = false,
+    this.showQr,
   });
 
   final String roomCode;
   final bool compact;
+  final bool? showQr;
+
+  bool get _showQr => showQr ?? !compact;
 
   Future<void> _copy(BuildContext context) async {
     await Clipboard.setData(ClipboardData(text: roomCode));
@@ -40,15 +46,60 @@ class RoomInviteCard extends StatelessWidget {
           if (!compact) ...[
             const SizedBox(height: 6),
             const Text(
-              '把房间号发给好友，对方可通过以下方式进入：',
+              '把房间号或下方二维码发给好友，对方扫码即可入房：',
               style: TextStyle(fontSize: 12, color: Color(0xFF6F7888), height: 1.4),
             ),
             const SizedBox(height: 4),
             const Text(
-              '① 首页 → 和朋友一起决定 → 加入房间\n'
-              '② 首页 → 和朋友一起决定 → 好友的房间（需先加好友）\n'
-              '③ 创建后 30 分钟内有效，超时自动结束',
+              '① 扫码入房（推荐）\n'
+              '② 首页 → 和朋友一起决定 → 加入房间\n'
+              '③ 好友的房间列表（需先加好友）\n'
+              '④ 创建后 30 分钟内有效，超时自动结束',
               style: TextStyle(fontSize: 12, color: Color(0xFF6F7888), height: 1.5),
+            ),
+          ],
+          if (_showQr) ...[
+            const SizedBox(height: 14),
+            Center(
+              child: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: const Color(0xFFEDF1F6)),
+                ),
+                child: QrImageView(
+                  data: RoomJoinLink.build(roomCode),
+                  version: QrVersions.auto,
+                  size: compact ? 132 : 160,
+                  backgroundColor: Colors.white,
+                  eyeStyle: const QrEyeStyle(
+                    eyeShape: QrEyeShape.square,
+                    color: Color(0xFF1E1F23),
+                  ),
+                  dataModuleStyle: const QrDataModuleStyle(
+                    dataModuleShape: QrDataModuleShape.square,
+                    color: Color(0xFF1E1F23),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Center(
+              child: Text(
+                '扫码入房 · $roomCode',
+                style: const TextStyle(fontSize: 12, color: Color(0xFF8D919A)),
+              ),
+            ),
+          ] else if (compact) ...[
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () => showRoomQrDialog(context, roomCode),
+                icon: const Icon(Icons.qr_code_2_outlined),
+                label: const Text('显示入房二维码'),
+              ),
             ),
           ],
           const SizedBox(height: 12),
@@ -84,6 +135,21 @@ class RoomInviteCard extends StatelessWidget {
       ),
     );
   }
+}
+
+Future<void> showRoomQrDialog(BuildContext context, String roomCode) {
+  return showDialog<void>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: const Text('扫码入房'),
+      content: SingleChildScrollView(
+        child: RoomInviteCard(roomCode: roomCode, showQr: true),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('关闭')),
+      ],
+    ),
+  );
 }
 
 Future<void> showRoomCreatedDialog(BuildContext context, String roomCode) {

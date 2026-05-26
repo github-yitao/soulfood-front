@@ -22,4 +22,12 @@ class AppConfig {
         return 'http://127.0.0.1:8080/soulfood';
     }
   }
+
+  static String get wsBaseUrl {
+    final http = baseUrl;
+    if (http.startsWith('https://')) {
+      return http.replaceFirst('https://', 'wss://');
+    }
+    return http.replaceFirst('http://', 'ws://');
+  }
 }

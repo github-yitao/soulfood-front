@@ -1,10 +1,12 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:soulfood_front/core/app_bootstrap.dart';
 import 'package:soulfood_front/features/agent/agent_repository.dart';
 import 'package:soulfood_front/features/room/pages/recipe_result_page.dart';
 import 'package:soulfood_front/features/room/room_models.dart';
 import 'package:soulfood_front/features/room/room_repository.dart';
+import 'package:soulfood_front/features/room/room_websocket.dart';
 import 'package:soulfood_front/features/room/widgets/room_invite_card.dart';
 import 'package:soulfood_front/features/room/widgets/vote_option_thumb.dart';
 
@@ -21,10 +23,12 @@ class VotePage extends StatefulWidget {
 class _VotePageState extends State<VotePage> {
   final _repo = RoomRepository();
   final _agent = AgentRepository();
+  final _ws = RoomWebSocketClient();
   RoomDetail? _room;
   bool _loading = true;
   bool _submitting = false;
   bool _previewLoading = false;
+  bool _wsConnected = false;
   Timer? _countdownTimer;
   int _remainingSeconds = 0;
 
@@ -37,7 +41,42 @@ class _VotePageState extends State<VotePage> {
   @override
   void dispose() {
     _countdownTimer?.cancel();
+    _ws.dispose();
     super.dispose();
+  }
+
+  void _connectWebSocket() {
+    final token = AppServices.I.session.accessToken;
+    if (token == null || token.isEmpty) return;
+
+    _ws.connect(
+      roomCode: widget.roomCode,
+      token: token,
+      onUpdate: _applyRoomUpdate,
+      onConnectionChanged: (connected) {
+        if (mounted) setState(() => _wsConnected = connected);
+      },
+    );
+  }
+
+  void _applyRoomUpdate(RoomDetail room, {bool silent = true}) {
+    if (!mounted) return;
+
+    final prev = _room;
+    final wasOpen = prev?.isClosed == false;
+
+    setState(() => _room = room);
+
+    if (room.isClosed) {
+      _countdownTimer?.cancel();
+      if (wasOpen && silent) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('投票已结束，可查看结果')),
+        );
+      }
+    } else {
+      _syncCountdown(room);
+    }
   }
 
   void _syncCountdown(RoomDetail room) {
@@ -50,7 +89,7 @@ class _VotePageState extends State<VotePage> {
       if (!mounted) return;
       if (_remainingSeconds <= 1) {
         _countdownTimer?.cancel();
-        _enterRoom();
+        _refreshRoom(silent: false);
         return;
       }
       setState(() => _remainingSeconds -= 1);
@@ -68,14 +107,13 @@ class _VotePageState extends State<VotePage> {
     try {
       await _repo.joinRoom(widget.roomCode);
       final room = await _repo.getRoom(widget.roomCode);
-      if (mounted) {
-        setState(() => _room = room);
-        _syncCountdown(room);
-        if (room.isClosed && room.remainingSeconds == 0) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('投票已超时自动结束（30分钟）')),
-          );
-        }
+      if (!mounted) return;
+      _applyRoomUpdate(room, silent: false);
+      _connectWebSocket();
+      if (!room.isClosed && room.remainingSeconds == 0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('投票已超时自动结束（30分钟）')),
+        );
       }
     } catch (e) {
       if (mounted) {
@@ -83,6 +121,19 @@ class _VotePageState extends State<VotePage> {
       }
     } finally {
       if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _refreshRoom({required bool silent}) async {
+    if (_submitting && silent) return;
+    try {
+      final room = await _repo.getRoom(widget.roomCode);
+      if (!mounted) return;
+      _applyRoomUpdate(room, silent: silent);
+    } catch (e) {
+      if (mounted && !silent) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+      }
     }
   }
 
@@ -297,7 +348,10 @@ class _VotePageState extends State<VotePage> {
       appBar: AppBar(
         title: Text(room?.topic ?? '组局投票'),
         actions: [
-          IconButton(onPressed: _loading ? null : _enterRoom, icon: const Icon(Icons.refresh)),
+          IconButton(
+            onPressed: _loading ? null : () => _refreshRoom(silent: false),
+            icon: const Icon(Icons.refresh),
+          ),
         ],
       ),
       bottomNavigationBar: room == null || _loading
@@ -323,7 +377,7 @@ class _VotePageState extends State<VotePage> {
                   ),
                 )
               : RefreshIndicator(
-                  onRefresh: _enterRoom,
+                  onRefresh: () => _refreshRoom(silent: false),
                   child: ListView(
                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
                     children: [
@@ -431,9 +485,34 @@ class _VotePageState extends State<VotePage> {
                         ),
                       ],
                       const SizedBox(height: 12),
-                      Text(
-                        '${room.participantCount} 人已投票',
-                        style: const TextStyle(color: Color(0xFF6F7888), fontWeight: FontWeight.w600),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              '${room.participantCount} 人参与 · ${room.options.fold<int>(0, (sum, o) => sum + o.voteCount)} 票',
+                              style: const TextStyle(color: Color(0xFF6F7888), fontWeight: FontWeight.w600),
+                            ),
+                          ),
+                          if (!isClosed)
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.circle,
+                                  size: 8,
+                                  color: _wsConnected ? const Color(0xFF2E7D32) : const Color(0xFFB3B8C2),
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  _wsConnected ? '实时同步' : '连接中…',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: _wsConnected ? const Color(0xFF2E7D32) : const Color(0xFF8D919A),
+                                  ),
+                                ),
+                              ],
+                            ),
+                        ],
                       ),
                       const SizedBox(height: 8),
                       const Text(

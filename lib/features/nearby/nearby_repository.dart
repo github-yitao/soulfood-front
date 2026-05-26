@@ -11,6 +11,10 @@ class RestaurantItem {
     required this.wanted,
     required this.favorited,
     this.address,
+    this.lat,
+    this.lng,
+    this.phone,
+    this.photoUrl,
   });
 
   final int id;
@@ -21,6 +25,10 @@ class RestaurantItem {
   final bool wanted;
   final bool favorited;
   final String? address;
+  final double? lat;
+  final double? lng;
+  final String? phone;
+  final String? photoUrl;
 
   factory RestaurantItem.fromJson(Map<String, dynamic> json) {
     return RestaurantItem(
@@ -32,6 +40,10 @@ class RestaurantItem {
       wanted: json['wanted'] as bool? ?? false,
       favorited: json['favorited'] as bool? ?? false,
       address: json['address'] as String?,
+      lat: (json['lat'] as num?)?.toDouble(),
+      lng: (json['lng'] as num?)?.toDouble(),
+      phone: json['phone'] as String?,
+      photoUrl: json['photoUrl'] as String?,
     );
   }
 }

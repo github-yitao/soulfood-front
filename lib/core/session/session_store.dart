@@ -51,6 +51,12 @@ class SessionStore {
     }
   }
 
+  Future<void> updateNickname(String nickname) async {
+    this.nickname = nickname;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_keyNickname, nickname);
+  }
+
   Future<void> clear() async {
     final prefs = await SharedPreferences.getInstance();
     userId = null;
