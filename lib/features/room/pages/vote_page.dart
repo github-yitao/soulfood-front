@@ -5,6 +5,7 @@ import 'package:soulfood_front/core/app_bootstrap.dart';
 import 'package:soulfood_front/core/theme/app_semantic_colors.dart';
 import 'package:soulfood_front/core/theme/theme_widgets.dart';
 import 'package:soulfood_front/features/agent/agent_repository.dart';
+import 'package:soulfood_front/features/preference/preference_repository.dart';
 import 'package:soulfood_front/features/room/pages/recipe_result_page.dart';
 import 'package:soulfood_front/features/room/room_models.dart';
 import 'package:soulfood_front/features/room/room_repository.dart';
@@ -25,10 +26,12 @@ class VotePage extends StatefulWidget {
 class _VotePageState extends State<VotePage> {
   final _repo = RoomRepository();
   final _agent = AgentRepository();
+  final _prefRepo = PreferenceRepository();
   final _ws = RoomWebSocketClient();
   RoomDetail? _room;
   bool _loading = true;
   bool _submitting = false;
+  bool _voting = false;
   bool _previewLoading = false;
   bool _wsConnected = false;
   Timer? _countdownTimer;
@@ -72,9 +75,9 @@ class _VotePageState extends State<VotePage> {
     if (room.isClosed) {
       _countdownTimer?.cancel();
       if (wasOpen && silent) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('投票已结束，可查看结果')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('投票已结束，可查看结果')));
       }
     } else {
       _syncCountdown(room);
@@ -113,13 +116,15 @@ class _VotePageState extends State<VotePage> {
       _applyRoomUpdate(room, silent: false);
       _connectWebSocket();
       if (!room.isClosed && room.remainingSeconds == 0) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('投票已超时自动结束（30分钟）')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('投票已超时自动结束（30分钟）')));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$e')));
       }
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -134,30 +139,47 @@ class _VotePageState extends State<VotePage> {
       _applyRoomUpdate(room, silent: silent);
     } catch (e) {
       if (mounted && !silent) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$e')));
       }
     }
   }
 
   Future<void> _vote(int optionId) async {
-    setState(() => _submitting = true);
+    final current = _room;
+    if (current == null || _voting) return;
+
+    // 先本地更新选中态，降低“点击后无反馈”的体感延迟。
+    setState(() {
+      _voting = true;
+      _room = RoomDetail(
+        code: current.code,
+        topic: current.topic,
+        status: current.status,
+        participantCount: current.participantCount,
+        myVoteOptionId: optionId,
+        options: current.options,
+        durationMin: current.durationMin,
+        expiresAt: current.expiresAt,
+        remainingSeconds: current.remainingSeconds,
+      );
+    });
+
     try {
       final room = await _repo.vote(widget.roomCode, optionId);
       if (!mounted) return;
       setState(() => _room = room);
       _syncCountdown(room);
-      final picked = room.options.where((o) => o.id == optionId).map((o) => o.title).firstOrNull;
-      if (picked != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('已投票：$picked')),
-        );
-      }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+        unawaited(_refreshRoom(silent: true));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$e')));
       }
     } finally {
-      if (mounted) setState(() => _submitting = false);
+      if (mounted) setState(() => _voting = false);
     }
   }
 
@@ -182,7 +204,9 @@ class _VotePageState extends State<VotePage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$e')));
       }
     } finally {
       if (mounted) setState(() => _submitting = false);
@@ -200,7 +224,10 @@ class _VotePageState extends State<VotePage> {
           decoration: const InputDecoration(hintText: '例如：寿司'),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('取消')),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('取消'),
+          ),
           FilledButton(
             onPressed: () => Navigator.pop(context, controller.text.trim()),
             child: const Text('添加'),
@@ -216,7 +243,9 @@ class _VotePageState extends State<VotePage> {
       if (mounted) setState(() => _room = room);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$e')));
       }
     } finally {
       if (mounted) setState(() => _submitting = false);
@@ -230,11 +259,12 @@ class _VotePageState extends State<VotePage> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('结束投票？'),
-        content: const Text(
-          '结束后将统计票数、关闭房间，并进入结果页。\n好友将无法继续投票。',
-        ),
+        content: const Text('结束后将统计票数、关闭房间，并进入结果页。\n好友将无法继续投票。'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('再等一会')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('再等一会'),
+          ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('结束并查看结果'),
@@ -247,6 +277,20 @@ class _VotePageState extends State<VotePage> {
     setState(() => _submitting = true);
     try {
       final result = await _repo.result(widget.roomCode);
+      String? prefText;
+      List<RecipeItem>? initialRecipes;
+      try {
+        prefText = await _prefRepo.preferenceText();
+        final recommend = await _agent.recommendRecipesDetailed(
+          preference: prefText,
+          voteWinner: result.title,
+        );
+        if (recommend.items.isNotEmpty) {
+          initialRecipes = recommend.items;
+        }
+      } catch (_) {
+        // 预加载失败时，结果页兜底自行加载
+      }
       if (!mounted) return;
       await Navigator.push<void>(
         context,
@@ -255,13 +299,17 @@ class _VotePageState extends State<VotePage> {
             voteResult: result,
             roomCode: widget.roomCode,
             roomTopic: _room?.topic,
+            preference: prefText,
+            initialRecipes: initialRecipes,
           ),
         ),
       );
       if (mounted) await _enterRoom();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$e')));
       }
     } finally {
       if (mounted) setState(() => _submitting = false);
@@ -276,7 +324,9 @@ class _VotePageState extends State<VotePage> {
     if (room.myVoteOptionId != null) {
       target = room.options.firstWhere((o) => o.id == room.myVoteOptionId);
     } else if (room.options.any((o) => o.voteCount > 0)) {
-      target = room.options.reduce((a, b) => a.voteCount >= b.voteCount ? a : b);
+      target = room.options.reduce(
+        (a, b) => a.voteCount >= b.voteCount ? a : b,
+      );
     } else {
       target = room.options.first;
     }
@@ -326,20 +376,13 @@ class _VotePageState extends State<VotePage> {
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$e')));
       }
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
-  }
-
-  String? get _myPickTitle {
-    final room = _room;
-    if (room == null || room.myVoteOptionId == null) return null;
-    return room.options
-        .where((o) => o.id == room.myVoteOptionId)
-        .map((o) => o.title)
-        .firstOrNull;
   }
 
   @override
@@ -371,197 +414,214 @@ class _VotePageState extends State<VotePage> {
       body: _loading && room == null
           ? const Center(child: CircularProgressIndicator())
           : room == null
-              ? Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text('房间加载失败'),
-                      const SizedBox(height: 12),
-                      FilledButton(onPressed: _enterRoom, child: const Text('重试')),
-                    ],
+          ? Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('房间加载失败'),
+                  const SizedBox(height: 12),
+                  FilledButton(onPressed: _enterRoom, child: const Text('重试')),
+                ],
+              ),
+            )
+          : RefreshIndicator(
+              onRefresh: () => _refreshRoom(silent: false),
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+                children: [
+                  _VoteFlowSteps(isClosed: isClosed, hasVoted: hasVoted),
+                  const SizedBox(height: 12),
+                  Text(
+                    room.topic,
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w800,
+                      height: 1.15,
+                      color: colors.textPrimary,
+                    ),
                   ),
-                )
-              : RefreshIndicator(
-                  onRefresh: () => _refreshRoom(silent: false),
-                  child: ListView(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
-                    children: [
-                      _VoteFlowSteps(isClosed: isClosed, hasVoted: hasVoted),
-                      const SizedBox(height: 12),
-                      Text(
-                        room.topic,
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.w800,
-                          height: 1.15,
-                          color: colors.textPrimary,
-                        ),
+                  const SizedBox(height: 6),
+                  Text(
+                    '房间号：${room.code}　　${room.participantCount} 人参与',
+                    style: TextStyle(fontSize: 13, color: colors.textSecondary),
+                  ),
+                  const SizedBox(height: 12),
+                  if (!isClosed && _remainingSeconds > 0)
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
                       ),
-                      const SizedBox(height: 6),
-                      Text(
-                        '房间号：${room.code}　　${room.participantCount} 人参与',
-                        style: TextStyle(fontSize: 13, color: colors.textSecondary),
+                      margin: const EdgeInsets.only(bottom: 8),
+                      decoration: appStatusDecoration(
+                        colors,
+                        _remainingSeconds <= 300
+                            ? AppStatusKind.error
+                            : AppStatusKind.info,
                       ),
-                      const SizedBox(height: 12),
-                      if (!isClosed && _remainingSeconds > 0)
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                          margin: const EdgeInsets.only(bottom: 8),
-                          decoration: appStatusDecoration(
-                            colors,
-                            _remainingSeconds <= 300 ? AppStatusKind.error : AppStatusKind.info,
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.timer_outlined,
-                                size: 18,
-                                color: appStatusTextColor(
-                                  colors,
-                                  _remainingSeconds <= 300 ? AppStatusKind.error : AppStatusKind.info,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  '剩余 $_remainingLabel · 超时后自动结束（最长30分钟）',
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                    color: appStatusTextColor(
-                                      colors,
-                                      _remainingSeconds <= 300 ? AppStatusKind.error : AppStatusKind.info,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      if (!isClosed) RoomInviteCard(roomCode: room.code, compact: true),
-                      if (isClosed)
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(14),
-                          margin: const EdgeInsets.only(bottom: 12),
-                          decoration: appStatusDecoration(colors, AppStatusKind.success),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.check_circle_outline,
-                                color: appStatusTextColor(colors, AppStatusKind.success),
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  '投票已结束（手动结束或超过30分钟自动结束）',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w700,
-                                    color: appStatusTextColor(colors, AppStatusKind.success),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      if (_myPickTitle != null) ...[
-                        const SizedBox(height: 8),
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(12),
-                          decoration: appStatusDecoration(colors, AppStatusKind.warning),
-                          child: Text(
-                            '你的选择：$_myPickTitle',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w700,
-                              color: appStatusTextColor(colors, AppStatusKind.warning),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.timer_outlined,
+                            size: 18,
+                            color: appStatusTextColor(
+                              colors,
+                              _remainingSeconds <= 300
+                                  ? AppStatusKind.error
+                                  : AppStatusKind.info,
                             ),
                           ),
-                        ),
-                      ],
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
+                          const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              '${room.participantCount} 人参与 · ${room.options.fold<int>(0, (sum, o) => sum + o.voteCount)} 票',
-                              style: TextStyle(color: colors.textSecondary, fontWeight: FontWeight.w600),
+                              '剩余 $_remainingLabel · 超时后自动结束（最长30分钟）',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: appStatusTextColor(
+                                  colors,
+                                  _remainingSeconds <= 300
+                                      ? AppStatusKind.error
+                                      : AppStatusKind.info,
+                                ),
+                              ),
                             ),
                           ),
-                          if (!isClosed)
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.circle,
-                                  size: 8,
-                                  color: _wsConnected ? colors.online : colors.offline,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  _wsConnected ? '实时同步' : '连接中…',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: _wsConnected ? colors.online : colors.textSecondary,
-                                  ),
-                                ),
-                              ],
-                            ),
                         ],
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        '点选一项即完成投票（可改选）',
-                        style: TextStyle(color: colors.textSecondary, fontSize: 13),
+                    ),
+                  if (!isClosed)
+                    RoomInviteCard(roomCode: room.code, compact: true),
+                  if (isClosed)
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(14),
+                      margin: const EdgeInsets.only(bottom: 12),
+                      decoration: appStatusDecoration(
+                        colors,
+                        AppStatusKind.success,
                       ),
-                      const SizedBox(height: 12),
-                      ...room.options.map(
-                        (opt) => _OptionCard(
-                          option: opt,
-                          selected: room.myVoteOptionId == opt.id,
-                          onTap: isClosed || _submitting ? null : () => _vote(opt.id),
-                        ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.check_circle_outline,
+                            color: appStatusTextColor(
+                              colors,
+                              AppStatusKind.success,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              '投票已结束（手动结束或超过30分钟自动结束）',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w700,
+                                color: appStatusTextColor(
+                                  colors,
+                                  AppStatusKind.success,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                      if (!isClosed) ...[
-                        const SizedBox(height: 8),
-                        OutlinedButton.icon(
-                          onPressed: _submitting ? null : _aiSuggest,
-                          icon: const Icon(Icons.auto_awesome),
-                          label: const Text('AI 补选项'),
-                          style: OutlinedButton.styleFrom(
-                            minimumSize: const Size.fromHeight(44),
-                            foregroundColor: colors.infoText,
-                            side: BorderSide(color: colors.infoBorder),
-                            backgroundColor: colors.infoBackground,
+                    ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          '${room.participantCount} 人参与 · ${room.options.fold<int>(0, (sum, o) => sum + o.voteCount)} 票',
+                          style: TextStyle(
+                            color: colors.textSecondary,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
-                        const SizedBox(height: 8),
-                        OutlinedButton.icon(
-                          onPressed: _submitting ? null : _addOption,
-                          icon: const Icon(Icons.add),
-                          label: const Text('手动添加选项'),
+                      ),
+                      if (!isClosed)
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.circle,
+                              size: 8,
+                              color: _wsConnected
+                                  ? colors.online
+                                  : colors.offline,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              _wsConnected ? '实时同步' : '连接中…',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: _wsConnected
+                                    ? colors.online
+                                    : colors.textSecondary,
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 12),
-                        FilledButton.icon(
-                          onPressed: (_submitting || _previewLoading) ? null : _previewRecipes,
-                          icon: _previewLoading
-                              ? SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: colors.onAccent,
-                                  ),
-                                )
-                              : const Icon(Icons.restaurant_menu_outlined),
-                          label: const Text('生成菜谱（Agent）'),
-                          style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(48)),
-                        ),
-                      ],
                     ],
                   ),
-                ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '点选一项即完成投票（可改选）',
+                    style: TextStyle(color: colors.textSecondary, fontSize: 13),
+                  ),
+                  const SizedBox(height: 12),
+                  ...room.options.map(
+                    (opt) => _OptionCard(
+                      option: opt,
+                      selected: room.myVoteOptionId == opt.id,
+                      onTap: isClosed || _submitting || _voting
+                          ? null
+                          : () => _vote(opt.id),
+                    ),
+                  ),
+                  if (!isClosed) ...[
+                    const SizedBox(height: 8),
+                    OutlinedButton.icon(
+                      onPressed: _submitting ? null : _aiSuggest,
+                      icon: const Icon(Icons.auto_awesome),
+                      label: const Text('AI 补选项'),
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size.fromHeight(44),
+                        foregroundColor: colors.infoText,
+                        side: BorderSide(color: colors.infoBorder),
+                        backgroundColor: colors.infoBackground,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    OutlinedButton.icon(
+                      onPressed: _submitting ? null : _addOption,
+                      icon: const Icon(Icons.add),
+                      label: const Text('手动添加选项'),
+                    ),
+                    const SizedBox(height: 12),
+                    FilledButton.icon(
+                      onPressed: (_submitting || _previewLoading)
+                          ? null
+                          : _previewRecipes,
+                      icon: _previewLoading
+                          ? SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: colors.onAccent,
+                              ),
+                            )
+                          : const Icon(Icons.restaurant_menu_outlined),
+                      label: const Text('生成菜谱（Agent）'),
+                      style: FilledButton.styleFrom(
+                        minimumSize: const Size.fromHeight(48),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
     );
   }
 }
@@ -581,16 +641,35 @@ class _VoteFlowSteps extends StatelessWidget {
         color: colors.cardBackground,
         borderRadius: BorderRadius.circular(16),
         boxShadow: const [
-          BoxShadow(color: Color(0x10000000), blurRadius: 10, offset: Offset(0, 4)),
+          BoxShadow(
+            color: Color(0x10000000),
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          ),
         ],
       ),
       child: Row(
         children: [
-          _StepDot(label: '1', title: '选选项', active: !hasVoted && !isClosed, done: hasVoted || isClosed),
+          _StepDot(
+            label: '1',
+            title: '选选项',
+            active: !hasVoted && !isClosed,
+            done: hasVoted || isClosed,
+          ),
           _StepLine(done: hasVoted || isClosed),
-          _StepDot(label: '2', title: '好友加入', active: hasVoted && !isClosed, done: isClosed),
+          _StepDot(
+            label: '2',
+            title: '好友加入',
+            active: hasVoted && !isClosed,
+            done: isClosed,
+          ),
           _StepLine(done: isClosed),
-          _StepDot(label: '3', title: '结束看结果', active: isClosed, done: isClosed),
+          _StepDot(
+            label: '3',
+            title: '结束看结果',
+            active: isClosed,
+            done: isClosed,
+          ),
         ],
       ),
     );
@@ -616,21 +695,32 @@ class _StepDot extends StatelessWidget {
     final color = done
         ? colors.successText
         : active
-            ? colors.accent
-            : colors.offline;
+        ? colors.accent
+        : colors.offline;
     return Expanded(
       child: Column(
         children: [
           CircleAvatar(
             radius: 14,
             backgroundColor: color.withValues(alpha: 0.15),
-            child: Text(label, style: TextStyle(fontWeight: FontWeight.w800, color: color, fontSize: 12)),
+            child: Text(
+              label,
+              style: TextStyle(
+                fontWeight: FontWeight.w800,
+                color: color,
+                fontSize: 12,
+              ),
+            ),
           ),
           const SizedBox(height: 4),
           Text(
             title,
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: color),
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
           ),
         ],
       ),
@@ -692,7 +782,9 @@ class _VoteBottomBar extends StatelessWidget {
                 onPressed: submitting ? null : onViewResult,
                 icon: const Icon(Icons.emoji_events_outlined),
                 label: const Text('查看投票结果与菜谱'),
-                style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(50)),
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size.fromHeight(50),
+                ),
               )
             : Column(
                 mainAxisSize: MainAxisSize.min,
@@ -704,7 +796,10 @@ class _VoteBottomBar extends StatelessWidget {
                       child: Text(
                         '请先点选一个选项完成投票',
                         textAlign: TextAlign.center,
-                        style: TextStyle(color: colors.textSecondary, fontSize: 12),
+                        style: TextStyle(
+                          color: colors.textSecondary,
+                          fontSize: 12,
+                        ),
                       ),
                     ),
                   FilledButton.icon(
@@ -720,7 +815,9 @@ class _VoteBottomBar extends StatelessWidget {
                           )
                         : const Icon(Icons.flag_rounded),
                     label: const Text('结束投票，查看结果'),
-                    style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(50)),
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size.fromHeight(50),
+                    ),
                   ),
                 ],
               ),
@@ -757,7 +854,11 @@ class _OptionCard extends StatelessWidget {
           width: selected ? 2 : 1,
         ),
         boxShadow: const [
-          BoxShadow(color: Color(0x08000000), blurRadius: 8, offset: Offset(0, 3)),
+          BoxShadow(
+            color: Color(0x08000000),
+            blurRadius: 8,
+            offset: Offset(0, 3),
+          ),
         ],
       ),
       child: InkWell(
@@ -781,7 +882,11 @@ class _OptionCard extends StatelessWidget {
                             if (selected)
                               Padding(
                                 padding: const EdgeInsets.only(right: 4),
-                                child: Icon(Icons.check_circle, color: colors.accent, size: 18),
+                                child: Icon(
+                                  Icons.check_circle,
+                                  color: colors.accent,
+                                  size: 18,
+                                ),
                               ),
                             Expanded(
                               child: Text(
@@ -789,20 +894,31 @@ class _OptionCard extends StatelessWidget {
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w700,
-                                  color: selected ? colors.warningText : colors.textPrimary,
+                                  color: selected
+                                      ? colors.warningText
+                                      : colors.textPrimary,
                                 ),
                               ),
                             ),
                           ],
                         ),
                         const SizedBox(height: 2),
-                        Text(meta, style: TextStyle(fontSize: 12, color: colors.textSecondary)),
+                        Text(
+                          meta,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: colors.textSecondary,
+                          ),
+                        ),
                       ],
                     ),
                   ),
                   Text(
                     option.voteCount > 0 ? '${option.percent}%' : '—',
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ],
               ),

@@ -23,7 +23,8 @@ class AppServices {
   final ValueNotifier<AppearanceSettings> appearanceNotifier;
 
   /// 兼容旧引用
-  ValueNotifier<AppThemeMode> get themeNotifier => _ThemeModeProxy(appearanceNotifier);
+  ValueNotifier<AppThemeMode> get themeNotifier =>
+      _ThemeModeProxy(appearanceNotifier);
 
   static AppServices? _instance;
 
@@ -47,7 +48,9 @@ class AppServices {
       api: api,
       auth: auth,
       appearance: appearance,
-      appearanceNotifier: ValueNotifier<AppearanceSettings>(appearance.settings),
+      appearanceNotifier: ValueNotifier<AppearanceSettings>(
+        appearance.settings,
+      ),
     );
     await AppIconService.apply(appearance.settings.appIcon);
   }
@@ -58,7 +61,9 @@ class AppServices {
   }
 
   Future<void> setThemeVariant(AppThemeVariant variant) async {
-    final icon = variant == AppThemeVariant.ghoul ? AppIconVariant.ghoul : AppIconVariant.classic;
+    final icon = variant == AppThemeVariant.ghoul
+        ? AppIconVariant.ghoul
+        : AppIconVariant.classic;
     await appearance.saveVariant(variant);
     await appearance.saveAppIcon(icon);
     await AppIconService.apply(icon);
@@ -144,8 +149,8 @@ class _AppBootstrapState extends State<AppBootstrap> {
   @override
   Widget build(BuildContext context) {
     if (_error != null) {
-      return Scaffold(
-        body: SafeArea(
+      return _BootstrapShell(
+        child: SafeArea(
           child: Center(
             child: Padding(
               padding: const EdgeInsets.all(24),
@@ -172,10 +177,24 @@ class _AppBootstrapState extends State<AppBootstrap> {
       );
     }
     if (!_ready) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+      return const _BootstrapShell(
+        child: Center(child: CircularProgressIndicator()),
       );
     }
     return widget.child;
+  }
+}
+
+class _BootstrapShell extends StatelessWidget {
+  const _BootstrapShell({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Directionality(
+      textDirection: TextDirection.ltr,
+      child: Material(color: const Color(0xFFF5F5F7), child: child),
+    );
   }
 }

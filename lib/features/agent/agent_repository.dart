@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:soulfood_front/core/api/api_client.dart';
 import 'package:soulfood_front/core/app_bootstrap.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -10,19 +12,36 @@ class RecipeItem {
   final String reason;
 
   factory RecipeItem.fromJson(Map<String, dynamic> json) {
+    final scoreValue = json['score'];
     return RecipeItem(
       name: json['name'] as String? ?? '',
-      score: (json['score'] as num?)?.toString() ?? '4.5',
+      score: switch (scoreValue) {
+        num n => n.toString(),
+        String s when s.trim().isNotEmpty => s.trim(),
+        _ => '4.5',
+      },
       reason: json['reason'] as String? ?? '',
     );
   }
 }
 
 class RecommendRecipesResult {
-  RecommendRecipesResult({required this.items, required this.fromApi});
+  RecommendRecipesResult({
+    required this.items,
+    required this.fromApi,
+    this.fromCache = false,
+  });
 
   final List<RecipeItem> items;
   final bool fromApi;
+  final bool fromCache;
+}
+
+class _RecipeCacheEntry {
+  const _RecipeCacheEntry({required this.at, required this.items});
+
+  final DateTime at;
+  final List<RecipeItem> items;
 }
 
 class RandomPickResult {
@@ -109,7 +128,9 @@ class AiConversationItem {
       title: json['title'] as String? ?? '新对话',
       preview: json['preview'] as String? ?? '',
       sceneTag: json['sceneTag'] as String?,
-      updatedAt: json['updatedAt'] != null ? DateTime.tryParse(json['updatedAt'] as String) : null,
+      updatedAt: json['updatedAt'] != null
+          ? DateTime.tryParse(json['updatedAt'] as String)
+          : null,
     );
   }
 }
@@ -135,7 +156,9 @@ class AiUserMemoryItem {
       memoryType: json['memoryType'] as String? ?? 'long_term',
       content: json['content'] as String? ?? '',
       source: json['source'] as String? ?? 'user',
-      updatedAt: json['updatedAt'] != null ? DateTime.tryParse(json['updatedAt'] as String) : null,
+      updatedAt: json['updatedAt'] != null
+          ? DateTime.tryParse(json['updatedAt'] as String)
+          : null,
     );
   }
 
@@ -170,6 +193,8 @@ class AgentRepository {
 
   final ApiClient _api;
   static const _conversationKey = 'ai_conversation_id';
+  static const _recipeCacheTtl = Duration(minutes: 3);
+  static final Map<String, _RecipeCacheEntry> _recipeCache = {};
 
   Future<String?> loadConversationId() async {
     final prefs = await SharedPreferences.getInstance();
@@ -225,8 +250,10 @@ class AgentRepository {
           'conversationId': conversationId,
         if (lat != null) 'lat': lat,
         if (lng != null) 'lng': lng,
-        if (imageBase64 != null && imageBase64.isNotEmpty) 'imageBase64': imageBase64,
-        if (imageMimeType != null && imageMimeType.isNotEmpty) 'imageMimeType': imageMimeType,
+        if (imageBase64 != null && imageBase64.isNotEmpty)
+          'imageBase64': imageBase64,
+        if (imageMimeType != null && imageMimeType.isNotEmpty)
+          'imageMimeType': imageMimeType,
       },
     );
   }
@@ -293,26 +320,44 @@ class AgentRepository {
     String? voteWinner,
     int? participants,
   }) async {
+    final cacheKey = '${voteWinner ?? ''}|$preference|${participants ?? ''}';
+    final cached = _recipeCache[cacheKey];
+    if (cached != null &&
+        DateTime.now().difference(cached.at) <= _recipeCacheTtl) {
+      return RecommendRecipesResult(
+        items: List<RecipeItem>.from(cached.items),
+        fromApi: true,
+        fromCache: true,
+      );
+    }
+
     try {
       final data = await _api.postData<Map<String, dynamic>>(
         '/ai/recommend/recipes',
         data: {
           'preference': preference,
-          if (voteWinner != null && voteWinner.isNotEmpty) 'voteWinner': voteWinner,
+          if (voteWinner != null && voteWinner.isNotEmpty)
+            'voteWinner': voteWinner,
           if (participants != null) 'participants': participants,
         },
         parser: (json) => json as Map<String, dynamic>,
       );
-      final items = data['items'] as List<dynamic>? ?? [];
+      final items = _extractRecipeItems(data['items']);
       if (items.isNotEmpty) {
-        return RecommendRecipesResult(
-          items: items.map((e) => RecipeItem.fromJson(e as Map<String, dynamic>)).toList(),
-          fromApi: true,
+        final parsedItems = items.map(RecipeItem.fromJson).toList();
+        _recipeCache[cacheKey] = _RecipeCacheEntry(
+          at: DateTime.now(),
+          items: parsedItems,
         );
+        return RecommendRecipesResult(items: parsedItems, fromApi: true);
       }
       final raw = data['rawReply'] as String? ?? '';
       final parsed = _parseRecipesFromText(raw);
       if (parsed.isNotEmpty) {
+        _recipeCache[cacheKey] = _RecipeCacheEntry(
+          at: DateTime.now(),
+          items: parsed,
+        );
         return RecommendRecipesResult(items: parsed, fromApi: true);
       }
     } catch (_) {
@@ -322,6 +367,52 @@ class AgentRepository {
       items: _fallbackRecipes(voteWinner),
       fromApi: false,
     );
+  }
+
+  List<Map<String, dynamic>> _extractRecipeItems(dynamic raw) {
+    if (raw == null) return const [];
+    if (raw is List) {
+      return raw
+          .map((e) => _extractRecipeFromEntry(e))
+          .whereType<Map<String, dynamic>>()
+          .toList();
+    }
+    if (raw is Map<String, dynamic>) {
+      if (raw.containsKey('items')) {
+        return _extractRecipeItems(raw['items']);
+      }
+      final one = _extractRecipeFromEntry(raw);
+      return one == null ? const [] : [one];
+    }
+    if (raw is String) {
+      try {
+        return _extractRecipeItems(jsonDecode(raw));
+      } catch (_) {
+        return const [];
+      }
+    }
+    return const [];
+  }
+
+  Map<String, dynamic>? _extractRecipeFromEntry(dynamic entry) {
+    if (entry is! Map) return null;
+    final map = entry.map((k, v) => MapEntry('$k', v));
+    if (map.containsKey('name')) {
+      return map;
+    }
+    if (map.containsKey('items')) {
+      final nested = _extractRecipeItems(map['items']);
+      if (nested.isNotEmpty) return nested.first;
+    }
+    final firstList = map.values.whereType<List>().cast<dynamic>().firstWhere(
+      (list) => list.isNotEmpty,
+      orElse: () => null,
+    );
+    if (firstList != null) {
+      final nested = _extractRecipeItems(firstList);
+      if (nested.isNotEmpty) return nested.first;
+    }
+    return null;
   }
 
   List<RecipeItem> _fallbackRecipes(String? voteWinner) {
@@ -339,20 +430,25 @@ class AgentRepository {
     ];
   }
 
+  List<RecipeItem> quickFallbackRecipes({String? voteWinner}) {
+    return _fallbackRecipes(voteWinner);
+  }
+
   Future<List<String>> suggestOptions({
     required String topic,
     List<String> existingOptions = const [],
   }) async {
     final data = await _api.postData<Map<String, dynamic>>(
       '/ai/suggest-options',
-      data: {
-        'topic': topic,
-        'existingOptions': existingOptions,
-      },
+      data: {'topic': topic, 'existingOptions': existingOptions},
       parser: (json) => json as Map<String, dynamic>,
     );
     final options = data['options'] as List<dynamic>? ?? [];
-    return options.map((e) => '$e').where((s) => s.length >= 2).take(4).toList();
+    return options
+        .map((e) => '$e')
+        .where((s) => s.length >= 2)
+        .take(4)
+        .toList();
   }
 
   Future<RandomPickResult> randomPick({
@@ -398,7 +494,9 @@ class AgentRepository {
   Future<List<AiUserMemoryItem>> listMemories({String? memoryType}) async {
     return _api.getData<List<AiUserMemoryItem>>(
       '/ai/memory',
-      query: memoryType != null && memoryType.isNotEmpty ? {'memoryType': memoryType} : null,
+      query: memoryType != null && memoryType.isNotEmpty
+          ? {'memoryType': memoryType}
+          : null,
       parser: (json) => (json as List<dynamic>)
           .map((e) => AiUserMemoryItem.fromJson(e as Map<String, dynamic>))
           .toList(),

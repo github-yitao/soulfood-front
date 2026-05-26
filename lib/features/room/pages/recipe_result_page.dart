@@ -29,8 +29,10 @@ class RecipeResultPage extends StatefulWidget {
   final String? roomCode;
   final String? roomTopic;
   final String? preference;
+
   /// 来自聊天分享卡等场景，跳过 AI 重新拉取
   final List<RecipeItem>? initialRecipes;
+
   /// 投票未结束时为 true，基于当前领先/已选项生成预览
   final bool isPreview;
 
@@ -64,14 +66,25 @@ class _RecipeResultPageState extends State<RecipeResultPage> {
             const SizedBox(height: 12),
             TextField(
               controller: amountCtrl,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(labelText: '消费金额（元）', border: OutlineInputBorder()),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              decoration: const InputDecoration(
+                labelText: '消费金额（元）',
+                border: OutlineInputBorder(),
+              ),
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('取消')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('确认')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('取消'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('确认'),
+          ),
         ],
       ),
     );
@@ -87,11 +100,15 @@ class _RecipeResultPageState extends State<RecipeResultPage> {
         roomCode: widget.roomCode,
       );
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('已记入历史订单')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('已记入历史订单')));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$e')));
       }
     } finally {
       amountCtrl.dispose();
@@ -109,6 +126,9 @@ class _RecipeResultPageState extends State<RecipeResultPage> {
       _loadingRecipes = false;
       _sourceLine = '来自好友分享的投票结果';
     } else {
+      _recipes = _agent.quickFallbackRecipes(
+        voteWinner: widget.voteResult.title,
+      );
       _loadRecipes();
     }
   }
@@ -129,7 +149,9 @@ class _RecipeResultPageState extends State<RecipeResultPage> {
         setState(() {
           _recipes = result.items;
           _sourceLine = result.fromApi
-              ? '来源：POST /ai/recommend/recipes · AI 推荐'
+              ? (result.fromCache
+                    ? '来源：本地缓存命中 · AI 推荐'
+                    : '来源：POST /ai/recommend/recipes · AI 推荐')
               : '演示：后端未响应时使用本地推荐';
         });
       }
@@ -151,13 +173,15 @@ class _RecipeResultPageState extends State<RecipeResultPage> {
       );
       if (mounted) {
         setState(() => _favorited.add(item.name));
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('已收藏 ${item.name}')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('已收藏 ${item.name}')));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$e')));
       }
     }
   }
@@ -196,9 +220,9 @@ class _RecipeResultPageState extends State<RecipeResultPage> {
 
   void _openShareSheet() {
     if (_loadingRecipes) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('菜谱加载中，请稍后再分享')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('菜谱加载中，请稍后再分享')));
       return;
     }
     final data = VoteShareData(
@@ -241,12 +265,20 @@ class _RecipeResultPageState extends State<RecipeResultPage> {
               decoration: appStatusDecoration(colors, AppStatusKind.info),
               child: Row(
                 children: [
-                  Icon(Icons.info_outline, size: 18, color: appStatusTextColor(colors, AppStatusKind.info)),
+                  Icon(
+                    Icons.info_outline,
+                    size: 18,
+                    color: appStatusTextColor(colors, AppStatusKind.info),
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       '投票进行中，菜谱基于当前选项预览；结束投票后可查看正式结果。',
-                      style: TextStyle(fontSize: 13, color: appStatusTextColor(colors, AppStatusKind.info), height: 1.35),
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: appStatusTextColor(colors, AppStatusKind.info),
+                        height: 1.35,
+                      ),
                     ),
                   ),
                 ],
@@ -259,7 +291,10 @@ class _RecipeResultPageState extends State<RecipeResultPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: colors.chipSelectedBackground,
                     borderRadius: BorderRadius.circular(999),
@@ -268,14 +303,24 @@ class _RecipeResultPageState extends State<RecipeResultPage> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.auto_awesome, size: 14, color: appStatusTextColor(colors, AppStatusKind.warning)),
+                      Icon(
+                        Icons.auto_awesome,
+                        size: 14,
+                        color: appStatusTextColor(
+                          colors,
+                          AppStatusKind.warning,
+                        ),
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         'AI 推荐',
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
-                          color: appStatusTextColor(colors, AppStatusKind.warning),
+                          color: appStatusTextColor(
+                            colors,
+                            AppStatusKind.warning,
+                          ),
                         ),
                       ),
                     ],
@@ -291,7 +336,9 @@ class _RecipeResultPageState extends State<RecipeResultPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            widget.isPreview ? '当前参考：${widget.voteResult.title}' : '投票胜出：${widget.voteResult.title}',
+                            widget.isPreview
+                                ? '当前参考：${widget.voteResult.title}'
+                                : '投票胜出：${widget.voteResult.title}',
                             style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.w800,
@@ -302,7 +349,10 @@ class _RecipeResultPageState extends State<RecipeResultPage> {
                           Text(
                             '${widget.voteResult.voteCount} 票 · ${widget.voteResult.percent}%'
                             '${widget.roomCode != null ? ' · 房间 ${widget.roomCode}' : ''}',
-                            style: TextStyle(color: colors.textSecondary, fontSize: 13),
+                            style: TextStyle(
+                              color: colors.textSecondary,
+                              fontSize: 13,
+                            ),
                           ),
                         ],
                       ),
@@ -314,29 +364,45 @@ class _RecipeResultPageState extends State<RecipeResultPage> {
                   widget.isPreview
                       ? '基于「${widget.voteResult.title}」与你的口味偏好（$_preferenceText）生成预览'
                       : '投票胜出：${widget.voteResult.title} · 已结合口味偏好（$_preferenceText）',
-                  style: TextStyle(color: colors.textSecondary, fontSize: 13, height: 1.35),
+                  style: TextStyle(
+                    color: colors.textSecondary,
+                    fontSize: 13,
+                    height: 1.35,
+                  ),
                 ),
               ],
             ),
           ),
           const SizedBox(height: 16),
-          if (_loadingRecipes)
+          if (_loadingRecipes && _recipes.isEmpty)
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 40),
               child: Center(child: CircularProgressIndicator()),
             )
-          else if (_error != null)
+          else if (_error != null && _recipes.isEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 16),
               child: Column(
                 children: [
                   Text(_error!, style: TextStyle(color: colors.textSecondary)),
                   const SizedBox(height: 8),
-                  OutlinedButton(onPressed: _loadRecipes, child: const Text('重试')),
+                  OutlinedButton(
+                    onPressed: _loadRecipes,
+                    child: const Text('重试'),
+                  ),
                 ],
               ),
             )
-          else
+          else ...[
+            if (_loadingRecipes)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: LinearProgressIndicator(
+                  minHeight: 3,
+                  color: colors.accent,
+                  backgroundColor: colors.progressTrack,
+                ),
+              ),
             ..._recipes.map(
               (item) => _RecipeCard(
                 item: item,
@@ -344,18 +410,25 @@ class _RecipeResultPageState extends State<RecipeResultPage> {
                 onFavorite: () => _favorite(item),
               ),
             ),
+          ],
           if (_sourceLine.isNotEmpty) ...[
             const SizedBox(height: 8),
             Text(
               _sourceLine,
-              style: TextStyle(fontSize: 11, color: colors.textSecondary, height: 1.4),
+              style: TextStyle(
+                fontSize: 11,
+                color: colors.textSecondary,
+                height: 1.4,
+              ),
             ),
           ],
           const SizedBox(height: 16),
           if (!widget.isPreview) ...[
             OutlinedButton.icon(
               onPressed: _openShareSheet,
-              style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(48)),
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size.fromHeight(48),
+              ),
               icon: const Icon(Icons.card_giftcard_outlined),
               label: Text(isGhoulTheme ? '生成喰迹分享卡' : '生成分享卡'),
             ),
@@ -396,14 +469,21 @@ class _RecipeResultPageState extends State<RecipeResultPage> {
             const SizedBox(height: 8),
             OutlinedButton(
               onPressed: _recordingOrder ? null : _recordVoteOrder,
-              style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(48)),
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size.fromHeight(48),
+              ),
               child: _recordingOrder
-                  ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2))
+                  ? const SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
                   : const Text('记入历史订单'),
             ),
             const SizedBox(height: 8),
             FilledButton(
-              onPressed: () => Navigator.popUntil(context, (route) => route.isFirst),
+              onPressed: () =>
+                  Navigator.popUntil(context, (route) => route.isFirst),
               style: FilledButton.styleFrom(
                 minimumSize: const Size.fromHeight(48),
               ),
@@ -444,7 +524,11 @@ class _RecipeCard extends StatelessWidget {
               children: [
                 Text(
                   item.name,
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: colors.textPrimary),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: colors.textPrimary,
+                  ),
                 ),
                 if (item.reason.isNotEmpty) ...[
                   const SizedBox(height: 4),
@@ -452,7 +536,11 @@ class _RecipeCard extends StatelessWidget {
                     item.reason,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 13, color: colors.textSecondary, height: 1.35),
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: colors.textSecondary,
+                      height: 1.35,
+                    ),
                   ),
                 ],
               ],
@@ -463,7 +551,10 @@ class _RecipeCard extends StatelessWidget {
             children: [
               Text(
                 '${item.score}分',
-                style: TextStyle(fontWeight: FontWeight.w700, color: colors.accent),
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  color: colors.accent,
+                ),
               ),
               IconButton(
                 visualDensity: VisualDensity.compact,

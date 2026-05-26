@@ -24,9 +24,9 @@ class RoomInviteCard extends StatelessWidget {
   Future<void> _copy(BuildContext context) async {
     await Clipboard.setData(ClipboardData(text: roomCode));
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('房间号 $roomCode 已复制')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('房间号 $roomCode 已复制')));
     }
   }
 
@@ -46,13 +46,21 @@ class RoomInviteCard extends StatelessWidget {
         children: [
           Text(
             '邀请好友投票',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: colors.textPrimary),
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w800,
+              color: colors.textPrimary,
+            ),
           ),
           if (!compact) ...[
             const SizedBox(height: 6),
             Text(
               '把房间号或下方二维码发给好友，对方扫码即可入房：',
-              style: TextStyle(fontSize: 12, color: colors.textSecondary, height: 1.4),
+              style: TextStyle(
+                fontSize: 12,
+                color: colors.textSecondary,
+                height: 1.4,
+              ),
             ),
             const SizedBox(height: 4),
             Text(
@@ -60,7 +68,11 @@ class RoomInviteCard extends StatelessWidget {
               '② 首页 → 和朋友一起决定 → 加入房间\n'
               '③ 好友的房间列表（需先加好友）\n'
               '④ 创建后 30 分钟内有效，超时自动结束',
-              style: TextStyle(fontSize: 12, color: colors.textSecondary, height: 1.5),
+              style: TextStyle(
+                fontSize: 12,
+                color: colors.textSecondary,
+                height: 1.5,
+              ),
             ),
           ],
           if (_showQr) ...[
@@ -96,48 +108,41 @@ class RoomInviteCard extends StatelessWidget {
                 style: TextStyle(fontSize: 12, color: colors.textSecondary),
               ),
             ),
-          ] else if (compact) ...[
-            const SizedBox(height: 10),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: () => showRoomQrDialog(context, roomCode),
-                icon: const Icon(Icons.qr_code_2_outlined),
-                label: const Text('显示入房二维码'),
-              ),
-            ),
           ],
           const SizedBox(height: 12),
-          Row(
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('房间号', style: TextStyle(fontSize: 12, color: colors.textSecondary)),
-                    const SizedBox(height: 4),
-                    Text(
-                      roomCode,
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 4,
-                        color: colors.chipSelectedText,
-                      ),
-                    ),
-                  ],
+              Text(
+                '房间号',
+                style: TextStyle(fontSize: 12, color: colors.textSecondary),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                roomCode,
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 4,
+                  color: colors.chipSelectedText,
                 ),
               ),
-              OutlinedButton.icon(
-                onPressed: () => _share(context),
-                icon: const Icon(Icons.share_outlined, size: 18),
-                label: const Text('分享'),
-              ),
-              const SizedBox(width: 8),
-              FilledButton.icon(
-                onPressed: () => _copy(context),
-                icon: const Icon(Icons.copy_rounded, size: 18),
-                label: const Text('复制'),
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: () => _share(context),
+                    icon: const Icon(Icons.share_outlined, size: 18),
+                    label: const Text('分享'),
+                  ),
+                  FilledButton.icon(
+                    onPressed: () => _copy(context),
+                    icon: const Icon(Icons.copy_rounded, size: 18),
+                    label: const Text('复制'),
+                  ),
+                ],
               ),
             ],
           ),
@@ -150,13 +155,14 @@ class RoomInviteCard extends StatelessWidget {
 Future<void> showRoomQrDialog(BuildContext context, String roomCode) {
   return showDialog<void>(
     context: context,
-    builder: (ctx) => AlertDialog(
-      title: const Text('扫码入房'),
-      content: SingleChildScrollView(
-        child: RoomInviteCard(roomCode: roomCode, showQr: true),
-      ),
+    builder: (ctx) => _RoomInviteDialog(
+      title: '扫码入房',
+      content: RoomInviteCard(roomCode: roomCode, showQr: true),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('关闭')),
+        TextButton(
+          onPressed: () => Navigator.pop(ctx),
+          child: const Text('关闭'),
+        ),
       ],
     ),
   );
@@ -166,11 +172,9 @@ Future<void> showRoomCreatedDialog(BuildContext context, String roomCode) {
   return showDialog<void>(
     context: context,
     barrierDismissible: false,
-    builder: (ctx) => AlertDialog(
-      title: const Text('房间创建成功'),
-      content: SingleChildScrollView(
-        child: RoomInviteCard(roomCode: roomCode),
-      ),
+    builder: (ctx) => _RoomInviteDialog(
+      title: '房间创建成功',
+      content: RoomInviteCard(roomCode: roomCode),
       actions: [
         FilledButton(
           onPressed: () => Navigator.pop(ctx),
@@ -179,4 +183,53 @@ Future<void> showRoomCreatedDialog(BuildContext context, String roomCode) {
       ],
     ),
   );
+}
+
+class _RoomInviteDialog extends StatelessWidget {
+  const _RoomInviteDialog({
+    required this.title,
+    required this.content,
+    required this.actions,
+  });
+
+  final String title;
+  final Widget content;
+  final List<Widget> actions;
+
+  @override
+  Widget build(BuildContext context) {
+    final screenSize = MediaQuery.sizeOf(context);
+    final dialogWidth = (screenSize.width - 32).clamp(280.0, 420.0).toDouble();
+    final maxDialogHeight = screenSize.height * 0.82;
+
+    return Dialog(
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      clipBehavior: Clip.antiAlias,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: dialogWidth,
+          maxHeight: maxDialogHeight,
+        ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 18, 20, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: Theme.of(context).textTheme.titleLarge),
+              const SizedBox(height: 12),
+              Flexible(child: SingleChildScrollView(child: content)),
+              const SizedBox(height: 14),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                alignment: WrapAlignment.end,
+                children: actions,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }

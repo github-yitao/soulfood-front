@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:soulfood_front/core/location/location_service.dart';
 import 'package:soulfood_front/core/theme/app_semantic_colors.dart';
@@ -25,6 +27,7 @@ class _RandomEatPageState extends State<RandomEatPage> {
   bool _picking = false;
   String? _pickName;
   String? _pickReason;
+  bool _usingFallback = false;
 
   @override
   void initState() {
@@ -37,19 +40,92 @@ class _RandomEatPageState extends State<RandomEatPage> {
     try {
       final location = await LocationService.current();
       if (mounted && location == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('未获取定位，将按默认区域搜索附近餐厅')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('未获取定位，将按默认区域搜索附近餐厅')));
       }
-      final items = await _repo.list(lat: location?.lat, lng: location?.lng);
-      if (mounted) setState(() => _items = items);
+      final items = await _repo
+          .list(lat: location?.lat, lng: location?.lng)
+          .timeout(const Duration(seconds: 6));
+      if (mounted) {
+        setState(() {
+          _items = items;
+          _usingFallback = false;
+        });
+      }
+    } on TimeoutException {
+      if (mounted) {
+        setState(() {
+          _items = _fallbackRestaurants();
+          _usingFallback = true;
+        });
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('附近数据加载超时，先用常见候选帮你随机')));
+      }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+        setState(() {
+          _items = _fallbackRestaurants();
+          _usingFallback = true;
+        });
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$e')));
       }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
+  }
+
+  List<RestaurantItem> _fallbackRestaurants() {
+    return [
+      RestaurantItem(
+        id: -1,
+        name: '火锅',
+        category: '热门',
+        rating: 4.8,
+        distanceKm: null,
+        wanted: false,
+        favorited: false,
+      ),
+      RestaurantItem(
+        id: -2,
+        name: '烤肉',
+        category: '热门',
+        rating: 4.7,
+        distanceKm: null,
+        wanted: false,
+        favorited: false,
+      ),
+      RestaurantItem(
+        id: -3,
+        name: '面馆',
+        category: '快选',
+        rating: 4.6,
+        distanceKm: null,
+        wanted: false,
+        favorited: false,
+      ),
+      RestaurantItem(
+        id: -4,
+        name: '麻辣烫',
+        category: '快选',
+        rating: 4.5,
+        distanceKm: null,
+        wanted: false,
+        favorited: false,
+      ),
+      RestaurantItem(
+        id: -5,
+        name: '轻食沙拉',
+        category: '清淡',
+        rating: 4.4,
+        distanceKm: null,
+        wanted: false,
+        favorited: false,
+      ),
+    ];
   }
 
   Future<void> _aiRandomPick() async {
@@ -67,7 +143,9 @@ class _RandomEatPageState extends State<RandomEatPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$e')));
       }
     } finally {
       if (mounted) setState(() => _picking = false);
@@ -87,7 +165,9 @@ class _RandomEatPageState extends State<RandomEatPage> {
       Navigator.pushNamed(context, AppRoutes.vote, arguments: room.code);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$e')));
       }
     } finally {
       if (mounted) setState(() => _picking = false);
@@ -108,28 +188,43 @@ class _RandomEatPageState extends State<RandomEatPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: appStatusDecoration(colors, AppStatusKind.info),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.auto_awesome, size: 14, color: colors.infoText),
+                      Icon(
+                        Icons.auto_awesome,
+                        size: 14,
+                        color: colors.infoText,
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         'AI 决策',
-                        style: TextStyle(fontSize: 12, color: colors.infoText, fontWeight: FontWeight.w700),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: colors.infoText,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ],
                   ),
                 ),
                 const SizedBox(height: 10),
                 const Text(
-                  '附近吃什么',
-                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, height: 1.15),
+                  '随机吃什么',
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w800,
+                    height: 1.15,
+                  ),
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  '发现附近美食，或由 AI 帮你拍板',
+                  _usingFallback ? '网络较慢，先从常见候选里随机' : '发现附近美食，或由 AI 帮你拍板',
                   style: TextStyle(color: colors.textSecondary, fontSize: 14),
                 ),
               ],
@@ -141,7 +236,10 @@ class _RandomEatPageState extends State<RandomEatPage> {
               child: _loading && _items.isEmpty
                   ? ListView(
                       children: const [
-                        SizedBox(height: 160, child: Center(child: CircularProgressIndicator())),
+                        SizedBox(
+                          height: 160,
+                          child: Center(child: CircularProgressIndicator()),
+                        ),
                       ],
                     )
                   : ListView(
@@ -154,12 +252,23 @@ class _RandomEatPageState extends State<RandomEatPage> {
                               leading: CircleAvatar(
                                 backgroundColor: colors.chipSelectedBackground,
                                 child: Text(
-                                  item.name.isNotEmpty ? item.name.substring(0, 1) : '?',
-                                  style: const TextStyle(fontWeight: FontWeight.w800),
+                                  item.name.isNotEmpty
+                                      ? item.name.substring(0, 1)
+                                      : '?',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w800,
+                                  ),
                                 ),
                               ),
-                              title: Text(item.name, style: const TextStyle(fontWeight: FontWeight.w700)),
-                              subtitle: Text('${item.category} · ${item.distanceKm ?? '-'} km'),
+                              title: Text(
+                                item.name,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              subtitle: Text(
+                                '${item.category} · ${item.distanceKm ?? '-'} km',
+                              ),
                               trailing: Text('${item.rating ?? '-'}'),
                             ),
                           ),
@@ -169,21 +278,37 @@ class _RandomEatPageState extends State<RandomEatPage> {
                           Container(
                             width: double.infinity,
                             padding: const EdgeInsets.all(14),
-                            decoration: appStatusDecoration(colors, AppStatusKind.info),
+                            decoration: appStatusDecoration(
+                              colors,
+                              AppStatusKind.info,
+                            ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('今天就吃', style: TextStyle(fontSize: 13, color: colors.textSecondary)),
+                                Text(
+                                  '今天就吃',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: colors.textSecondary,
+                                  ),
+                                ),
                                 const SizedBox(height: 4),
                                 Text(
                                   _pickName!,
-                                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
+                                  style: const TextStyle(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.w800,
+                                  ),
                                 ),
-                                if (_pickReason != null && _pickReason!.isNotEmpty) ...[
+                                if (_pickReason != null &&
+                                    _pickReason!.isNotEmpty) ...[
                                   const SizedBox(height: 6),
                                   Text(
                                     _pickReason!,
-                                    style: TextStyle(color: colors.textSecondary, fontSize: 13),
+                                    style: TextStyle(
+                                      color: colors.textSecondary,
+                                      fontSize: 13,
+                                    ),
                                   ),
                                 ],
                               ],
@@ -200,7 +325,11 @@ class _RandomEatPageState extends State<RandomEatPage> {
             child: OutlinedButton.icon(
               onPressed: _picking || _items.isEmpty ? null : _aiRandomPick,
               icon: _picking
-                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
                   : const Icon(Icons.casino),
               label: const Text('AI 随机帮我选'),
               style: OutlinedButton.styleFrom(
