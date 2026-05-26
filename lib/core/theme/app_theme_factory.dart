@@ -10,28 +10,31 @@ class AppThemeFactory {
   static const _fontFamily = 'PingFang SC';
 
   static ThemeData classicLight() => _build(
-        brightness: Brightness.light,
-        semantic: AppSemanticColors.classicLight,
-        scaffold: ClassicBrandPalette.scaffoldLight,
-        seed: ClassicBrandPalette.accent,
-      );
+    brightness: Brightness.light,
+    semantic: AppSemanticColors.classicLight,
+    scaffold: ClassicBrandPalette.scaffoldLight,
+    seed: ClassicBrandPalette.accent,
+  );
 
   static ThemeData classicDark() => _build(
-        brightness: Brightness.dark,
-        semantic: AppSemanticColors.classicDark,
-        scaffold: ClassicBrandPalette.scaffoldDark,
-        seed: ClassicBrandPalette.accent,
-      );
+    brightness: Brightness.dark,
+    semantic: AppSemanticColors.classicDark,
+    scaffold: ClassicBrandPalette.scaffoldDark,
+    seed: ClassicBrandPalette.accent,
+  );
 
   static ThemeData ghoul() => _build(
-        brightness: Brightness.dark,
-        semantic: AppSemanticColors.ghoul,
-        scaffold: const Color(0xFF1C1C1E),
-        seed: const Color(0xFFFF3B30),
-        isGhoul: true,
-      );
+    brightness: Brightness.dark,
+    semantic: AppSemanticColors.ghoul,
+    scaffold: const Color(0xFF1C1C1E),
+    seed: const Color(0xFFFF3B30),
+    isGhoul: true,
+  );
 
-  static ThemeData resolve(AppearanceSettings settings, Brightness platformBrightness) {
+  static ThemeData resolve(
+    AppearanceSettings settings,
+    Brightness platformBrightness,
+  ) {
     if (settings.variant == AppThemeVariant.ghoul) {
       return ghoul();
     }
@@ -58,8 +61,9 @@ class AppThemeFactory {
       surface: semantic.cardBackground,
     );
 
-    final buttonShape = RoundedRectangleBorder(borderRadius: BorderRadius.circular(20));
-
+    final buttonShape = RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(20),
+    );
     return ThemeData(
       useMaterial3: true,
       brightness: brightness,
@@ -82,7 +86,11 @@ class AppThemeFactory {
       ),
       cardTheme: CardThemeData(
         color: semantic.cardBackground,
-        elevation: 0,
+        elevation: isGhoul ? 0 : (isDark ? 2 : 1),
+        shadowColor: isGhoul
+            ? Colors.transparent
+            : Colors.black.withValues(alpha: isDark ? 0.25 : 0.08),
+        surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
           side: BorderSide(color: semantic.cardBorder),
@@ -111,7 +119,13 @@ class AppThemeFactory {
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           backgroundColor: semantic.accent,
-          foregroundColor: isGhoul ? Colors.white : (isDark ? Colors.white : const Color(0xFF1E1F23)),
+          foregroundColor: isGhoul
+              ? Colors.white
+              : (isDark ? Colors.white : const Color(0xFF1E1F23)),
+          elevation: isGhoul ? 0 : 1.5,
+          shadowColor: isGhoul
+              ? Colors.transparent
+              : semantic.accent.withValues(alpha: 0.28),
           shape: buttonShape,
           minimumSize: const Size.fromHeight(48),
           textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
@@ -125,14 +139,25 @@ class AppThemeFactory {
         ),
       ),
       textButtonTheme: TextButtonThemeData(
-        style: TextButton.styleFrom(foregroundColor: semantic.textSecondary),
+        style: TextButton.styleFrom(
+          foregroundColor: semantic.textSecondary,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+        ),
       ),
       chipTheme: ChipThemeData(
         backgroundColor: semantic.chipBackground,
         selectedColor: semantic.chipSelectedBackground,
         disabledColor: semantic.chipBackground.withValues(alpha: 0.5),
-        labelStyle: TextStyle(color: semantic.chipText, fontWeight: FontWeight.w600),
-        secondaryLabelStyle: TextStyle(color: semantic.chipSelectedText, fontWeight: FontWeight.w700),
+        labelStyle: TextStyle(
+          color: semantic.chipText,
+          fontWeight: FontWeight.w600,
+        ),
+        secondaryLabelStyle: TextStyle(
+          color: semantic.chipSelectedText,
+          fontWeight: FontWeight.w700,
+        ),
         side: BorderSide(color: semantic.chipBorder),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
         checkmarkColor: semantic.chipSelectedText,
@@ -159,6 +184,9 @@ class AppThemeFactory {
       dialogTheme: DialogThemeData(
         backgroundColor: semantic.cardBackground,
         surfaceTintColor: Colors.transparent,
+        shadowColor: isGhoul
+            ? Colors.transparent
+            : Colors.black.withValues(alpha: isDark ? 0.4 : 0.14),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
           side: BorderSide(color: semantic.cardBorder),
@@ -180,6 +208,10 @@ class AppThemeFactory {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: semantic.inputFill,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 14,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide(color: semantic.inputBorder),
@@ -190,21 +222,36 @@ class AppThemeFactory {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: semantic.accent, width: 1.5),
+          borderSide: BorderSide(color: semantic.accent, width: 1.8),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: semantic.errorBorder, width: 1.8),
         ),
         labelStyle: TextStyle(color: semantic.textSecondary),
-        hintStyle: TextStyle(color: semantic.textSecondary.withValues(alpha: 0.7)),
+        hintStyle: TextStyle(
+          color: semantic.textSecondary.withValues(alpha: 0.7),
+        ),
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         backgroundColor: isGhoul ? const Color(0xFF252528) : null,
       ),
-      progressIndicatorTheme: ProgressIndicatorThemeData(color: semantic.accent),
+      progressIndicatorTheme: ProgressIndicatorThemeData(
+        color: semantic.accent,
+      ),
       listTileTheme: ListTileThemeData(
         iconColor: semantic.textPrimary,
         textColor: semantic.textPrimary,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ),
+      shadowColor: isGhoul
+          ? Colors.transparent
+          : Colors.black.withValues(alpha: isDark ? 0.24 : 0.08),
+      canvasColor: semantic.featureDefaultBackground,
+      splashColor: semantic.splashGlow,
+      highlightColor: semantic.accent.withValues(alpha: isDark ? 0.12 : 0.08),
       textTheme: isGhoul
           ? TextTheme(
               displayLarge: TextStyle(

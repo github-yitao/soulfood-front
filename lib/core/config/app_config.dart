@@ -1,21 +1,20 @@
-import 'package:flutter/foundation.dart';
-
 class AppConfig {
   AppConfig._();
 
   /// 优先级：`--dart-define=API_BASE_URL=...` > 平台默认。
   ///
-  /// 真机联调需隧道时：
+  /// 当前默认隧道（2026-05-26）：
+  /// `https://fever-arbitration-randy-assistant.trycloudflare.com/soulfood`
+  ///
+  /// 可通过 dart-define 覆盖：
   /// `flutter run --dart-define=API_BASE_URL=https://xxx.trycloudflare.com/soulfood`
   static String get baseUrl {
     const fromEnv = String.fromEnvironment('API_BASE_URL');
     if (fromEnv.isNotEmpty) {
       return fromEnv;
     }
-    // Android 模拟器访问宿主机；iOS 模拟器用 localhost。真机请用 dart-define。
-    return defaultTargetPlatform == TargetPlatform.android
-        ? 'http://10.0.2.2:8080/soulfood'
-        : 'http://127.0.0.1:8080/soulfood';
+    // 默认走 Cloudflare 隧道，确保真机/模拟器可直接联调。
+    return 'https://fever-arbitration-randy-assistant.trycloudflare.com/soulfood';
   }
 
   static String get wsBaseUrl {
