@@ -1,8 +1,8 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:soulfood_front/core/api/api_client.dart';
 import 'package:soulfood_front/core/session/session_store.dart';
 import 'package:soulfood_front/core/settings/appearance_store.dart';
+import 'package:soulfood_front/core/theme/app_theme_variant.dart';
 import 'package:soulfood_front/features/auth/auth_repository.dart';
 
 class AppServices {
@@ -11,14 +11,17 @@ class AppServices {
     required this.api,
     required this.auth,
     required this.appearance,
-    required this.themeNotifier,
+    required this.appearanceNotifier,
   });
 
   final SessionStore session;
   final ApiClient api;
   final AuthRepository auth;
   final AppearanceStore appearance;
-  final ValueNotifier<AppThemeMode> themeNotifier;
+  final ValueNotifier<AppearanceSettings> appearanceNotifier;
+
+  /// 兼容旧引用
+  ValueNotifier<AppThemeMode> get themeNotifier => _ThemeModeProxy(appearanceNotifier);
 
   static AppServices? _instance;
 
@@ -42,13 +45,42 @@ class AppServices {
       api: api,
       auth: auth,
       appearance: appearance,
-      themeNotifier: ValueNotifier<AppThemeMode>(appearance.mode),
+      appearanceNotifier: ValueNotifier<AppearanceSettings>(appearance.settings),
     );
   }
 
   Future<void> setThemeMode(AppThemeMode mode) async {
-    await appearance.save(mode);
-    themeNotifier.value = mode;
+    await appearance.saveMode(mode);
+    appearanceNotifier.value = appearance.settings;
+  }
+
+  Future<void> setThemeVariant(AppThemeVariant variant) async {
+    await appearance.saveVariant(variant);
+    appearanceNotifier.value = appearance.settings;
+  }
+
+  Future<void> setAppearance(AppearanceSettings settings) async {
+    await appearance.save(settings);
+    appearanceNotifier.value = appearance.settings;
+  }
+}
+
+/// 让仍监听 themeNotifier 的页面继续工作。
+class _ThemeModeProxy extends ValueNotifier<AppThemeMode> {
+  _ThemeModeProxy(this._source) : super(_source.value.mode) {
+    _source.addListener(_sync);
+  }
+
+  final ValueNotifier<AppearanceSettings> _source;
+
+  void _sync() {
+    value = _source.value.mode;
+  }
+
+  @override
+  void dispose() {
+    _source.removeListener(_sync);
+    super.dispose();
   }
 }
 

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:soulfood_front/core/app_bootstrap.dart';
 import 'package:soulfood_front/core/settings/appearance_store.dart';
+import 'package:soulfood_front/core/theme/app_theme_factory.dart';
+import 'package:soulfood_front/core/theme/app_theme_variant.dart';
+import 'package:soulfood_front/core/auth/auth_session_guard.dart';
 import 'package:soulfood_front/features/auth/login_page.dart';
 import 'package:soulfood_front/features/auth/splash_page.dart';
 import 'package:soulfood_front/features/favorite/favorites_page.dart';
@@ -11,6 +14,7 @@ import 'package:soulfood_front/features/nearby/random_eat_page.dart';
 import 'package:soulfood_front/features/order/orders_page.dart';
 import 'package:soulfood_front/features/preference/preference_page.dart';
 import 'package:soulfood_front/features/growth/legal_document_page.dart';
+import 'package:soulfood_front/features/notification/notifications_page.dart';
 import 'package:soulfood_front/features/profile/appearance_page.dart';
 import 'package:soulfood_front/features/profile/settings_page.dart';
 import 'package:soulfood_front/features/agent/ai_conversations_page.dart';
@@ -48,51 +52,44 @@ class _DecideMealAppState extends State<_DecideMealApp> {
   @override
   void initState() {
     super.initState();
-    AppServices.I.themeNotifier.addListener(_onThemeChanged);
+    AppServices.I.appearanceNotifier.addListener(_onAppearanceChanged);
   }
 
   @override
   void dispose() {
-    AppServices.I.themeNotifier.removeListener(_onThemeChanged);
+    AppServices.I.appearanceNotifier.removeListener(_onAppearanceChanged);
     super.dispose();
   }
 
-  void _onThemeChanged() => setState(() {});
+  void _onAppearanceChanged() => setState(() {});
 
   @override
   Widget build(BuildContext context) {
-    final themeMode = _toThemeMode(AppServices.I.themeNotifier.value);
+    final settings = AppServices.I.appearanceNotifier.value;
+
+    final classicLight = AppThemeFactory.classicLight();
+    final classicDark = AppThemeFactory.classicDark();
+    final ghoul = AppThemeFactory.ghoul();
+
+    final isGhoul = settings.variant == AppThemeVariant.ghoul;
+    final themeMode = isGhoul
+        ? ThemeMode.dark
+        : switch (settings.mode) {
+            AppThemeMode.light => ThemeMode.light,
+            AppThemeMode.dark => ThemeMode.dark,
+            AppThemeMode.system => ThemeMode.system,
+          };
+
     return MaterialApp(
+      navigatorKey: AuthSessionGuard.navigatorKey,
       debugShowCheckedModeBanner: false,
       title: 'DecideMeal',
       themeMode: themeMode,
-      theme: ThemeData(
-        useMaterial3: true,
-        brightness: Brightness.light,
-        scaffoldBackgroundColor: const Color(0xFFF5F6F8),
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFFFD966)),
-        fontFamily: 'PingFang SC',
-      ),
-      darkTheme: ThemeData(
-        useMaterial3: true,
-        brightness: Brightness.dark,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFFFFD966),
-          brightness: Brightness.dark,
-        ),
-        fontFamily: 'PingFang SC',
-      ),
+      theme: isGhoul ? ghoul : classicLight,
+      darkTheme: isGhoul ? ghoul : classicDark,
       home: const SplashPage(),
       onGenerateRoute: _onGenerateRoute,
     );
-  }
-
-  ThemeMode _toThemeMode(AppThemeMode mode) {
-    return switch (mode) {
-      AppThemeMode.light => ThemeMode.light,
-      AppThemeMode.dark => ThemeMode.dark,
-      AppThemeMode.system => ThemeMode.system,
-    };
   }
 
   Route<void>? _onGenerateRoute(RouteSettings settings) {
@@ -179,6 +176,8 @@ class _DecideMealAppState extends State<_DecideMealApp> {
           builder: (_) => const LegalDocumentPage(type: LegalDocumentType.privacy),
           settings: settings,
         );
+      case AppRoutes.notifications:
+        return MaterialPageRoute<void>(builder: (_) => const NotificationsPage(), settings: settings);
       default:
         return MaterialPageRoute<void>(
           builder: (_) => const SplashPage(),

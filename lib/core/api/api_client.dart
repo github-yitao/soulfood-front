@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:soulfood_front/core/api/api_result.dart';
+import 'package:soulfood_front/core/auth/auth_session_guard.dart';
 import 'package:soulfood_front/core/config/app_config.dart';
 import 'package:soulfood_front/core/session/session_store.dart';
 
@@ -39,6 +40,20 @@ class ApiClient {
             }
           }
           handler.next(options);
+        },
+        onResponse: (response, handler) {
+          _maybeHandleUnauthorized(response.requestOptions.path, response.data);
+          handler.next(response);
+        },
+        onError: (error, handler) {
+          final path = error.requestOptions.path;
+          final status = error.response?.statusCode;
+          if (status == 401) {
+            final data = error.response?.data;
+            final message = data is Map ? data['message'] as String? : null;
+            _maybeHandleUnauthorized(path, data, force: true, message: message);
+          }
+          handler.next(error);
         },
       ),
       _RetryInterceptor(_dio),
@@ -193,6 +208,25 @@ class ApiClient {
     final code = json['code'] as int? ?? -1;
     if (code != 0) {
       throw ApiException(json['message'] as String? ?? '请求失败', code: code);
+    }
+  }
+
+  void _maybeHandleUnauthorized(
+    String path,
+    Object? data, {
+    bool force = false,
+    String? message,
+  }) {
+    if (AuthSessionGuard.shouldIgnorePath(path)) return;
+
+    var code = force ? 401 : null;
+    String? msg = message;
+    if (data is Map<String, dynamic>) {
+      code ??= data['code'] as int?;
+      msg ??= data['message'] as String?;
+    }
+    if (code == 401) {
+      unawaited(AuthSessionGuard.handleUnauthorized(message: msg ?? '登录已过期，请重新登录'));
     }
   }
 

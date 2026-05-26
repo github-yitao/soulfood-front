@@ -108,6 +108,19 @@ class AuthRepository {
     return profile;
   }
 
+  Future<void> changePassword({
+    required String oldPassword,
+    required String newPassword,
+  }) async {
+    await _api.postVoid(
+      '/api/v1/auth/me/password',
+      data: {
+        'oldPassword': oldPassword,
+        'newPassword': newPassword,
+      },
+    );
+  }
+
   Future<void> _saveFromResponse(Map<String, dynamic> data, {String? username}) async {
     final userId = (data['userId'] as num).toInt();
     final nickname = data['nickname'] as String? ?? username ?? '用户';

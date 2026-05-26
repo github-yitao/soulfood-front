@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:soulfood_front/core/app_bootstrap.dart';
+import 'package:soulfood_front/core/theme/app_semantic_colors.dart';
+import 'package:soulfood_front/core/theme/app_theme_variant.dart';
+import 'package:soulfood_front/core/theme/ghoul_eye_mark.dart';
 import 'package:soulfood_front/features/auth/login_page.dart';
 import 'package:soulfood_front/features/room/room_deep_link.dart';
 import 'package:soulfood_front/pages/root_page.dart';
@@ -41,38 +44,50 @@ class _SplashPageState extends State<SplashPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+    final isGhoul = AppServices.I.appearance.variant == AppThemeVariant.ghoul;
+
     return Scaffold(
+      backgroundColor: isGhoul ? const Color(0xFF0A0A0B) : null,
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 88,
-              height: 88,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFFFFD36E), Color(0xFFFF9F5A)],
-                ),
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Color(0x40FF904B),
-                    blurRadius: 18,
-                    offset: Offset(0, 8),
+            if (isGhoul)
+              const GhoulEyeMark(size: 96)
+            else
+              Container(
+                width: 88,
+                height: 88,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFFFD36E), Color(0xFFFF9F5A)],
                   ),
-                ],
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: colors.splashGlow,
+                      blurRadius: 18,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: const Icon(Icons.ramen_dining, color: Colors.white, size: 44),
               ),
-              child: const Icon(Icons.ramen_dining, color: Colors.white, size: 44),
-            ),
             const SizedBox(height: 16),
-            const Text(
+            Text(
               'DecideMeal',
-              style: TextStyle(fontSize: 32, fontWeight: FontWeight.w800),
+              style: TextStyle(
+                fontSize: 32,
+                fontWeight: FontWeight.w800,
+                color: colors.textPrimary,
+                letterSpacing: isGhoul ? 1.2 : 0,
+              ),
             ),
             const SizedBox(height: 8),
-            const Text(
-              '帮你更快决定吃什么',
-              style: TextStyle(color: Color(0xFF8D919A)),
+            Text(
+              isGhoul ? '在黑暗中，做出你的选择' : '帮你更快决定吃什么',
+              style: TextStyle(color: colors.textSecondary),
             ),
           ],
         ),

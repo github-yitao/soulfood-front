@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:soulfood_front/features/room/room_join_link.dart';
 
 /// 房间号展示 + 二维码 + 复制 + 好友加入说明
@@ -25,6 +26,10 @@ class RoomInviteCard extends StatelessWidget {
         SnackBar(content: Text('房间号 $roomCode 已复制')),
       );
     }
+  }
+
+  Future<void> _share(BuildContext context) async {
+    await Share.share(RoomJoinLink.shareMessage(roomCode));
   }
 
   @override
@@ -123,6 +128,12 @@ class RoomInviteCard extends StatelessWidget {
                   ],
                 ),
               ),
+              OutlinedButton.icon(
+                onPressed: () => _share(context),
+                icon: const Icon(Icons.share_outlined, size: 18),
+                label: const Text('分享'),
+              ),
+              const SizedBox(width: 8),
               FilledButton.icon(
                 onPressed: () => _copy(context),
                 style: FilledButton.styleFrom(backgroundColor: const Color(0xFFFF8A43)),

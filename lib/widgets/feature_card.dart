@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:soulfood_front/core/theme/app_semantic_colors.dart';
 
 class FeatureCard extends StatelessWidget {
   const FeatureCard({
@@ -22,20 +23,22 @@ class FeatureCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
         height: 108,
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
         decoration: BoxDecoration(
-          color: backgroundColor ?? Colors.white,
+          color: backgroundColor ?? colors.featureDefaultBackground,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: borderColor ?? const Color(0xFFECEFF3)),
-          boxShadow: const [
+          border: Border.all(color: borderColor ?? colors.featureDefaultBorder),
+          boxShadow: [
             BoxShadow(
-              color: Color(0x0A1E1F23),
+              color: colors.textPrimary.withValues(alpha: 0.04),
               blurRadius: 8,
-              offset: Offset(0, 3),
+              offset: const Offset(0, 3),
             ),
           ],
         ),
@@ -51,7 +54,7 @@ class FeatureCard extends StatelessWidget {
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
                 height: 1.2,
-                color: textColor ?? const Color(0xFF232630),
+                color: textColor ?? colors.featureDefaultText,
               ),
             ),
           ],

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:soulfood_front/core/app_bootstrap.dart';
+import 'package:soulfood_front/core/theme/app_semantic_colors.dart';
 import 'package:soulfood_front/features/auth/auth_repository.dart';
 import 'package:soulfood_front/features/favorite/favorites_page.dart';
+import 'package:soulfood_front/features/notification/notification_repository.dart';
 import 'package:soulfood_front/features/order/orders_page.dart';
 import 'package:soulfood_front/features/preference/preference_page.dart';
 import 'package:soulfood_front/features/profile/profile_edit_page.dart';
@@ -16,13 +18,31 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   final _auth = AuthRepository(AppServices.I.api, AppServices.I.session);
+  final _notificationRepo = NotificationRepository(AppServices.I.api);
   late Future<UserProfile> _profileFuture = _auth.getProfile();
+  int _unreadNotifications = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUnreadCount();
+  }
+
+  Future<void> _loadUnreadCount() async {
+    try {
+      final overview = await _notificationRepo.load();
+      if (mounted) setState(() => _unreadNotifications = overview.unreadCount);
+    } catch (_) {
+      // 未读数加载失败不影响主流程
+    }
+  }
 
   Future<void> _reload() async {
     setState(() {
       _profileFuture = _auth.getProfile();
     });
     await _profileFuture;
+    await _loadUnreadCount();
   }
 
   void _open(Widget page) {
@@ -52,24 +72,30 @@ class _ProfilePageState extends State<ProfilePage> {
           }
 
           final profile = snapshot.data!;
+          final colors = context.appColors;
           return RefreshIndicator(
             onRefresh: _reload,
             child: ListView(
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.all(20),
               children: [
-                const Text(
+                Text(
                   '我的',
-                  style: TextStyle(fontSize: 36, fontWeight: FontWeight.w800),
+                  style: TextStyle(fontSize: 36, fontWeight: FontWeight.w800, color: colors.textPrimary),
                 ),
                 const SizedBox(height: 24),
                 Container(
                   padding: const EdgeInsets.all(18),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: colors.cardBackground,
                     borderRadius: BorderRadius.circular(20),
-                    boxShadow: const [
-                      BoxShadow(color: Color(0x12000000), blurRadius: 12, offset: Offset(0, 4)),
+                    border: Border.all(color: colors.cardBorder),
+                    boxShadow: [
+                      BoxShadow(
+                        color: colors.textPrimary.withValues(alpha: 0.06),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
                     ],
                   ),
                   child: Row(
@@ -82,19 +108,19 @@ class _ProfilePageState extends State<ProfilePage> {
                           children: [
                             Text(
                               profile.nickname,
-                              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
+                              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: colors.textPrimary),
                             ),
                             const SizedBox(height: 4),
                             if (profile.username != null && profile.username!.isNotEmpty)
                               Text(
                                 '@${profile.username}',
-                                style: const TextStyle(color: Color(0xFF8D919A), fontSize: 13),
+                                style: TextStyle(color: colors.textSecondary, fontSize: 13),
                               ),
                             Text(
                               profile.signature?.isNotEmpty == true
                                   ? profile.signature!
                                   : '让选择变得更简单',
-                              style: const TextStyle(color: Color(0xFF8D919A)),
+                              style: TextStyle(color: colors.textSecondary),
                             ),
                           ],
                         ),
@@ -117,6 +143,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
                 const SizedBox(height: 16),
                 _MenuCard(
+                  colors: colors,
                   items: [
                     _MenuItem(
                       icon: Icons.favorite_outline,
@@ -149,10 +176,20 @@ class _ProfilePageState extends State<ProfilePage> {
                       label: '邀请好友',
                       onTap: () => Navigator.pushNamed(context, AppRoutes.invite),
                     ),
+                    _MenuItem(
+                      icon: Icons.notifications_outlined,
+                      label: '消息通知',
+                      trailing: _unreadNotifications > 0 ? '$_unreadNotifications 条未读' : null,
+                      onTap: () async {
+                        await Navigator.pushNamed(context, AppRoutes.notifications);
+                        _loadUnreadCount();
+                      },
+                    ),
                   ],
                 ),
                 const SizedBox(height: 12),
                 _MenuCard(
+                  colors: colors,
                   items: [
                     _MenuItem(
                       icon: Icons.settings_outlined,
@@ -168,6 +205,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
                 const SizedBox(height: 12),
                 _MenuCard(
+                  colors: colors,
                   items: [
                     _MenuItem(
                       icon: Icons.forum_outlined,
@@ -229,24 +267,30 @@ class _ProfileAvatar extends StatelessWidget {
 }
 
 class _MenuCard extends StatelessWidget {
-  const _MenuCard({required this.items});
+  const _MenuCard({required this.colors, required this.items});
 
+  final AppSemanticColors colors;
   final List<_MenuItem> items;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colors.cardBackground,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: const [
-          BoxShadow(color: Color(0x0A000000), blurRadius: 8, offset: Offset(0, 2)),
+        border: Border.all(color: colors.cardBorder),
+        boxShadow: [
+          BoxShadow(
+            color: colors.textPrimary.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
         ],
       ),
       child: Column(
         children: [
           for (var i = 0; i < items.length; i++) ...[
-            if (i > 0) const Divider(height: 1, indent: 52),
+            if (i > 0) Divider(height: 1, indent: 52, color: colors.cardBorder),
             items[i],
           ],
         ],
@@ -270,15 +314,16 @@ class _MenuItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     return ListTile(
-      leading: Icon(icon, color: const Color(0xFF5D6677)),
-      title: Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
+      leading: Icon(icon, color: colors.textSecondary),
+      title: Text(label, style: TextStyle(fontWeight: FontWeight.w600, color: colors.textPrimary)),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           if (trailing != null)
-            Text(trailing!, style: const TextStyle(color: Color(0xFFB3B8C2), fontSize: 12)),
-          const Icon(Icons.chevron_right, color: Color(0xFFB3B8C2)),
+            Text(trailing!, style: TextStyle(color: colors.textSecondary, fontSize: 12)),
+          Icon(Icons.chevron_right, color: colors.textSecondary),
         ],
       ),
       onTap: onTap,

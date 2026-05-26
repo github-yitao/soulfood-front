@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:soulfood_front/core/theme/app_semantic_colors.dart';
 import 'package:soulfood_front/features/room/room_deep_link.dart';
 import 'package:soulfood_front/pages/home_page.dart';
 import 'package:soulfood_front/pages/profile_page.dart';
@@ -30,6 +31,8 @@ class _RootPageState extends State<RootPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Scaffold(
       body: IndexedStack(index: _selectedIndex, children: _tabs),
       bottomNavigationBar: NavigationBar(
@@ -40,8 +43,8 @@ class _RootPageState extends State<RootPage> {
           });
         },
         height: 84,
-        backgroundColor: Colors.white,
-        indicatorColor: const Color(0xFFFFEAA5),
+        backgroundColor: colors.navBackground,
+        indicatorColor: colors.navIndicator,
         destinations: const <NavigationDestination>[
           NavigationDestination(
             icon: Icon(Icons.home_outlined),

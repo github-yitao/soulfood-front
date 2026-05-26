@@ -3,7 +3,9 @@ import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:soulfood_front/core/app_bootstrap.dart';
 import 'package:soulfood_front/core/settings/appearance_store.dart';
+import 'package:soulfood_front/core/theme/app_theme_variant.dart';
 import 'package:soulfood_front/features/auth/login_page.dart';
+import 'package:soulfood_front/features/profile/change_password_page.dart';
 import 'package:soulfood_front/routing/app_routes.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -24,12 +26,12 @@ class _SettingsPageState extends State<SettingsPage> {
     super.initState();
     _loadPrefs();
     _refreshLocationStatus();
-    AppServices.I.themeNotifier.addListener(_onThemeChanged);
+    AppServices.I.appearanceNotifier.addListener(_onThemeChanged);
   }
 
   @override
   void dispose() {
-    AppServices.I.themeNotifier.removeListener(_onThemeChanged);
+    AppServices.I.appearanceNotifier.removeListener(_onThemeChanged);
     super.dispose();
   }
 
@@ -84,6 +86,14 @@ class _SettingsPageState extends State<SettingsPage> {
         AppThemeMode.system => '跟随系统',
       };
 
+  String _appearanceLabel() {
+    final variant = AppServices.I.appearance.variant;
+    if (variant == AppThemeVariant.ghoul) {
+      return variant.label;
+    }
+    return '${variant.label} · ${_themeModeLabel(AppServices.I.appearance.mode)}';
+  }
+
   Future<void> _logout(BuildContext context) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -107,22 +117,43 @@ class _SettingsPageState extends State<SettingsPage> {
 
   void _showAccountSecurity() {
     final username = AppServices.I.session.username ?? '未登录';
-    showDialog<void>(
+    showModalBottomSheet<void>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('账号与安全'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('当前账号：$username'),
-            const SizedBox(height: 12),
-            const Text('修改密码、绑定手机等功能即将上线。', style: TextStyle(color: Color(0xFF6F7889), fontSize: 13)),
-          ],
+      showDragHandle: true,
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('账号与安全', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+              const SizedBox(height: 8),
+              Text('当前账号：$username', style: const TextStyle(color: Color(0xFF6F7889), fontSize: 13)),
+              const SizedBox(height: 12),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.lock_outline),
+                title: const Text('修改密码'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  Navigator.push<void>(
+                    context,
+                    MaterialPageRoute<void>(builder: (_) => const ChangePasswordPage()),
+                  );
+                },
+              ),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.phone_android_outlined),
+                title: const Text('绑定手机'),
+                subtitle: const Text('即将上线', style: TextStyle(fontSize: 12)),
+                enabled: false,
+              ),
+            ],
+          ),
         ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('知道了')),
-        ],
       ),
     );
   }
@@ -186,7 +217,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final themeLabel = _themeModeLabel(AppServices.I.themeNotifier.value);
+    final themeLabel = _appearanceLabel();
 
     return Scaffold(
       appBar: AppBar(title: const Text('设置')),

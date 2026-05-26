@@ -7,6 +7,12 @@ class RoomJoinLink {
     return 'decidemeal://join?code=$code';
   }
 
+  static String shareMessage(String roomCode) {
+    final code = roomCode.trim().toUpperCase();
+    final link = build(code);
+    return '来 DecideMeal 一起投票选餐厅！\n房间号：$code\n打开链接或扫码入房：$link';
+  }
+
   /// 从二维码/深链接/纯 6 位数字解析房间号。
   static String? parseRoomCode(String raw) {
     final text = raw.trim();

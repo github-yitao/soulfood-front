@@ -25,6 +25,7 @@ class AppRoutes {
   static const String profileEdit = '/profile/edit';
   static const String legalTerms = '/legal/terms';
   static const String legalPrivacy = '/legal/privacy';
+  static const String notifications = '/notifications';
 
   const AppRoutes._();
 }
