@@ -203,29 +203,69 @@ class ApiClient {
       final body = response.data;
       if (body == null) return;
 
-      final buffer = StringBuffer();
+      var pending = '';
       await for (final chunk in utf8.decoder.bind(body.stream)) {
-        buffer.write(chunk);
-        while (true) {
-          final text = buffer.toString();
-          final newline = text.indexOf('\n');
-          if (newline == -1) break;
-          final line = text.substring(0, newline).trim();
-          final rest = text.substring(newline + 1);
-          buffer
-            ..clear()
-            ..write(rest);
-          if (line.isEmpty) continue;
-          yield jsonDecode(line) as Map<String, dynamic>;
+        pending += chunk;
+        final extracted = _extractJsonObjects(pending);
+        pending = extracted.rest;
+        for (final objectText in extracted.objects) {
+          final decoded = jsonDecode(objectText);
+          if (decoded is Map<String, dynamic>) {
+            yield decoded;
+          }
         }
       }
-      final tail = buffer.toString().trim();
+      final tail = pending.trim();
       if (tail.isNotEmpty) {
-        yield jsonDecode(tail) as Map<String, dynamic>;
+        final decoded = jsonDecode(tail);
+        if (decoded is Map<String, dynamic>) {
+          yield decoded;
+        }
       }
     } on DioException catch (e) {
       throw _toApiException(e);
     }
+  }
+
+  _JsonObjectBatch _extractJsonObjects(String input) {
+    final objects = <String>[];
+    var depth = 0;
+    var inString = false;
+    var escaping = false;
+    var start = -1;
+    var lastConsumed = 0;
+
+    for (var i = 0; i < input.length; i++) {
+      final ch = input[i];
+      if (escaping) {
+        escaping = false;
+        continue;
+      }
+      if (ch == r'\') {
+        escaping = true;
+        continue;
+      }
+      if (ch == '"') {
+        inString = !inString;
+        continue;
+      }
+      if (inString) continue;
+
+      if (ch == '{') {
+        if (depth == 0) start = i;
+        depth++;
+      } else if (ch == '}') {
+        if (depth > 0) depth--;
+        if (depth == 0 && start >= 0) {
+          objects.add(input.substring(start, i + 1));
+          lastConsumed = i + 1;
+          start = -1;
+        }
+      }
+    }
+
+    final rest = input.substring(lastConsumed).trimLeft();
+    return _JsonObjectBatch(objects: objects, rest: rest);
   }
 
   T _parse<T>(Map<String, dynamic>? json, T Function(Object? json) parser) {
@@ -326,6 +366,13 @@ class ApiClient {
         return ApiException(msg ?? e.message ?? '网络请求失败', code: status ?? -1);
     }
   }
+}
+
+class _JsonObjectBatch {
+  const _JsonObjectBatch({required this.objects, required this.rest});
+
+  final List<String> objects;
+  final String rest;
 }
 
 /// 瞬时网络/网关错误自动重试，避免用户手动刷新。
