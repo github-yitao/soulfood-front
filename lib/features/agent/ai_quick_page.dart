@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:soulfood_front/features/agent/agent_repository.dart';
 import 'package:soulfood_front/features/preference/preference_repository.dart';
@@ -19,6 +21,7 @@ class _AiQuickPageState extends State<AiQuickPage> {
   @override
   void initState() {
     super.initState();
+    _recipes = _agent.quickFallbackRecipes();
     _load();
   }
 
@@ -26,11 +29,21 @@ class _AiQuickPageState extends State<AiQuickPage> {
     setState(() => _loading = true);
     try {
       final pref = await _prefRepo.preferenceText();
-      final items = await _agent.recommendRecipes(preference: pref);
+      final items = await _agent
+          .recommendRecipes(preference: pref)
+          .timeout(const Duration(seconds: 6));
       if (mounted) setState(() => _recipes = items);
+    } on TimeoutException {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('AI 推荐加载超时，先展示本地候选')));
+      }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$e')));
       }
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -43,26 +56,37 @@ class _AiQuickPageState extends State<AiQuickPage> {
       appBar: AppBar(
         title: const Text('AI 帮我决定'),
         actions: [
-          TextButton(onPressed: _loading ? null : _load, child: const Text('换一批')),
+          TextButton(
+            onPressed: _loading ? null : _load,
+            child: const Text('换一批'),
+          ),
         ],
       ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: _recipes.length,
-              itemBuilder: (context, index) {
-                final item = _recipes[index];
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 10),
-                  child: ListTile(
-                    title: Text(item.name, style: const TextStyle(fontWeight: FontWeight.w700)),
-                    subtitle: Text(item.reason),
-                    trailing: Text('${item.score}分'),
-                  ),
-                );
-              },
+      body: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: _recipes.length + (_loading ? 1 : 0),
+        itemBuilder: (context, index) {
+          if (_loading && index == 0) {
+            return const Padding(
+              padding: EdgeInsets.only(bottom: 10),
+              child: LinearProgressIndicator(minHeight: 3),
+            );
+          }
+          final recipeIndex = _loading ? index - 1 : index;
+          final item = _recipes[recipeIndex];
+          return Card(
+            margin: const EdgeInsets.only(bottom: 10),
+            child: ListTile(
+              title: Text(
+                item.name,
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
+              subtitle: Text(item.reason),
+              trailing: Text('${item.score}分'),
             ),
+          );
+        },
+      ),
     );
   }
 }

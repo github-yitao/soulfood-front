@@ -293,9 +293,14 @@ class AgentRepository {
     );
   }
 
-  Future<List<ChatHistoryMessage>> loadHistory(String conversationId) async {
+  Future<List<ChatHistoryMessage>> loadHistory(
+    String conversationId, {
+    int offset = 0,
+    int limit = 10,
+  }) async {
     return _api.getData<List<ChatHistoryMessage>>(
       '/ai/chat/$conversationId/history',
+      query: {'offset': offset, 'limit': limit},
       parser: (json) => (json as List<dynamic>)
           .map((e) => ChatHistoryMessage.fromJson(e as Map<String, dynamic>))
           .toList(),
