@@ -59,26 +59,7 @@ class _SplashPageState extends State<SplashPage> {
             if (isGhoul)
               const GhoulEyeMark(size: 96)
             else
-              Container(
-                width: 96,
-                height: 96,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: ClassicBrandPalette.heroGradient,
-                  ),
-                  borderRadius: BorderRadius.circular(26),
-                  boxShadow: [
-                    BoxShadow(
-                      color: ClassicBrandPalette.accent.withValues(alpha: 0.28),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
-                    ),
-                  ],
-                ),
-                child: const ClassicBrandMark(size: 72, showPlate: false),
-              ),
+              const ClassicBrandMark(size: 56, filled: true),
             const SizedBox(height: 16),
             Text(
               'DecideMeal',
@@ -93,7 +74,7 @@ class _SplashPageState extends State<SplashPage> {
             Text(
               isGhoul
                   ? '在饥饿与纠结之间，选出今晚的归宿'
-                  : classicThemedText('帮你更快决定吃什么', warm: '一口暖食，告别纠结'),
+                  : classicThemedText('帮你更快决定吃什么', warm: '帮你决定吃什么'),
               style: TextStyle(color: colors.textSecondary),
             ),
           ],

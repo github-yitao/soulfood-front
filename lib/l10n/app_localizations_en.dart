@@ -57,7 +57,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appIcon => 'App Icon';
 
   @override
-  String get appIconClassic => 'Warm bowl';
+  String get appIconClassic => 'Minimal warm';
 
   @override
   String get appIconGhoul => 'Ghoul Icon';
@@ -103,7 +103,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get forgotPassword => 'Forgot password?';
 
   @override
-  String get themeClassicDesc => 'Warm gold palette with bowl icon for everyday meals';
+  String get themeClassicDesc => 'Clean neutrals with a warm orange accent';
 
   @override
   String get themeGhoulDesc => 'Dark high-contrast, inspired by Tokyo Ghoul';

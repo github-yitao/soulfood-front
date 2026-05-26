@@ -57,7 +57,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appIcon => '应用图标';
 
   @override
-  String get appIconClassic => '暖金碗筷';
+  String get appIconClassic => '简约暖橙';
 
   @override
   String get appIconGhoul => '喰种图标';
@@ -102,7 +102,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get forgotPassword => '忘记密码？';
 
   @override
-  String get themeClassicDesc => '暖金配色 + 碗筷图标，日常选餐更亲切';
+  String get themeClassicDesc => '简约中性色，少量暖橙点缀';
 
   @override
   String get themeGhoulDesc => '暗色高对比，灵感来自东京喰种';

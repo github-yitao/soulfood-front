@@ -244,22 +244,13 @@ class _ThemePreviewMini extends StatelessWidget {
       width: 56,
       height: 56,
       decoration: BoxDecoration(
+        color: ClassicBrandPalette.surface,
         borderRadius: BorderRadius.circular(14),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: ClassicBrandPalette.heroGradient,
-        ),
-        border: Border.all(color: const Color(0xFFFFC98A)),
-        boxShadow: [
-          BoxShadow(
-            color: ClassicBrandPalette.accent.withValues(alpha: 0.2),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
-          ),
-        ],
+        border: Border.all(color: ClassicBrandPalette.border),
       ),
-      child: const Center(child: ClassicBrandMark(size: 38, showPlate: false, glow: false)),
+      child: const Center(
+        child: ClassicBrandMark(size: 28, filled: false),
+      ),
     );
   }
 }

@@ -35,34 +35,30 @@ class _ClassicCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFFFFF8F0), Color(0xFFFFE8D0)],
-        ),
-        border: Border.all(color: const Color(0xFFFFD4A8)),
+        borderRadius: BorderRadius.circular(16),
+        color: const Color(0xFFFFFFFF),
+        border: Border.all(color: const Color(0xFFE5E5EA)),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFFF8A43).withValues(alpha: 0.18),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 20,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(20, 22, 20, 18),
           child: _CardBody(
             data: data,
-            accent: const Color(0xFFFF8A43),
-            textPrimary: const Color(0xFF1F2430),
-            textSecondary: const Color(0xFF6F7888),
-            chipBg: const Color(0xFFFFF2E0),
-            chipBorder: const Color(0xFFFFD4A8),
-            divider: const Color(0xFFECEFF3),
-            footer: '和朋友一起，更快决定吃什么',
+            accent: const Color(0xFFE85D2C),
+            textPrimary: const Color(0xFF1A1A1A),
+            textSecondary: const Color(0xFF8E8E93),
+            chipBg: const Color(0xFFF5F5F7),
+            chipBorder: const Color(0xFFE5E5EA),
+            divider: const Color(0xFFE5E5EA),
+            footer: '和朋友一起决定吃什么',
           ),
         ),
       ),

@@ -197,7 +197,7 @@ abstract class AppLocalizations {
   /// No description provided for @appIconClassic.
   ///
   /// In zh, this message translates to:
-  /// **'默认图标'**
+  /// **'简约暖橙'**
   String get appIconClassic;
 
   /// No description provided for @appIconGhoul.
@@ -287,7 +287,7 @@ abstract class AppLocalizations {
   /// No description provided for @themeClassicDesc.
   ///
   /// In zh, this message translates to:
-  /// **'明亮轻快，适合日常选餐'**
+  /// **'简约中性色，少量暖橙点缀'**
   String get themeClassicDesc;
 
   /// No description provided for @themeGhoulDesc.

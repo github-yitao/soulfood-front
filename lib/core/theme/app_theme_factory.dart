@@ -13,14 +13,14 @@ class AppThemeFactory {
         brightness: Brightness.light,
         semantic: AppSemanticColors.classicLight,
         scaffold: ClassicBrandPalette.scaffoldLight,
-        seed: ClassicBrandPalette.gold,
+        seed: ClassicBrandPalette.accent,
       );
 
   static ThemeData classicDark() => _build(
         brightness: Brightness.dark,
         semantic: AppSemanticColors.classicDark,
         scaffold: ClassicBrandPalette.scaffoldDark,
-        seed: ClassicBrandPalette.gold,
+        seed: ClassicBrandPalette.accent,
       );
 
   static ThemeData ghoul() => _build(

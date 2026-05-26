@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:soulfood_front/core/app_bootstrap.dart';
 import 'package:soulfood_front/core/theme/app_semantic_colors.dart';
-import 'package:soulfood_front/core/theme/classic_brand_mark.dart';
 import 'package:soulfood_front/core/theme/classic_theme_copy.dart';
 import 'package:soulfood_front/core/theme/ghoul_theme_copy.dart';
 import 'package:soulfood_front/core/theme/ghoul_eye_mark.dart';
@@ -221,50 +220,52 @@ class _HomeHeroState extends State<_HomeHero> {
           scale: _pressed ? 0.97 : 1,
           duration: const Duration(milliseconds: 120),
           child: Container(
-            width: 220,
-            height: 220,
+            width: isGhoul ? 220 : 200,
+            height: isGhoul ? 220 : 200,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
+              color: isGhoul ? null : colors.heroGradientStart,
               gradient: isGhoul
                   ? RadialGradient(
                       center: const Alignment(0.2, -0.1),
                       radius: 0.95,
                       colors: [colors.heroGradientStart, colors.heroGradientEnd],
                     )
-                  : RadialGradient(
-                      center: const Alignment(0.36, 0.24),
-                      radius: 0.78,
-                      colors: [colors.heroGradientStart, colors.heroGradientEnd],
-                    ),
-              border: isGhoul ? Border.all(color: colors.cardBorder, width: 1.5) : null,
+                  : null,
+              border: Border.all(
+                color: isGhoul ? colors.cardBorder : colors.cardBorder,
+                width: isGhoul ? 1.5 : 1,
+              ),
               boxShadow: [
                 BoxShadow(
                   color: isGhoul
                       ? colors.accent.withValues(alpha: _pressed ? 0.15 : 0.28)
-                      : Colors.black.withValues(alpha: _pressed ? 0.03 : 0.04),
-                  blurRadius: isGhoul ? 28 : 18,
-                  offset: const Offset(0, 12),
+                      : Colors.black.withValues(alpha: _pressed ? 0.04 : 0.06),
+                  blurRadius: isGhoul ? 28 : 24,
+                  offset: Offset(0, isGhoul ? 12 : 8),
                 ),
               ],
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                if (isGhoul)
-                  const GhoulEyeMark(size: 80, glow: true)
-                else
-                  const ClassicBrandMark(size: 64, showPlate: false),
-                SizedBox(height: isGhoul ? 8 : 10),
+                if (isGhoul) ...[
+                  const GhoulEyeMark(size: 80, glow: true),
+                  const SizedBox(height: 8),
+                ] else ...[
+                  Icon(Icons.restaurant_menu_rounded, size: 32, color: colors.accent),
+                  const SizedBox(height: 14),
+                ],
                 Text(
                   isGhoul
                       ? '今夜喰\n什么'
                       : classicThemedText('帮我决定\n吃什么', warm: '今晚吃\n什么'),
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: isGhoul ? 24 : 28,
-                    height: 1.08,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: isGhoul ? 0.2 : -0.6,
+                    fontSize: isGhoul ? 24 : 20,
+                    height: 1.25,
+                    fontWeight: isGhoul ? FontWeight.w900 : FontWeight.w600,
+                    letterSpacing: isGhoul ? 0.2 : -0.2,
                     color: colors.heroText,
                   ),
                 ),

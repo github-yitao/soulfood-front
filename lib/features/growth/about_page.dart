@@ -33,18 +33,21 @@ class AboutPage extends StatelessWidget {
                   width: 62,
                   height: 62,
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: isGhoul
-                          ? [colors.heroGradientStart, colors.heroGradientEnd]
-                          : ClassicBrandPalette.heroGradient,
-                    ),
+                    color: isGhoul ? null : ClassicBrandPalette.surface,
+                    gradient: isGhoul
+                        ? LinearGradient(
+                            colors: [colors.heroGradientStart, colors.heroGradientEnd],
+                          )
+                        : null,
                     borderRadius: BorderRadius.circular(18),
-                    border: isGhoul ? Border.all(color: colors.cardBorder) : null,
+                    border: Border.all(
+                      color: isGhoul ? colors.cardBorder : ClassicBrandPalette.border,
+                    ),
                   ),
                   child: Center(
                     child: isGhoul
                         ? const GhoulEyeMark(size: 44, glow: false)
-                        : const ClassicBrandMark(size: 48, showPlate: false, glow: false),
+                        : const ClassicBrandMark(size: 36, filled: true),
                   ),
                 ),
                 const SizedBox(height: 10),
