@@ -36,23 +36,22 @@ class _RandomEatPageState extends State<RandomEatPage> {
   }
 
   Future<void> _load() async {
-    setState(() => _loading = true);
-    try {
-      final location = await LocationService.current();
-      if (mounted && location == null) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('未获取定位，将按默认区域搜索附近餐厅')));
+    setState(() {
+      _loading = true;
+      if (_items.isEmpty) {
+        _items = _fallbackRestaurants();
+        _usingFallback = true;
       }
-      final items = await _repo
-          .list(lat: location?.lat, lng: location?.lng)
-          .timeout(const Duration(seconds: 6));
+    });
+    try {
+      final items = await _repo.list().timeout(const Duration(seconds: 4));
       if (mounted) {
         setState(() {
           _items = items;
           _usingFallback = false;
         });
       }
+      unawaited(_refreshWithLocation());
     } on TimeoutException {
       if (mounted) {
         setState(() {
@@ -75,6 +74,25 @@ class _RandomEatPageState extends State<RandomEatPage> {
       }
     } finally {
       if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _refreshWithLocation() async {
+    try {
+      final location = await LocationService.current().timeout(
+        const Duration(seconds: 2),
+      );
+      if (location == null) return;
+      final items = await _repo
+          .list(lat: location.lat, lng: location.lng)
+          .timeout(const Duration(seconds: 4));
+      if (!mounted || items.isEmpty) return;
+      setState(() {
+        _items = items;
+        _usingFallback = false;
+      });
+    } catch (_) {
+      // 静默失败，保持当前列表即可。
     }
   }
 
@@ -174,6 +192,52 @@ class _RandomEatPageState extends State<RandomEatPage> {
     }
   }
 
+  Future<void> _want(RestaurantItem item) async {
+    if (item.id <= 0) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('当前是离线候选，无法加入想去清单')));
+      }
+      return;
+    }
+    try {
+      await _repo.markWant(item.id);
+      if (!mounted) return;
+      setState(() {
+        _items = _items
+            .map(
+              (e) => e.id == item.id
+                  ? RestaurantItem(
+                      id: e.id,
+                      name: e.name,
+                      category: e.category,
+                      rating: e.rating,
+                      distanceKm: e.distanceKm,
+                      wanted: true,
+                      favorited: e.favorited,
+                      address: e.address,
+                      lat: e.lat,
+                      lng: e.lng,
+                      phone: e.phone,
+                      photoUrl: e.photoUrl,
+                    )
+                  : e,
+            )
+            .toList();
+      });
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('已标记想去：${item.name}')));
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$e')));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
@@ -269,7 +333,10 @@ class _RandomEatPageState extends State<RandomEatPage> {
                               subtitle: Text(
                                 '${item.category} · ${item.distanceKm ?? '-'} km',
                               ),
-                              trailing: Text('${item.rating ?? '-'}'),
+                              trailing: FilledButton.tonal(
+                                onPressed: () => _want(item),
+                                child: Text(item.wanted ? '已想去' : '想去'),
+                              ),
                             ),
                           ),
                         ),

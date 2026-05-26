@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:soulfood_front/core/app_bootstrap.dart';
 import 'package:soulfood_front/core/theme/app_semantic_colors.dart';
@@ -19,17 +21,31 @@ class _NotificationsPageState extends State<NotificationsPage> {
   @override
   void initState() {
     super.initState();
+    final cached = _repo.readCache();
+    if (cached != null) {
+      _overview = cached;
+      _loading = false;
+      setState(() {});
+    }
     _load();
   }
 
   Future<void> _load() async {
-    setState(() => _loading = true);
+    setState(() => _loading = _overview == null);
     try {
-      final data = await _repo.load();
+      final data = await _repo.load().timeout(const Duration(seconds: 6));
       if (mounted) setState(() => _overview = data);
+    } on TimeoutException {
+      if (mounted && _overview == null) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('通知加载超时，先显示缓存内容')));
+      }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$e')));
       }
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -38,13 +54,15 @@ class _NotificationsPageState extends State<NotificationsPage> {
 
   Future<void> _openNotification(AppNotification item) async {
     if (!item.read) {
-      try {
-        await _repo.markRead(item.id);
-      } catch (_) {}
+      unawaited(_repo.markRead(item.id));
     }
     if (!mounted) return;
     if (item.roomCode != null && item.roomCode!.isNotEmpty) {
-      await Navigator.pushNamed(context, AppRoutes.vote, arguments: item.roomCode);
+      await Navigator.pushNamed(
+        context,
+        AppRoutes.vote,
+        arguments: item.roomCode,
+      );
     }
     await _load();
   }
@@ -55,7 +73,9 @@ class _NotificationsPageState extends State<NotificationsPage> {
       await _load();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$e')));
       }
     }
   }
@@ -84,14 +104,18 @@ class _NotificationsPageState extends State<NotificationsPage> {
                       children: [
                         const SizedBox(height: 120),
                         Center(
-                          child: Text('暂无通知', style: TextStyle(color: colors.textSecondary)),
+                          child: Text(
+                            '暂无通知',
+                            style: TextStyle(color: colors.textSecondary),
+                          ),
                         ),
                       ],
                     )
                   : ListView.separated(
                       padding: const EdgeInsets.all(16),
                       itemCount: overview.items.length,
-                      separatorBuilder: (context, index) => const SizedBox(height: 10),
+                      separatorBuilder: (context, index) =>
+                          const SizedBox(height: 10),
                       itemBuilder: (context, index) {
                         final item = overview.items[index];
                         return _NotificationTile(
@@ -139,7 +163,9 @@ class _NotificationTile extends StatelessWidget {
                   border: Border.all(color: colors.bannerBorder),
                 ),
                 child: Icon(
-                  item.type == 'room_closed' ? Icons.how_to_vote_outlined : Icons.notifications_outlined,
+                  item.type == 'room_closed'
+                      ? Icons.how_to_vote_outlined
+                      : Icons.notifications_outlined,
                   color: colors.bannerText,
                 ),
               ),
@@ -164,14 +190,21 @@ class _NotificationTile extends StatelessWidget {
                           Container(
                             width: 8,
                             height: 8,
-                            decoration: BoxDecoration(color: colors.accent, shape: BoxShape.circle),
+                            decoration: BoxDecoration(
+                              color: colors.accent,
+                              shape: BoxShape.circle,
+                            ),
                           ),
                       ],
                     ),
                     const SizedBox(height: 6),
                     Text(
                       item.body,
-                      style: TextStyle(fontSize: 13, color: colors.textSecondary, height: 1.4),
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: colors.textSecondary,
+                        height: 1.4,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     Text(

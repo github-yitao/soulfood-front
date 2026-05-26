@@ -53,12 +53,27 @@ class NotificationRepository {
   NotificationRepository(this._api);
 
   final ApiClient _api;
+  static const Duration _cacheTtl = Duration(seconds: 45);
+  static NotificationOverview? _cache;
+  static DateTime? _cacheAt;
+
+  NotificationOverview? readCache() {
+    final data = _cache;
+    final at = _cacheAt;
+    if (data == null || at == null) return null;
+    if (DateTime.now().difference(at) > _cacheTtl) return null;
+    return data;
+  }
 
   Future<NotificationOverview> load() async {
-    return _api.getData(
+    final data = await _api.getData(
       '/api/v1/notifications',
-      parser: (json) => NotificationOverview.fromJson(json as Map<String, dynamic>),
+      parser: (json) =>
+          NotificationOverview.fromJson(json as Map<String, dynamic>),
     );
+    _cache = data;
+    _cacheAt = DateTime.now();
+    return data;
   }
 
   Future<void> markRead(int id) async {
@@ -67,5 +82,7 @@ class NotificationRepository {
 
   Future<void> markAllRead() async {
     await _api.postVoid('/api/v1/notifications/read-all');
+    _cache = null;
+    _cacheAt = null;
   }
 }
