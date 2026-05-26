@@ -39,7 +39,7 @@ class HomePage extends StatelessWidget {
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        isGhoul ? '在喰与之间，选出今晚的归宿' : '帮你更快决定吃什么 🙂',
+                        isGhoul ? '在饥饿与纠结之间，选出今晚的归宿' : '帮你更快决定吃什么 🙂',
                         style: TextStyle(
                           fontSize: 13,
                           color: colors.textSecondary,

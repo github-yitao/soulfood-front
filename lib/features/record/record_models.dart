@@ -64,16 +64,14 @@ class RecordItem {
 
 class RecordStat {
   const RecordStat({
+    required this.key,
     required this.title,
-    required this.backgroundColor,
-    required this.titleColor,
     this.count,
   });
 
+  final String key;
   final String title;
   final int? count;
-  final Color backgroundColor;
-  final Color titleColor;
 }
 
 class RecordsData {

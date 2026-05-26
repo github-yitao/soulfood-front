@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:soulfood_front/core/api/api_client.dart';
 import 'package:soulfood_front/core/app_bootstrap.dart';
 import 'package:soulfood_front/features/record/record_models.dart';
@@ -19,12 +18,10 @@ class RecordRepository {
 
     final stats = statsJson.map((raw) {
       final item = raw as Map<String, dynamic>;
-      final key = item['key'] as String? ?? '';
       return RecordStat(
+        key: item['key'] as String? ?? '',
         title: item['title'] as String? ?? '',
         count: (item['count'] as num?)?.toInt(),
-        backgroundColor: _statColor(key),
-        titleColor: _statTitleColor(key),
       );
     }).toList();
 
@@ -33,35 +30,5 @@ class RecordRepository {
         .toList();
 
     return RecordsData(stats: stats, records: records);
-  }
-
-  Color _statColor(String key) {
-    switch (key) {
-      case 'vote':
-        return const Color(0xFFFFD6D7);
-      case 'friends':
-        return const Color(0xFFFFEFBC);
-      case 'eat':
-        return const Color(0xFFDDF6DF);
-      case 'favorite':
-        return const Color(0xFFE0E6FF);
-      default:
-        return const Color(0xFFF1F3F6);
-    }
-  }
-
-  Color _statTitleColor(String key) {
-    switch (key) {
-      case 'vote':
-        return const Color(0xFFF05F65);
-      case 'friends':
-        return const Color(0xFFE0AF28);
-      case 'eat':
-        return const Color(0xFF48B86B);
-      case 'favorite':
-        return const Color(0xFF7E8BDF);
-      default:
-        return const Color(0xFF646871);
-    }
   }
 }

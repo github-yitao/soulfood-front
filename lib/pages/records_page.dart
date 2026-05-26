@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:soulfood_front/core/theme/app_semantic_colors.dart';
 import 'package:soulfood_front/core/theme/theme_widgets.dart';
 import 'package:soulfood_front/features/record/record_detail_page.dart';
+import 'package:soulfood_front/features/record/record_stat_style.dart';
 import 'package:soulfood_front/features/record/record_models.dart';
 import 'package:soulfood_front/features/record/record_repository.dart';
 
@@ -140,37 +141,43 @@ class _StatsGrid extends StatelessWidget {
       runSpacing: 12,
       children: stats
           .map(
-            (RecordStat stat) => Container(
-              width: 112,
-              height: 100,
-              padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
-              decoration: BoxDecoration(
-                color: stat.backgroundColor,
-                borderRadius: BorderRadius.circular(18),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    stat.title,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: stat.titleColor,
-                    ),
+            (RecordStat stat) {
+              final style = recordStatStyle(context, stat.key);
+              return Container(
+                width: 112,
+                height: 100,
+                padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+                decoration: BoxDecoration(
+                  color: style.background,
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(
+                    color: colors.cardBorder.withValues(alpha: Theme.of(context).brightness == Brightness.dark ? 0.6 : 0),
                   ),
-                  const Spacer(),
-                  Text(
-                    '${stat.count ?? 0}次',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.w800,
-                      color: colors.textPrimary,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      stat.title,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: style.titleColor,
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ),
+                    const Spacer(),
+                    Text(
+                      '${stat.count ?? 0}次',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w800,
+                        color: colors.textPrimary,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
           )
           .toList(),
     );
