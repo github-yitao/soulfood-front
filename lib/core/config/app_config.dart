@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 class AppConfig {
   AppConfig._();
 
-  /// 优先级：`--dart-define=API_BASE_URL=...` > 平台默认直连本机后端。
+  /// 优先级：`--dart-define=API_BASE_URL=...` > 平台默认。
   ///
   /// 真机联调需隧道时：
   /// `flutter run --dart-define=API_BASE_URL=https://xxx.trycloudflare.com/soulfood`
@@ -12,15 +12,10 @@ class AppConfig {
     if (fromEnv.isNotEmpty) {
       return fromEnv;
     }
-    if (kIsWeb) {
-      return 'http://localhost:8080/soulfood';
-    }
-    switch (defaultTargetPlatform) {
-      case TargetPlatform.android:
-        return 'http://10.0.2.2:8080/soulfood';
-      default:
-        return 'http://127.0.0.1:8080/soulfood';
-    }
+    // Android 模拟器访问宿主机；iOS 模拟器用 localhost。真机请用 dart-define。
+    return defaultTargetPlatform == TargetPlatform.android
+        ? 'http://10.0.2.2:8080/soulfood'
+        : 'http://127.0.0.1:8080/soulfood';
   }
 
   static String get wsBaseUrl {

@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:soulfood_front/features/room/room_join_flow.dart';
@@ -18,12 +17,6 @@ class _ScanJoinRoomPageState extends State<ScanJoinRoomPage> {
   );
   bool _processing = false;
   String? _lastScanned;
-
-  bool get _supportsScan {
-    if (kIsWeb) return false;
-    return defaultTargetPlatform == TargetPlatform.android ||
-        defaultTargetPlatform == TargetPlatform.iOS;
-  }
 
   @override
   void dispose() {
@@ -56,22 +49,6 @@ class _ScanJoinRoomPageState extends State<ScanJoinRoomPage> {
 
   @override
   Widget build(BuildContext context) {
-    if (!_supportsScan) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('扫码入房')),
-        body: const Center(
-          child: Padding(
-            padding: EdgeInsets.all(24),
-            child: Text(
-              '当前平台不支持相机扫码，请使用 Android / iOS 设备，或通过「加入房间」手动输入房间号。',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Color(0xFF6F7888), height: 1.5),
-            ),
-          ),
-        ),
-      );
-    }
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('扫码入房'),
