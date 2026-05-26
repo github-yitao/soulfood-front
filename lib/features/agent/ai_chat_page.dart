@@ -61,7 +61,9 @@ class _AiChatPageState extends State<AiChatPage> {
   String? _conversationId;
   bool _sending = false;
   bool _prefLoaded = false;
-  bool _historyLoaded = false;
+  bool _loadingOlder = false;
+  bool _historyHasMore = true;
+  int _historyOffset = 0;
   String _preferenceText = '';
   double _thinkingElapsed = 0;
   Timer? _thinkingTimer;
@@ -69,45 +71,45 @@ class _AiChatPageState extends State<AiChatPage> {
   XFile? _pendingImage;
   final _imagePicker = ImagePicker();
 
-  static const _quickPrompts = [
-    '今晚吃什么？',
-    '三人聚餐推荐',
-    '20分钟快手菜',
-    '附近有什么好吃的',
-  ];
+  static const _quickPrompts = ['今晚吃什么？', '三人聚餐推荐', '20分钟快手菜', '附近有什么好吃的'];
 
   @override
   void initState() {
     super.initState();
+    _scrollCtrl.addListener(_onScroll);
     _bootstrap();
   }
 
   Future<void> _bootstrap() async {
     if (widget.isNewChat) {
       _conversationId = null;
-    } else if (widget.conversationId != null && widget.conversationId!.isNotEmpty) {
+    } else if (widget.conversationId != null &&
+        widget.conversationId!.isNotEmpty) {
       _conversationId = widget.conversationId;
     } else {
       _conversationId = await _agent.loadConversationId();
     }
 
-    try {
-      _preferenceText = await _prefRepo.preferenceText();
-      _location = await LocationService.current();
-    } catch (_) {
-      _preferenceText = '清淡、家常菜';
-    }
+    final prefFuture = _prefRepo
+        .preferenceText()
+        .timeout(const Duration(seconds: 3), onTimeout: () => '清淡、家常菜')
+        .catchError((_) => '清淡、家常菜');
+    final locationFuture = LocationService.current()
+        .timeout(const Duration(seconds: 3), onTimeout: () => null)
+        .catchError((_) => null);
 
     if (_conversationId != null && _conversationId!.isNotEmpty) {
-      await _loadHistory();
+      await _loadInitialHistory();
     } else {
       _addWelcomeMessage();
     }
 
+    _preferenceText = await prefFuture;
+    _location = await locationFuture;
+
     if (mounted) {
       setState(() {
         _prefLoaded = true;
-        _historyLoaded = true;
       });
     }
   }
@@ -116,21 +118,26 @@ class _AiChatPageState extends State<AiChatPage> {
     if (_messages.isNotEmpty) return;
     _messages.add(
       ChatMessage(
-            text: '你好，我是 DecideMeal 美食助手。'
-                '你可以问我「今晚吃什么」「微辣家常菜推荐」等问题。'
-                '${_preferenceText.isNotEmpty ? '\n\n已结合你的偏好与位置个性化推荐。' : ''}',
+        text:
+            '你好，我是 DecideMeal 美食助手。'
+            '你可以问我「今晚吃什么」「微辣家常菜推荐」等问题。'
+            '${_preferenceText.isNotEmpty ? '\n\n已结合你的偏好与位置个性化推荐。' : ''}',
         isUser: false,
       ),
     );
   }
 
-  Future<void> _loadHistory() async {
+  Future<void> _loadInitialHistory() async {
     final id = _conversationId;
     if (id == null || id.isEmpty) return;
     try {
-      final history = await _agent.loadHistory(id);
+      final history = await _agent
+          .loadHistory(id, offset: 0, limit: 10)
+          .timeout(const Duration(seconds: 6));
       if (!mounted) return;
       setState(() {
+        _historyOffset = history.length;
+        _historyHasMore = history.length == 10;
         _messages
           ..clear()
           ..addAll(
@@ -151,7 +158,41 @@ class _AiChatPageState extends State<AiChatPage> {
       if (mounted) {
         setState(() => _conversationId = null);
         _addWelcomeMessage();
+        _historyHasMore = false;
       }
+    }
+  }
+
+  Future<void> _loadOlderHistory() async {
+    final id = _conversationId;
+    if (id == null || id.isEmpty || _loadingOlder || !_historyHasMore) return;
+    setState(() => _loadingOlder = true);
+    try {
+      final older = await _agent
+          .loadHistory(id, offset: _historyOffset, limit: 10)
+          .timeout(const Duration(seconds: 6));
+      if (!mounted || older.isEmpty) {
+        if (mounted) setState(() => _historyHasMore = false);
+        return;
+      }
+      final mapped = older
+          .map(
+            (m) => ChatMessage(
+              text: m.content,
+              isUser: m.role == 'user',
+              cards: m.cards,
+            ),
+          )
+          .toList();
+      setState(() {
+        _messages.insertAll(0, mapped);
+        _historyOffset += older.length;
+        _historyHasMore = older.length == 10;
+      });
+    } catch (_) {
+      // keep current list
+    } finally {
+      if (mounted) setState(() => _loadingOlder = false);
     }
   }
 
@@ -159,8 +200,16 @@ class _AiChatPageState extends State<AiChatPage> {
   void dispose() {
     _thinkingTimer?.cancel();
     _inputCtrl.dispose();
+    _scrollCtrl.removeListener(_onScroll);
     _scrollCtrl.dispose();
     super.dispose();
+  }
+
+  void _onScroll() {
+    if (!_scrollCtrl.hasClients) return;
+    if (_scrollCtrl.position.pixels <= 24) {
+      _loadOlderHistory();
+    }
   }
 
   void _startThinkingTimer(Stopwatch stopwatch) {
@@ -203,7 +252,9 @@ class _AiChatPageState extends State<AiChatPage> {
 
     setState(() {
       _sending = true;
-      _messages.add(ChatMessage(text: displayText, isUser: true, imagePath: imagePath));
+      _messages.add(
+        ChatMessage(text: displayText, isUser: true, imagePath: imagePath),
+      );
       _messages.add(ChatMessage(text: '', isUser: false, streaming: true));
     });
     final assistantIndex = _messages.length - 1;
@@ -236,7 +287,8 @@ class _AiChatPageState extends State<AiChatPage> {
             _scrollToBottom();
           }
         } else if (type == 'done') {
-          _conversationId = event['conversationId'] as String? ?? _conversationId;
+          _conversationId =
+              event['conversationId'] as String? ?? _conversationId;
           final rawCards = event['cards'] as List<dynamic>? ?? [];
           cards = rawCards
               .map((e) => ChatActionCard.fromJson(e as Map<String, dynamic>))
@@ -298,13 +350,15 @@ class _AiChatPageState extends State<AiChatPage> {
             cards: msg.cards,
           );
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('已收藏 AI 回复，可在「我的收藏」查看')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('已收藏 AI 回复，可在「我的收藏」查看')));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$e')));
       }
     }
   }
@@ -316,8 +370,14 @@ class _AiChatPageState extends State<AiChatPage> {
         title: const Text('清空对话'),
         content: const Text('将清除当前会话记忆，确定继续？'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('取消')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('清空')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('取消'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('清空'),
+          ),
         ],
       ),
     );
@@ -338,12 +398,7 @@ class _AiChatPageState extends State<AiChatPage> {
       _conversationId = null;
       _messages
         ..clear()
-        ..add(
-          ChatMessage(
-            text: '会话已清空，可以重新开始提问。',
-            isUser: false,
-          ),
-        );
+        ..add(ChatMessage(text: '会话已清空，可以重新开始提问。', isUser: false));
     });
   }
 
@@ -366,7 +421,9 @@ class _AiChatPageState extends State<AiChatPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('选图失败：$e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('选图失败：$e')));
       }
     }
   }
@@ -403,13 +460,15 @@ class _AiChatPageState extends State<AiChatPage> {
     try {
       await _nearbyRepo.markWant(card.id);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('已标记「${card.name}」为想去')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('已标记「${card.name}」为想去')));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$e')));
       }
     }
   }
@@ -417,7 +476,11 @@ class _AiChatPageState extends State<AiChatPage> {
   Future<void> _favoriteItem(ChatActionCard card) async {
     try {
       if (card.type == 'recipe') {
-        await _favRepo.addRecipe(title: card.name, recipeId: card.id, category: card.subtitle);
+        await _favRepo.addRecipe(
+          title: card.name,
+          recipeId: card.id,
+          category: card.subtitle,
+        );
       } else if (card.type == 'restaurant') {
         await _favRepo.addRestaurant(
           restaurantId: card.id,
@@ -428,20 +491,24 @@ class _AiChatPageState extends State<AiChatPage> {
         return;
       }
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('已收藏「${card.name}」')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('已收藏「${card.name}」')));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$e')));
       }
     }
   }
 
   void _continueAsk(ChatActionCard card) {
     _inputCtrl.text = '请详细介绍一下「${card.name}」';
-    _inputCtrl.selection = TextSelection.collapsed(offset: _inputCtrl.text.length);
+    _inputCtrl.selection = TextSelection.collapsed(
+      offset: _inputCtrl.text.length,
+    );
   }
 
   Future<void> _startVoteFromCards(List<ChatActionCard> cards) async {
@@ -452,9 +519,9 @@ class _AiChatPageState extends State<AiChatPage> {
         .toList();
     if (options.length < 2) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('至少需要 2 家餐厅才能发起投票')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('至少需要 2 家餐厅才能发起投票')));
       }
       return;
     }
@@ -467,7 +534,9 @@ class _AiChatPageState extends State<AiChatPage> {
       Navigator.pushNamed(context, AppRoutes.vote, arguments: room.code);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$e')));
       }
     }
   }
@@ -510,30 +579,46 @@ class _AiChatPageState extends State<AiChatPage> {
       body: Column(
         children: [
           Expanded(
-            child: !_prefLoaded || !_historyLoaded
-                ? const Center(child: CircularProgressIndicator())
-                : ListView.builder(
-                    controller: _scrollCtrl,
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-                    itemCount: _messages.length,
-                    itemBuilder: (context, index) {
-                      final msg = _messages[index];
-                      return _Bubble(
-                        message: msg,
-                        thinkingElapsed: msg.streaming && msg.text.isEmpty ? _thinkingElapsed : null,
-                        onFavorite: !msg.isUser && !msg.streaming
-                            ? () => _favoriteReply(index)
-                            : null,
-                        onOpenCard: _openCard,
-                        onMarkWant: _markWant,
-                        onFavoriteItem: _favoriteItem,
-                        onContinueAsk: _continueAsk,
-                        onStartVote: !msg.isUser && !msg.streaming
-                            ? () => _startVoteFromCards(msg.cards)
-                            : null,
-                      );
-                    },
-                  ),
+            child: ListView.builder(
+              controller: _scrollCtrl,
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+              itemCount: _messages.length + (_loadingOlder ? 1 : 0),
+              itemBuilder: (context, index) {
+                if (_loadingOlder && index == 0) {
+                  return const Padding(
+                    padding: EdgeInsets.only(bottom: 10),
+                    child: Center(
+                      child: SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    ),
+                  );
+                }
+                final messageIndex = _loadingOlder ? index - 1 : index;
+                if (messageIndex < 0 || messageIndex >= _messages.length) {
+                  return const SizedBox.shrink();
+                }
+                final msg = _messages[messageIndex];
+                return _Bubble(
+                  message: msg,
+                  thinkingElapsed: msg.streaming && msg.text.isEmpty
+                      ? _thinkingElapsed
+                      : null,
+                  onFavorite: !msg.isUser && !msg.streaming
+                      ? () => _favoriteReply(messageIndex)
+                      : null,
+                  onOpenCard: _openCard,
+                  onMarkWant: _markWant,
+                  onFavoriteItem: _favoriteItem,
+                  onContinueAsk: _continueAsk,
+                  onStartVote: !msg.isUser && !msg.streaming
+                      ? () => _startVoteFromCards(msg.cards)
+                      : null,
+                );
+              },
+            ),
           ),
           if (_sending)
             const Padding(
@@ -576,7 +661,10 @@ class _AiChatPageState extends State<AiChatPage> {
                   Expanded(
                     child: Text(
                       '已选图片，可补充说明或直接发送',
-                      style: TextStyle(fontSize: 13, color: colors.textSecondary),
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: colors.textSecondary,
+                      ),
                     ),
                   ),
                   IconButton(
@@ -683,7 +771,11 @@ class _Bubble extends StatelessWidget {
             bottomRight: Radius.circular(isUser ? 4 : 16),
           ),
           boxShadow: [
-            BoxShadow(color: colors.textPrimary.withValues(alpha: 0.06), blurRadius: 6, offset: const Offset(0, 2)),
+            BoxShadow(
+              color: colors.textPrimary.withValues(alpha: 0.06),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
           ],
         ),
         child: Column(
@@ -707,8 +799,7 @@ class _Bubble extends StatelessWidget {
                   message.text,
                   style: TextStyle(color: colors.onAccent, height: 1.45),
                 ),
-            ]
-            else
+            ] else
               MarkdownBody(
                 data: message.text.isEmpty ? '…' : message.text,
                 selectable: true,
@@ -716,15 +807,18 @@ class _Bubble extends StatelessWidget {
               ),
             if (!isUser && message.cards.isNotEmpty) ...[
               const SizedBox(height: 10),
-              ...message.cards.map((card) => _CardBlock(
-                    card: card,
-                    onOpenCard: onOpenCard,
-                    onMarkWant: onMarkWant,
-                    onFavoriteItem: onFavoriteItem,
-                    onContinueAsk: onContinueAsk,
-                  )),
+              ...message.cards.map(
+                (card) => _CardBlock(
+                  card: card,
+                  onOpenCard: onOpenCard,
+                  onMarkWant: onMarkWant,
+                  onFavoriteItem: onFavoriteItem,
+                  onContinueAsk: onContinueAsk,
+                ),
+              ),
               if (onStartVote != null &&
-                  message.cards.where((c) => c.type == 'restaurant').length >= 2)
+                  message.cards.where((c) => c.type == 'restaurant').length >=
+                      2)
                 Padding(
                   padding: const EdgeInsets.only(top: 6),
                   child: OutlinedButton.icon(
@@ -745,7 +839,10 @@ class _Bubble extends StatelessWidget {
                   if (message.thinkingSeconds != null)
                     Text(
                       '思考 ${_formatThinking(message.thinkingSeconds!)}',
-                      style: TextStyle(fontSize: 11, color: colors.textSecondary),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: colors.textSecondary,
+                      ),
                     ),
                   const Spacer(),
                   if (onFavorite != null)
@@ -755,9 +852,13 @@ class _Bubble extends StatelessWidget {
                       child: Padding(
                         padding: const EdgeInsets.all(4),
                         child: Icon(
-                          message.favorited ? Icons.favorite : Icons.favorite_border,
+                          message.favorited
+                              ? Icons.favorite
+                              : Icons.favorite_border,
                           size: 18,
-                          color: message.favorited ? colors.accent : colors.textSecondary,
+                          color: message.favorited
+                              ? colors.accent
+                              : colors.textSecondary,
                         ),
                       ),
                     ),
@@ -770,25 +871,39 @@ class _Bubble extends StatelessWidget {
     );
   }
 
-  static MarkdownStyleSheet _assistantMarkdownStyle(AppSemanticColors colors) => MarkdownStyleSheet(
-    p: TextStyle(color: colors.textPrimary, height: 1.5, fontSize: 15),
-    strong: TextStyle(
-      fontWeight: FontWeight.w800,
-      color: colors.textPrimary,
-    ),
-    em: TextStyle(fontStyle: FontStyle.italic, color: colors.textPrimary),
-    h1: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: colors.textPrimary),
-    h2: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: colors.textPrimary),
-    h3: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: colors.textPrimary),
-    listBullet: TextStyle(color: colors.textPrimary, fontSize: 15),
-    listIndent: 22,
-    blockSpacing: 10,
-    horizontalRuleDecoration: BoxDecoration(
-      border: Border(top: BorderSide(color: colors.cardBorder)),
-    ),
-  );
+  static MarkdownStyleSheet _assistantMarkdownStyle(AppSemanticColors colors) =>
+      MarkdownStyleSheet(
+        p: TextStyle(color: colors.textPrimary, height: 1.5, fontSize: 15),
+        strong: TextStyle(
+          fontWeight: FontWeight.w800,
+          color: colors.textPrimary,
+        ),
+        em: TextStyle(fontStyle: FontStyle.italic, color: colors.textPrimary),
+        h1: TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.w800,
+          color: colors.textPrimary,
+        ),
+        h2: TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.w800,
+          color: colors.textPrimary,
+        ),
+        h3: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w700,
+          color: colors.textPrimary,
+        ),
+        listBullet: TextStyle(color: colors.textPrimary, fontSize: 15),
+        listIndent: 22,
+        blockSpacing: 10,
+        horizontalRuleDecoration: BoxDecoration(
+          border: Border(top: BorderSide(color: colors.cardBorder)),
+        ),
+      );
 
-  static String _formatThinking(double seconds) => '${seconds.toStringAsFixed(2)} 秒';
+  static String _formatThinking(double seconds) =>
+      '${seconds.toStringAsFixed(2)} 秒';
 }
 
 class _CardBlock extends StatelessWidget {
@@ -834,7 +949,8 @@ class _CardBlock extends StatelessWidget {
               children: [
                 if (card.type == 'restaurant' && onMarkWant != null)
                   _MiniAction(label: '想去', onTap: () => onMarkWant!(card)),
-                if ((card.type == 'recipe' || card.type == 'restaurant') && onFavoriteItem != null)
+                if ((card.type == 'recipe' || card.type == 'restaurant') &&
+                    onFavoriteItem != null)
                   _MiniAction(label: '收藏', onTap: () => onFavoriteItem!(card)),
                 if (onContinueAsk != null)
                   _MiniAction(label: '追问', onTap: () => onContinueAsk!(card)),
@@ -887,7 +1003,11 @@ class _ThinkingBubble extends StatelessWidget {
           color: colors.cardBackground,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
-            BoxShadow(color: colors.textPrimary.withValues(alpha: 0.06), blurRadius: 6, offset: const Offset(0, 2)),
+            BoxShadow(
+              color: colors.textPrimary.withValues(alpha: 0.06),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
           ],
         ),
         child: Row(

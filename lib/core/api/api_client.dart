@@ -43,15 +43,20 @@ class ApiClient {
         },
         onResponse: (response, handler) {
           if (response.requestOptions.extra['skip_auth_recovery'] != true) {
-            _maybeHandleUnauthorized(response.requestOptions.path, response.data);
+            _maybeHandleUnauthorized(
+              response.requestOptions.path,
+              response.data,
+            );
           }
           handler.next(response);
         },
         onError: (error, handler) async {
           final path = error.requestOptions.path;
           final status = error.response?.statusCode;
-          final skipRecovery = error.requestOptions.extra['skip_auth_recovery'] == true;
-          final alreadyRetried = error.requestOptions.extra['_auth_refresh_tried'] == true;
+          final skipRecovery =
+              error.requestOptions.extra['skip_auth_recovery'] == true;
+          final alreadyRetried =
+              error.requestOptions.extra['_auth_refresh_tried'] == true;
 
           if (!skipRecovery && status == 401 && !alreadyRetried) {
             final refreshed = await _tryRefreshToken();
@@ -85,7 +90,10 @@ class ApiClient {
     required T Function(Object? json) parser,
   }) async {
     try {
-      final response = await _dio.get<Map<String, dynamic>>(path, queryParameters: query);
+      final response = await _dio.get<Map<String, dynamic>>(
+        path,
+        queryParameters: query,
+      );
       return _parse(response.data, parser);
     } on DioException catch (e) {
       throw _toApiException(e);
@@ -102,7 +110,9 @@ class ApiClient {
       final response = await _dio.post<Map<String, dynamic>>(
         path,
         data: data,
-        options: Options(extra: {if (skipAuthRecovery) 'skip_auth_recovery': true}),
+        options: Options(
+          extra: {if (skipAuthRecovery) 'skip_auth_recovery': true},
+        ),
       );
       return _parse(response.data, parser);
     } on DioException catch (e) {
@@ -110,12 +120,18 @@ class ApiClient {
     }
   }
 
-  Future<void> postVoid(String path, {Object? data, bool skipAuthRecovery = false}) async {
+  Future<void> postVoid(
+    String path, {
+    Object? data,
+    bool skipAuthRecovery = false,
+  }) async {
     try {
       final response = await _dio.post<Map<String, dynamic>>(
         path,
         data: data,
-        options: Options(extra: {if (skipAuthRecovery) 'skip_auth_recovery': true}),
+        options: Options(
+          extra: {if (skipAuthRecovery) 'skip_auth_recovery': true},
+        ),
       );
       _ensureOk(response.data);
     } on DioException catch (e) {
@@ -189,7 +205,10 @@ class ApiClient {
   }
 
   /// NDJSON 流式 POST，每行一个 JSON 对象
-  Stream<Map<String, dynamic>> postNdjsonStream(String path, {Object? data}) async* {
+  Stream<Map<String, dynamic>> postNdjsonStream(
+    String path, {
+    Object? data,
+  }) async* {
     try {
       final response = await _dio.post<ResponseBody>(
         path,
@@ -241,7 +260,7 @@ class ApiClient {
         escaping = false;
         continue;
       }
-      if (ch == r'\') {
+      if (ch == '\\') {
         escaping = true;
         continue;
       }
@@ -276,7 +295,10 @@ class ApiClient {
     return result.data as T;
   }
 
-  ApiResult<T> _parseResult<T>(Map<String, dynamic>? json, T Function(Object? json) parser) {
+  ApiResult<T> _parseResult<T>(
+    Map<String, dynamic>? json,
+    T Function(Object? json) parser,
+  ) {
     if (json == null) {
       throw ApiException('空响应');
     }
@@ -312,7 +334,9 @@ class ApiClient {
       msg ??= data['message'] as String?;
     }
     if (code == 401) {
-      unawaited(AuthSessionGuard.handleUnauthorized(message: msg ?? '登录已过期，请重新登录'));
+      unawaited(
+        AuthSessionGuard.handleUnauthorized(message: msg ?? '登录已过期，请重新登录'),
+      );
     }
   }
 
@@ -335,7 +359,10 @@ class ApiClient {
       final access = data['token'] as String? ?? '';
       final nextRefresh = data['refreshToken'] as String? ?? '';
       if (access.isEmpty || nextRefresh.isEmpty) return false;
-      await _session.updateTokens(accessToken: access, refreshToken: nextRefresh);
+      await _session.updateTokens(
+        accessToken: access,
+        refreshToken: nextRefresh,
+      );
       return true;
     } catch (_) {
       return false;
@@ -385,7 +412,10 @@ class _RetryInterceptor extends Interceptor {
   static const _retryKey = '_api_retry_count';
 
   @override
-  Future<void> onError(DioException err, ErrorInterceptorHandler handler) async {
+  Future<void> onError(
+    DioException err,
+    ErrorInterceptorHandler handler,
+  ) async {
     final attempt = (err.requestOptions.extra[_retryKey] as int?) ?? 0;
     if (attempt >= _maxAttempts - 1 || !_isTransient(err)) {
       return handler.next(err);

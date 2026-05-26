@@ -47,7 +47,9 @@ class _AiConversationsPageState extends State<AiConversationsPage> {
       if (mounted) setState(() => _items = items);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$e')));
       }
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -66,8 +68,14 @@ class _AiConversationsPageState extends State<AiConversationsPage> {
         title: const Text('删除对话'),
         content: Text('确定删除「${item.title}」？'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('取消')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('删除')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('取消'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('删除'),
+          ),
         ],
       ),
     );
@@ -79,7 +87,9 @@ class _AiConversationsPageState extends State<AiConversationsPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$e')));
       }
     }
   }
@@ -97,7 +107,10 @@ class _AiConversationsPageState extends State<AiConversationsPage> {
           decoration: const InputDecoration(hintText: '输入对话标题'),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('取消')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('取消'),
+          ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, ctrl.text.trim()),
             child: const Text('保存'),
@@ -111,7 +124,9 @@ class _AiConversationsPageState extends State<AiConversationsPage> {
       await _load();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$e')));
       }
     }
   }
@@ -124,11 +139,18 @@ class _AiConversationsPageState extends State<AiConversationsPage> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const ListTile(title: Text('设置场景标签', style: TextStyle(fontWeight: FontWeight.w700))),
+            const ListTile(
+              title: Text(
+                '设置场景标签',
+                style: TextStyle(fontWeight: FontWeight.w700),
+              ),
+            ),
             ..._sceneTags.map(
               (tag) => ListTile(
                 title: Text(tag),
-                trailing: item.sceneTag == tag ? Icon(Icons.check, color: colors.infoText) : null,
+                trailing: item.sceneTag == tag
+                    ? Icon(Icons.check, color: colors.infoText)
+                    : null,
                 onTap: () => Navigator.pop(ctx, tag),
               ),
             ),
@@ -146,7 +168,9 @@ class _AiConversationsPageState extends State<AiConversationsPage> {
       await _load();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$e')));
       }
     }
   }
@@ -155,7 +179,8 @@ class _AiConversationsPageState extends State<AiConversationsPage> {
     Navigator.push<void>(
       context,
       MaterialPageRoute<void>(
-        builder: (_) => AiChatPage(conversationId: conversationId, isNewChat: isNew),
+        builder: (_) =>
+            AiChatPage(conversationId: conversationId, isNewChat: isNew),
       ),
     ).then((_) => _load());
   }
@@ -182,12 +207,6 @@ class _AiConversationsPageState extends State<AiConversationsPage> {
             tooltip: '新对话',
           ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _openChat(isNew: true),
-        backgroundColor: colors.accent,
-        icon: const Icon(Icons.chat),
-        label: const Text('新对话'),
       ),
       body: Column(
         children: [
@@ -268,7 +287,9 @@ class _AiConversationsPageState extends State<AiConversationsPage> {
                                   child: Text(
                                     '暂无对话记录\n从首页或下方按钮开始新对话',
                                     textAlign: TextAlign.center,
-                                    style: TextStyle(color: colors.textSecondary),
+                                    style: TextStyle(
+                                      color: colors.textSecondary,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -277,7 +298,8 @@ class _AiConversationsPageState extends State<AiConversationsPage> {
                         : ListView.separated(
                             padding: const EdgeInsets.all(12),
                             itemCount: _items.length,
-                            separatorBuilder: (_, _) => const SizedBox(height: 8),
+                            separatorBuilder: (_, _) =>
+                                const SizedBox(height: 8),
                             itemBuilder: (context, index) {
                               final item = _items[index];
                               return Card(
@@ -285,7 +307,10 @@ class _AiConversationsPageState extends State<AiConversationsPage> {
                                 child: ListTile(
                                   leading: CircleAvatar(
                                     backgroundColor: colors.infoBackground,
-                                    child: Icon(Icons.smart_toy_outlined, color: colors.infoText),
+                                    child: Icon(
+                                      Icons.smart_toy_outlined,
+                                      color: colors.infoText,
+                                    ),
                                   ),
                                   title: Row(
                                     children: [
@@ -294,26 +319,41 @@ class _AiConversationsPageState extends State<AiConversationsPage> {
                                           item.title,
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
-                                          style: const TextStyle(fontWeight: FontWeight.w700),
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.w700,
+                                          ),
                                         ),
                                       ),
-                                      if (item.sceneTag != null && item.sceneTag!.isNotEmpty)
+                                      if (item.sceneTag != null &&
+                                          item.sceneTag!.isNotEmpty)
                                         Container(
-                                          margin: const EdgeInsets.only(left: 6),
-                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                          margin: const EdgeInsets.only(
+                                            left: 6,
+                                          ),
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 6,
+                                            vertical: 2,
+                                          ),
                                           decoration: BoxDecoration(
                                             color: colors.infoBackground,
-                                            borderRadius: BorderRadius.circular(4),
+                                            borderRadius: BorderRadius.circular(
+                                              4,
+                                            ),
                                           ),
                                           child: Text(
                                             item.sceneTag!,
-                                            style: TextStyle(fontSize: 11, color: colors.infoText),
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              color: colors.infoText,
+                                            ),
                                           ),
                                         ),
                                     ],
                                   ),
                                   subtitle: Text(
-                                    item.preview.isEmpty ? '暂无消息' : item.preview,
+                                    item.preview.isEmpty
+                                        ? '暂无消息'
+                                        : item.preview,
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
                                   ),
@@ -322,10 +362,16 @@ class _AiConversationsPageState extends State<AiConversationsPage> {
                                     children: [
                                       Text(
                                         _formatTime(item.updatedAt),
-                                        style: TextStyle(color: colors.textSecondary, fontSize: 12),
+                                        style: TextStyle(
+                                          color: colors.textSecondary,
+                                          fontSize: 12,
+                                        ),
                                       ),
                                       PopupMenuButton<String>(
-                                        icon: const Icon(Icons.more_vert, size: 20),
+                                        icon: const Icon(
+                                          Icons.more_vert,
+                                          size: 20,
+                                        ),
                                         onSelected: (value) {
                                           switch (value) {
                                             case 'rename':
@@ -337,14 +383,24 @@ class _AiConversationsPageState extends State<AiConversationsPage> {
                                           }
                                         },
                                         itemBuilder: (_) => const [
-                                          PopupMenuItem(value: 'rename', child: Text('重命名')),
-                                          PopupMenuItem(value: 'tag', child: Text('设置标签')),
-                                          PopupMenuItem(value: 'delete', child: Text('删除')),
+                                          PopupMenuItem(
+                                            value: 'rename',
+                                            child: Text('重命名'),
+                                          ),
+                                          PopupMenuItem(
+                                            value: 'tag',
+                                            child: Text('设置标签'),
+                                          ),
+                                          PopupMenuItem(
+                                            value: 'delete',
+                                            child: Text('删除'),
+                                          ),
                                         ],
                                       ),
                                     ],
                                   ),
-                                  onTap: () => _openChat(conversationId: item.id),
+                                  onTap: () =>
+                                      _openChat(conversationId: item.id),
                                   onLongPress: () => _rename(item),
                                 ),
                               );

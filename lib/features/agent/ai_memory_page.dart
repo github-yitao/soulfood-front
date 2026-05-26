@@ -111,38 +111,34 @@ class _AiMemoryPageState extends State<AiMemoryPage> {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
-    return PopScope(
-      canPop: true,
-      child: Scaffold(
-        appBar: AppBar(
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-            onPressed: () => Navigator.maybePop(context),
-          ),
-          title: const Text('AI 记忆'),
+    return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+          onPressed: () => Navigator.maybePop(context),
         ),
-        body: Column(
+        title: const Text('AI 记忆'),
+      ),
+      body: RefreshIndicator(
+        onRefresh: _load,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(12, 8, 12, 96),
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-              child: Text(
-                '助手会记住你的饮食偏好和近期经历，让推荐越来越懂你。'
-                '对话中明确说出的习惯也会自动提取为长期记忆。',
-                style: TextStyle(
-                  color: colors.textSecondary,
-                  fontSize: 13,
-                  height: 1.4,
-                ),
+            Text(
+              '助手会记住你的饮食偏好和近期经历，让推荐越来越懂你。'
+              '对话中明确说出的习惯也会自动提取为长期记忆。',
+              style: TextStyle(
+                color: colors.textSecondary,
+                fontSize: 13,
+                height: 1.4,
               ),
             ),
+            const SizedBox(height: 8),
             SizedBox(
               height: 44,
               child: ListView(
                 scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
                 children: [
                   AppFilterChip(
                     label: '全部',
@@ -152,6 +148,7 @@ class _AiMemoryPageState extends State<AiMemoryPage> {
                       _load();
                     },
                   ),
+                  const SizedBox(width: 8),
                   AppFilterChip(
                     label: '长期记忆',
                     selected: _filterType == 'long_term',
@@ -160,6 +157,7 @@ class _AiMemoryPageState extends State<AiMemoryPage> {
                       _load();
                     },
                   ),
+                  const SizedBox(width: 8),
                   AppFilterChip(
                     label: '近期经历',
                     selected: _filterType == 'episodic',
@@ -171,80 +169,67 @@ class _AiMemoryPageState extends State<AiMemoryPage> {
                 ],
               ),
             ),
-            Expanded(
-              child: _loading
-                  ? const Center(child: CircularProgressIndicator())
-                  : RefreshIndicator(
-                      onRefresh: _load,
-                      child: _items.isEmpty
-                          ? ListView(
-                              children: [
-                                SizedBox(
-                                  height: 200,
-                                  child: Center(
-                                    child: Text(
-                                      '暂无记忆\n可在下方手动添加，或通过对话自动积累',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        color: colors.textSecondary,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            )
-                          : ListView.separated(
-                              padding: const EdgeInsets.all(12),
-                              itemCount: _items.length,
-                              separatorBuilder: (_, _) =>
-                                  const SizedBox(height: 8),
-                              itemBuilder: (context, index) {
-                                final item = _items[index];
-                                return Card(
-                                  child: ListTile(
-                                    title: Text(item.content),
-                                    subtitle: Text(item.typeLabel),
-                                    trailing: IconButton(
-                                      icon: const Icon(Icons.delete_outline),
-                                      onPressed: () => _delete(item),
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-                    ),
-            ),
-            SafeArea(
-              top: false,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _inputCtrl,
-                        decoration: InputDecoration(
-                          hintText: '手动添加记忆，如「不吃香菜」',
-                          filled: true,
-                          fillColor: colors.inputFill,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
-                          ),
-                        ),
-                        onSubmitted: (_) => _addMemory(),
+            const SizedBox(height: 8),
+            if (_loading)
+              const Padding(
+                padding: EdgeInsets.only(top: 80),
+                child: Center(child: CircularProgressIndicator()),
+              )
+            else if (_items.isEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 80),
+                child: Center(
+                  child: Text(
+                    '暂无记忆\n可在下方手动添加，或通过对话自动积累',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: colors.textSecondary),
+                  ),
+                ),
+              )
+            else
+              ..._items.map(
+                (item) => Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Card(
+                    child: ListTile(
+                      title: Text(item.content),
+                      subtitle: Text(item.typeLabel),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.delete_outline),
+                        onPressed: () => _delete(item),
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    FilledButton(
-                      onPressed: _addMemory,
-                      child: const Text('添加'),
-                    ),
-                  ],
+                  ),
                 ),
               ),
-            ),
           ],
+        ),
+      ),
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+          child: Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _inputCtrl,
+                  decoration: InputDecoration(
+                    hintText: '手动添加记忆，如「不吃香菜」',
+                    filled: true,
+                    fillColor: colors.inputFill,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                  onSubmitted: (_) => _addMemory(),
+                ),
+              ),
+              const SizedBox(width: 8),
+              FilledButton(onPressed: _addMemory, child: const Text('添加')),
+            ],
+          ),
         ),
       ),
     );
