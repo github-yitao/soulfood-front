@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:soulfood_front/core/app_bootstrap.dart';
 import 'package:soulfood_front/core/theme/app_semantic_colors.dart';
+import 'package:soulfood_front/core/theme/theme_widgets.dart';
 import 'package:soulfood_front/features/auth/auth_repository.dart';
 import 'package:soulfood_front/features/favorite/favorites_page.dart';
 import 'package:soulfood_front/features/notification/notification_repository.dart';
@@ -106,9 +107,35 @@ class _ProfilePageState extends State<ProfilePage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              profile.nickname,
-                              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: colors.textPrimary),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    profile.nickname,
+                                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: colors.textPrimary),
+                                  ),
+                                ),
+                                if (profile.inviteBadgeUnlocked)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    decoration: appStatusDecoration(colors, AppStatusKind.warning),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(Icons.military_tech, size: 14, color: appStatusTextColor(colors, AppStatusKind.warning)),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          '组局达人',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w700,
+                                            color: appStatusTextColor(colors, AppStatusKind.warning),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                              ],
                             ),
                             const SizedBox(height: 4),
                             if (profile.username != null && profile.username!.isNotEmpty)
@@ -240,27 +267,28 @@ class _ProfileAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     final url = profile.avatarUrl;
     if (url != null && url.isNotEmpty) {
       return CircleAvatar(
         radius: 32,
-        backgroundColor: const Color(0xFFFFEFBC),
+        backgroundColor: colors.chipSelectedBackground,
         backgroundImage: NetworkImage(url),
         onBackgroundImageError: (_, _) {},
         child: url.isEmpty
             ? Text(
                 profile.nickname.isNotEmpty ? profile.nickname.substring(0, 1) : '?',
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: colors.textPrimary),
               )
             : null,
       );
     }
     return CircleAvatar(
       radius: 32,
-      backgroundColor: const Color(0xFFFFEFBC),
+      backgroundColor: colors.chipSelectedBackground,
       child: Text(
         profile.nickname.isNotEmpty ? profile.nickname.substring(0, 1) : '?',
-        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
+        style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: colors.textPrimary),
       ),
     );
   }

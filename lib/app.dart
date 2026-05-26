@@ -1,26 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:soulfood_front/core/app_bootstrap.dart';
 import 'package:soulfood_front/core/settings/appearance_store.dart';
 import 'package:soulfood_front/core/theme/app_theme_factory.dart';
 import 'package:soulfood_front/core/theme/app_theme_variant.dart';
 import 'package:soulfood_front/core/auth/auth_session_guard.dart';
+import 'package:soulfood_front/features/auth/forgot_password_page.dart';
 import 'package:soulfood_front/features/auth/login_page.dart';
 import 'package:soulfood_front/features/auth/splash_page.dart';
 import 'package:soulfood_front/features/favorite/favorites_page.dart';
 import 'package:soulfood_front/features/growth/about_page.dart';
 import 'package:soulfood_front/features/growth/invite_page.dart';
 import 'package:soulfood_front/features/nearby/nearby_page.dart';
+import 'package:soulfood_front/features/nearby/restaurant_map_page.dart';
+import 'package:soulfood_front/features/nearby/wanted_restaurants_page.dart';
 import 'package:soulfood_front/features/nearby/random_eat_page.dart';
 import 'package:soulfood_front/features/order/orders_page.dart';
 import 'package:soulfood_front/features/preference/preference_page.dart';
 import 'package:soulfood_front/features/growth/legal_document_page.dart';
 import 'package:soulfood_front/features/notification/notifications_page.dart';
+import 'package:soulfood_front/features/profile/bind_phone_page.dart';
 import 'package:soulfood_front/features/profile/appearance_page.dart';
 import 'package:soulfood_front/features/profile/settings_page.dart';
 import 'package:soulfood_front/features/agent/ai_conversations_page.dart';
 import 'package:soulfood_front/features/agent/ai_memory_page.dart';
 import 'package:soulfood_front/features/agent/ai_chat_page.dart';
 import 'package:soulfood_front/features/agent/ai_quick_page.dart';
+import 'package:soulfood_front/features/recipe/cook_mode_page.dart';
 import 'package:soulfood_front/features/recipe/recipe_library_page.dart';
 import 'package:soulfood_front/features/room/pages/create_room_page.dart';
 import 'package:soulfood_front/features/friend/my_friends_page.dart';
@@ -30,6 +36,7 @@ import 'package:soulfood_front/features/room/pages/scan_join_room_page.dart';
 import 'package:soulfood_front/features/room/pages/recipe_result_page.dart';
 import 'package:soulfood_front/features/room/pages/vote_page.dart';
 import 'package:soulfood_front/features/room/room_models.dart';
+import 'package:soulfood_front/l10n/app_localizations.dart';
 import 'package:soulfood_front/routing/app_routes.dart';
 
 class SoulFoodApp extends StatelessWidget {
@@ -83,7 +90,15 @@ class _DecideMealAppState extends State<_DecideMealApp> {
     return MaterialApp(
       navigatorKey: AuthSessionGuard.navigatorKey,
       debugShowCheckedModeBanner: false,
-      title: 'DecideMeal',
+      onGenerateTitle: (context) => AppLocalizations.of(context)?.appTitle ?? 'DecideMeal',
+      locale: Locale(settings.locale.languageCode),
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: AppLocalizations.supportedLocales,
       themeMode: themeMode,
       theme: isGhoul ? ghoul : classicLight,
       darkTheme: isGhoul ? ghoul : classicDark,
@@ -152,6 +167,16 @@ class _DecideMealAppState extends State<_DecideMealApp> {
         return MaterialPageRoute<void>(builder: (_) => const RandomEatPage(), settings: settings);
       case AppRoutes.nearby:
         return MaterialPageRoute<void>(builder: (_) => const NearbyPage(), settings: settings);
+      case AppRoutes.restaurantMap:
+        return MaterialPageRoute<void>(builder: (_) => const RestaurantMapPage(), settings: settings);
+      case AppRoutes.wantedRestaurants:
+        return MaterialPageRoute<void>(builder: (_) => const WantedRestaurantsPage(), settings: settings);
+      case AppRoutes.cookMode:
+        return MaterialPageRoute<void>(builder: (_) => const CookModePage(), settings: settings);
+      case AppRoutes.forgotPassword:
+        return MaterialPageRoute<void>(builder: (_) => const ForgotPasswordPage(), settings: settings);
+      case AppRoutes.bindPhone:
+        return MaterialPageRoute<void>(builder: (_) => const BindPhonePage(), settings: settings);
       case AppRoutes.favorites:
         return MaterialPageRoute<void>(builder: (_) => const FavoritesPage(), settings: settings);
       case AppRoutes.preference:

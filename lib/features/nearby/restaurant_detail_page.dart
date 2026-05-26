@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:soulfood_front/core/theme/app_semantic_colors.dart';
+import 'package:soulfood_front/core/theme/theme_widgets.dart';
 import 'package:soulfood_front/features/favorite/favorite_repository.dart';
 import 'package:soulfood_front/features/nearby/nearby_repository.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -136,6 +138,7 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
     }
 
     final phone = item.phone?.split(';').first.trim();
+    final colors = context.appColors;
 
     return Scaffold(
       appBar: AppBar(title: Text(item.name)),
@@ -163,15 +166,14 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: const Color(0xFFEDF0F6)),
-                  ),
+                  decoration: appCardDecoration(context),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(item.category, style: const TextStyle(color: Color(0xFFD86A00), fontWeight: FontWeight.w700)),
+                      Text(
+                        item.category,
+                        style: TextStyle(color: colors.chipSelectedText, fontWeight: FontWeight.w700),
+                      ),
                       const SizedBox(height: 8),
                       Text('评分 ${item.rating ?? '-'} · 距离 ${item.distanceKm ?? '-'} km'),
                       if (item.address != null && item.address!.isNotEmpty) ...[
@@ -179,10 +181,13 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Icon(Icons.place_outlined, size: 16, color: Color(0xFF737C8B)),
+                            Icon(Icons.place_outlined, size: 16, color: colors.textSecondary),
                             const SizedBox(width: 6),
                             Expanded(
-                              child: Text(item.address!, style: const TextStyle(color: Color(0xFF737C8B), fontSize: 13)),
+                              child: Text(
+                                item.address!,
+                                style: TextStyle(color: colors.textSecondary, fontSize: 13),
+                              ),
                             ),
                           ],
                         ),
@@ -191,16 +196,19 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
                         const SizedBox(height: 8),
                         Row(
                           children: [
-                            const Icon(Icons.phone_outlined, size: 16, color: Color(0xFF737C8B)),
+                            Icon(Icons.phone_outlined, size: 16, color: colors.textSecondary),
                             const SizedBox(width: 6),
-                            Text(phone, style: const TextStyle(color: Color(0xFF737C8B), fontSize: 13)),
+                            Text(phone, style: TextStyle(color: colors.textSecondary, fontSize: 13)),
                           ],
                         ),
                       ],
                       if (item.wanted)
-                        const Padding(
-                          padding: EdgeInsets.only(top: 8),
-                          child: Text('已标记想去', style: TextStyle(color: Color(0xFFD86A00), fontSize: 13)),
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Text(
+                            '已标记想去',
+                            style: TextStyle(color: colors.chipSelectedText, fontSize: 13),
+                          ),
                         ),
                     ],
                   ),
@@ -248,7 +256,6 @@ class _RestaurantDetailPageState extends State<RestaurantDetailPage> {
                       onPressed: _busy ? null : _toggleFavorite,
                       icon: Icon(item.favorited ? Icons.favorite : Icons.favorite_border),
                       label: Text(item.favorited ? '已收藏' : '收藏店铺'),
-                      style: FilledButton.styleFrom(backgroundColor: const Color(0xFFFF8A43)),
                     ),
                   ),
                 ],
@@ -268,21 +275,22 @@ class _PhotoPlaceholder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     return Container(
       height: 160,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        gradient: const LinearGradient(
-          colors: [Color(0xFFFFF4E8), Color(0xFFFFE0CC)],
+        gradient: LinearGradient(
+          colors: [colors.bannerBackground, colors.chipSelectedBackground],
         ),
       ),
       alignment: Alignment.center,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.restaurant, size: 40, color: Color(0xFFFF8A43)),
+          Icon(Icons.restaurant, size: 40, color: colors.accent),
           const SizedBox(height: 8),
-          Text(name, style: const TextStyle(fontWeight: FontWeight.w700, color: Color(0xFFD86A00))),
+          Text(name, style: TextStyle(fontWeight: FontWeight.w700, color: colors.chipSelectedText)),
         ],
       ),
     );

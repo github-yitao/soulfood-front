@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:soulfood_front/core/theme/app_semantic_colors.dart';
+import 'package:soulfood_front/core/theme/theme_widgets.dart';
 import 'package:soulfood_front/features/order/order_repository.dart';
 
 class OrdersPage extends StatefulWidget {
@@ -194,6 +196,8 @@ class _OrdersPageState extends State<OrdersPage> {
     final stats = _monthStats(filteredDays);
     final hasDemo = overview?.hasDemoOrders ?? false;
 
+    final colors = context.appColors;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('历史订单'),
@@ -207,7 +211,7 @@ class _OrdersPageState extends State<OrdersPage> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _addManualOrder,
-        backgroundColor: const Color(0xFFFF8A43),
+        backgroundColor: colors.accent,
         icon: const Icon(Icons.add),
         label: const Text('记一笔'),
       ),
@@ -222,20 +226,20 @@ class _OrdersPageState extends State<OrdersPage> {
                     Container(
                       margin: const EdgeInsets.only(bottom: 12),
                       padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFFF8EB),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: const Color(0xFFFFE0A8)),
-                      ),
-                      child: const Row(
+                      decoration: appStatusDecoration(colors, AppStatusKind.warning),
+                      child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(Icons.info_outline, size: 18, color: Color(0xFFD86A00)),
-                          SizedBox(width: 8),
+                          Icon(Icons.info_outline, size: 18, color: colors.warningText),
+                          const SizedBox(width: 8),
                           Expanded(
                             child: Text(
                               '列表中含示例订单（仅供体验），可通过「记一笔」添加真实消费记录。',
-                              style: TextStyle(fontSize: 13, color: Color(0xFF8A5A12), height: 1.45),
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: colors.warningText,
+                                height: 1.45,
+                              ),
                             ),
                           ),
                         ],
@@ -258,20 +262,10 @@ class _OrdersPageState extends State<OrdersPage> {
                       itemBuilder: (context, index) {
                         final f = _filters[index];
                         final active = _filter == f.$1;
-                        return FilterChip(
-                          label: Text(f.$2),
+                        return AppFilterChip(
+                          label: f.$2,
                           selected: active,
                           showCheckmark: false,
-                          labelStyle: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: active ? const Color(0xFFD86A00) : const Color(0xFF5F697A),
-                          ),
-                          backgroundColor: const Color(0xFFF7F9FC),
-                          selectedColor: const Color(0xFFFFF2E0),
-                          side: BorderSide(
-                            color: active ? const Color(0xFFFFD79F) : const Color(0xFFE8EDF4),
-                          ),
                           onSelected: (_) {
                             setState(() => _filter = f.$1);
                             _load();
@@ -284,15 +278,11 @@ class _OrdersPageState extends State<OrdersPage> {
                   if (filteredDays.isEmpty)
                     Container(
                       padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 14),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFBFCFF),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: const Color(0xFFE3E8F0), style: BorderStyle.solid),
-                      ),
-                      child: const Center(
+                      decoration: appMutedSurfaceDecoration(context, radius: 16),
+                      child: Center(
                         child: Text(
                           '当前筛选下暂无订单，换个分类或月份看看。',
-                          style: TextStyle(color: Color(0xFF7C8594), fontSize: 13),
+                          style: TextStyle(color: colors.textSecondary, fontSize: 13),
                         ),
                       ),
                     )
@@ -322,15 +312,21 @@ class _OverviewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF1F2E45), Color(0xFF2F4569)],
+        gradient: LinearGradient(
+          colors: [colors.heroGradientStart, colors.heroGradientEnd, colors.accent],
+          stops: const [0.0, 0.55, 1.0],
         ),
         borderRadius: BorderRadius.circular(20),
-        boxShadow: const [
-          BoxShadow(color: Color(0x38142138), blurRadius: 24, offset: Offset(0, 12)),
+        boxShadow: [
+          BoxShadow(
+            color: colors.accent.withValues(alpha: 0.28),
+            blurRadius: 24,
+            offset: const Offset(0, 12),
+          ),
         ],
       ),
       child: Column(
@@ -341,17 +337,20 @@ class _OverviewCard extends StatelessWidget {
             children: [
               Text(
                 '$month 月消费概览${hasDemo ? '（含示例）' : ''}',
-                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 16),
+                style: TextStyle(color: colors.heroText, fontWeight: FontWeight.w800, fontSize: 16),
               ),
-              const Text('近 30 天', style: TextStyle(color: Color(0xCCFFFFFF), fontSize: 12)),
+              Text(
+                '近 30 天',
+                style: TextStyle(color: colors.heroText.withValues(alpha: 0.8), fontSize: 12),
+              ),
             ],
           ),
           const SizedBox(height: 12),
           Row(
             children: [
-              _metric('订单数', '$orderCount'),
-              _metric('总消费', '¥${totalAmount.toStringAsFixed(0)}'),
-              _metric('常点品类', topCategory),
+              _metric(context, '订单数', '$orderCount'),
+              _metric(context, '总消费', '¥${totalAmount.toStringAsFixed(0)}'),
+              _metric(context, '常点品类', topCategory),
             ],
           ),
         ],
@@ -359,26 +358,30 @@ class _OverviewCard extends StatelessWidget {
     );
   }
 
-  Widget _metric(String label, String value) {
+  Widget _metric(BuildContext context, String label, String value) {
+    final colors = context.appColors;
     return Expanded(
       child: Container(
         margin: const EdgeInsets.only(right: 8),
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.12),
+          color: colors.heroText.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
+          border: Border.all(color: colors.heroText.withValues(alpha: 0.18)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label, style: const TextStyle(color: Color(0xD1FFFFFF), fontSize: 11)),
+            Text(
+              label,
+              style: TextStyle(color: colors.heroText.withValues(alpha: 0.82), fontSize: 11),
+            ),
             const SizedBox(height: 4),
             Text(
               value,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 18),
+              style: TextStyle(color: colors.heroText, fontWeight: FontWeight.w800, fontSize: 18),
             ),
           ],
         ),
@@ -394,6 +397,7 @@ class _OrderTimeline extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -403,11 +407,11 @@ class _OrderTimeline extends StatelessWidget {
           bottom: 8,
           child: Container(
             width: 2,
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [Color(0xFFFFD9AD), Color(0xFFFFEEDE)],
+                colors: [colors.accentSecondary, colors.chipSelectedBackground],
               ),
             ),
           ),
@@ -435,6 +439,7 @@ class _DayBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -444,16 +449,16 @@ class _DayBlock extends StatelessWidget {
               width: 8,
               height: 8,
               decoration: BoxDecoration(
-                color: const Color(0xFFFF9A4D),
+                color: colors.accent,
                 shape: BoxShape.circle,
-                border: Border.all(color: const Color(0xFFFFF1E3), width: 3),
+                border: Border.all(color: colors.chipSelectedBackground, width: 3),
               ),
             ),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
                 day.dateLabel,
-                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF687184)),
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: colors.textSecondary),
               ),
             ),
           ],
@@ -475,19 +480,13 @@ class _OrderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     final pending = item.statusText == '待开发票';
     final metaParts = _metaParts(item);
 
     return Container(
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFEDF1F6)),
-        boxShadow: const [
-          BoxShadow(color: Color(0x141E2941), blurRadius: 18, offset: Offset(0, 8)),
-        ],
-      ),
+      decoration: appCardDecoration(context),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -497,20 +496,16 @@ class _OrderCard extends StatelessWidget {
               children: [
                 Text(
                   item.restaurantName,
-                  style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: Color(0xFF1F2633)),
+                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: colors.textPrimary),
                 ),
                 if (item.isDemo) ...[
                   const SizedBox(height: 4),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFFF4E8),
-                      borderRadius: BorderRadius.circular(999),
-                      border: Border.all(color: const Color(0xFFFFD8B1)),
-                    ),
-                    child: const Text(
+                    decoration: appStatusDecoration(colors, AppStatusKind.warning),
+                    child: Text(
                       '示例',
-                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Color(0xFFCF6C16)),
+                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: colors.warningText),
                     ),
                   ),
                 ],
@@ -523,7 +518,7 @@ class _OrderCard extends StatelessWidget {
                         .map(
                           (part) => Text(
                             part,
-                            style: const TextStyle(color: Color(0xFF6F7889), fontSize: 12),
+                            style: TextStyle(color: colors.textSecondary, fontSize: 12),
                           ),
                         )
                         .toList(),
@@ -533,16 +528,19 @@ class _OrderCard extends StatelessWidget {
                   const SizedBox(height: 7),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: pending ? const Color(0xFFFFF2E3) : const Color(0xFFEEF7FF),
-                      borderRadius: BorderRadius.circular(999),
+                    decoration: appStatusDecoration(
+                      colors,
+                      pending ? AppStatusKind.warning : AppStatusKind.info,
                     ),
                     child: Text(
                       item.statusText!,
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
-                        color: pending ? const Color(0xFFDE7312) : const Color(0xFF3171CB),
+                        color: appStatusTextColor(
+                          colors,
+                          pending ? AppStatusKind.warning : AppStatusKind.info,
+                        ),
                       ),
                     ),
                   ),
@@ -552,7 +550,7 @@ class _OrderCard extends StatelessWidget {
           ),
           Text(
             '¥${item.amount.toStringAsFixed(0)}',
-            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: Color(0xFF222A39)),
+            style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: colors.textPrimary),
           ),
         ],
       ),

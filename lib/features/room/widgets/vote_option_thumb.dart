@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:soulfood_front/core/theme/app_semantic_colors.dart';
 
 class VoteOptionThumbStyle {
   const VoteOptionThumbStyle({required this.icon, required this.colors});
@@ -53,6 +54,7 @@ class VoteOptionThumb extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     final style = voteOptionThumbStyle(title, source: source);
     return Container(
       width: 54,
@@ -65,7 +67,7 @@ class VoteOptionThumb extends StatelessWidget {
           colors: style.colors,
         ),
       ),
-      child: Icon(style.icon, color: Colors.white, size: 28),
+      child: Icon(style.icon, color: colors.onAccent, size: 28),
     );
   }
 }

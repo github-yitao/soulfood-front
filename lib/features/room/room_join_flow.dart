@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:soulfood_front/core/storage/recent_rooms_store.dart';
 import 'package:soulfood_front/features/room/room_join_link.dart';
 import 'package:soulfood_front/features/room/room_repository.dart';
 import 'package:soulfood_front/routing/app_routes.dart';
@@ -16,6 +17,7 @@ Future<bool> joinRoomAndNavigate(BuildContext context, String rawCode) async {
 
   try {
     await RoomRepository().joinRoom(code);
+    await RecentRoomsStore().remember(code);
     if (!context.mounted) return false;
     Navigator.pushReplacementNamed(context, AppRoutes.vote, arguments: code);
     return true;

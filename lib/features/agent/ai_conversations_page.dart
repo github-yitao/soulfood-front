@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:soulfood_front/core/theme/app_semantic_colors.dart';
+import 'package:soulfood_front/core/theme/theme_widgets.dart';
 import 'package:soulfood_front/features/agent/agent_repository.dart';
 import 'package:soulfood_front/features/agent/ai_chat_page.dart';
 
@@ -115,6 +117,7 @@ class _AiConversationsPageState extends State<AiConversationsPage> {
   }
 
   Future<void> _setSceneTag(AiConversationItem item) async {
+    final colors = context.appColors;
     final selected = await showModalBottomSheet<String>(
       context: context,
       builder: (ctx) => SafeArea(
@@ -125,7 +128,7 @@ class _AiConversationsPageState extends State<AiConversationsPage> {
             ..._sceneTags.map(
               (tag) => ListTile(
                 title: Text(tag),
-                trailing: item.sceneTag == tag ? const Icon(Icons.check, color: Color(0xFF2B5EA8)) : null,
+                trailing: item.sceneTag == tag ? Icon(Icons.check, color: colors.infoText) : null,
                 onTap: () => Navigator.pop(ctx, tag),
               ),
             ),
@@ -168,6 +171,7 @@ class _AiConversationsPageState extends State<AiConversationsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     return Scaffold(
       appBar: AppBar(
         title: const Text('AI 对话记录'),
@@ -181,7 +185,7 @@ class _AiConversationsPageState extends State<AiConversationsPage> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _openChat(isNew: true),
-        backgroundColor: const Color(0xFFFF8A43),
+        backgroundColor: colors.accent,
         icon: const Icon(Icons.chat),
         label: const Text('新对话'),
       ),
@@ -208,7 +212,7 @@ class _AiConversationsPageState extends State<AiConversationsPage> {
                       )
                     : null,
                 filled: true,
-                fillColor: Colors.white,
+                fillColor: colors.inputFill,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
@@ -225,8 +229,8 @@ class _AiConversationsPageState extends State<AiConversationsPage> {
               children: [
                 Padding(
                   padding: const EdgeInsets.only(right: 8),
-                  child: FilterChip(
-                    label: const Text('全部'),
+                  child: AppFilterChip(
+                    label: '全部',
                     selected: _sceneTag == null,
                     onSelected: (_) {
                       setState(() => _sceneTag = null);
@@ -237,8 +241,8 @@ class _AiConversationsPageState extends State<AiConversationsPage> {
                 ..._sceneTags.map(
                   (tag) => Padding(
                     padding: const EdgeInsets.only(right: 8),
-                    child: FilterChip(
-                      label: Text(tag),
+                    child: AppFilterChip(
+                      label: tag,
                       selected: _sceneTag == tag,
                       onSelected: (_) {
                         setState(() => _sceneTag = tag);
@@ -257,14 +261,14 @@ class _AiConversationsPageState extends State<AiConversationsPage> {
                     onRefresh: _load,
                     child: _items.isEmpty
                         ? ListView(
-                            children: const [
+                            children: [
                               SizedBox(
                                 height: 240,
                                 child: Center(
                                   child: Text(
                                     '暂无对话记录\n从首页或下方按钮开始新对话',
                                     textAlign: TextAlign.center,
-                                    style: TextStyle(color: Color(0xFF8D919A)),
+                                    style: TextStyle(color: colors.textSecondary),
                                   ),
                                 ),
                               ),
@@ -280,8 +284,8 @@ class _AiConversationsPageState extends State<AiConversationsPage> {
                                 key: ValueKey(item.id),
                                 child: ListTile(
                                   leading: CircleAvatar(
-                                    backgroundColor: const Color(0xFFEEF4FF),
-                                    child: const Icon(Icons.smart_toy_outlined, color: Color(0xFF2B5EA8)),
+                                    backgroundColor: colors.infoBackground,
+                                    child: Icon(Icons.smart_toy_outlined, color: colors.infoText),
                                   ),
                                   title: Row(
                                     children: [
@@ -298,12 +302,12 @@ class _AiConversationsPageState extends State<AiConversationsPage> {
                                           margin: const EdgeInsets.only(left: 6),
                                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                           decoration: BoxDecoration(
-                                            color: const Color(0xFFEEF4FF),
+                                            color: colors.infoBackground,
                                             borderRadius: BorderRadius.circular(4),
                                           ),
                                           child: Text(
                                             item.sceneTag!,
-                                            style: const TextStyle(fontSize: 11, color: Color(0xFF2B5EA8)),
+                                            style: TextStyle(fontSize: 11, color: colors.infoText),
                                           ),
                                         ),
                                     ],
@@ -318,7 +322,7 @@ class _AiConversationsPageState extends State<AiConversationsPage> {
                                     children: [
                                       Text(
                                         _formatTime(item.updatedAt),
-                                        style: const TextStyle(color: Color(0xFF8D919A), fontSize: 12),
+                                        style: TextStyle(color: colors.textSecondary, fontSize: 12),
                                       ),
                                       PopupMenuButton<String>(
                                         icon: const Icon(Icons.more_vert, size: 20),

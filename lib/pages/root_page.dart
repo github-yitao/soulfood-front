@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:soulfood_front/core/theme/app_semantic_colors.dart';
 import 'package:soulfood_front/features/room/room_deep_link.dart';
+import 'package:soulfood_front/l10n/app_localizations.dart';
 import 'package:soulfood_front/pages/home_page.dart';
 import 'package:soulfood_front/pages/profile_page.dart';
 import 'package:soulfood_front/pages/records_page.dart';
@@ -32,6 +33,7 @@ class _RootPageState extends State<RootPage> {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       body: IndexedStack(index: _selectedIndex, children: _tabs),
@@ -45,21 +47,21 @@ class _RootPageState extends State<RootPage> {
         height: 84,
         backgroundColor: colors.navBackground,
         indicatorColor: colors.navIndicator,
-        destinations: const <NavigationDestination>[
+        destinations: [
           NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home_rounded),
-            label: '首页',
+            icon: const Icon(Icons.home_outlined),
+            selectedIcon: const Icon(Icons.home_rounded),
+            label: l10n.tabHome,
           ),
           NavigationDestination(
-            icon: Icon(Icons.history_outlined),
-            selectedIcon: Icon(Icons.history_rounded),
-            label: '记录',
+            icon: const Icon(Icons.history_outlined),
+            selectedIcon: const Icon(Icons.history_rounded),
+            label: l10n.tabRecords,
           ),
           NavigationDestination(
-            icon: Icon(Icons.person_outline_rounded),
-            selectedIcon: Icon(Icons.person_rounded),
-            label: '我的',
+            icon: const Icon(Icons.person_outline_rounded),
+            selectedIcon: const Icon(Icons.person_rounded),
+            label: l10n.tabMine,
           ),
         ],
       ),

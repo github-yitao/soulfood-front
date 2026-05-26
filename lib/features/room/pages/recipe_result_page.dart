@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:soulfood_front/core/api/api_client.dart';
+import 'package:soulfood_front/core/theme/app_semantic_colors.dart';
+import 'package:soulfood_front/core/theme/theme_widgets.dart';
 import 'package:soulfood_front/features/agent/agent_repository.dart';
 import 'package:soulfood_front/features/favorite/favorite_repository.dart';
 import 'package:soulfood_front/features/favorite/favorites_page.dart';
+import 'package:soulfood_front/features/order/order_repository.dart';
 import 'package:soulfood_front/features/preference/preference_repository.dart';
 import 'package:soulfood_front/features/room/room_models.dart';
 import 'package:soulfood_front/features/room/widgets/vote_option_thumb.dart';
@@ -36,6 +40,56 @@ class _RecipeResultPageState extends State<RecipeResultPage> {
   String _preferenceText = '清淡、家常菜';
   String _sourceLine = '';
   final Set<String> _favorited = {};
+  bool _recordingOrder = false;
+
+  Future<void> _recordVoteOrder() async {
+    final amountCtrl = TextEditingController(text: '88');
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('记一笔'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('将「${widget.voteResult.title}」记入历史订单'),
+            const SizedBox(height: 12),
+            TextField(
+              controller: amountCtrl,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              decoration: const InputDecoration(labelText: '消费金额（元）', border: OutlineInputBorder()),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('取消')),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('确认')),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    setState(() => _recordingOrder = true);
+    try {
+      final amount = double.tryParse(amountCtrl.text.trim()) ?? 0;
+      if (amount <= 0) throw ApiException('请输入有效金额');
+      await OrderRepository().createFromVote(
+        winnerTitle: widget.voteResult.title,
+        amount: amount,
+        roomCode: widget.roomCode,
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('已记入历史订单')));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+      }
+    } finally {
+      amountCtrl.dispose();
+      if (mounted) setState(() => _recordingOrder = false);
+    }
+  }
 
   @override
   void initState() {
@@ -127,12 +181,11 @@ class _RecipeResultPageState extends State<RecipeResultPage> {
   @override
   Widget build(BuildContext context) {
     final previewLabel = widget.isPreview ? '（预览）' : '';
+    final colors = context.appColors;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.transparent,
         title: Text('推荐菜谱$previewLabel'),
       ),
       body: ListView(
@@ -143,19 +196,15 @@ class _RecipeResultPageState extends State<RecipeResultPage> {
               width: double.infinity,
               margin: const EdgeInsets.only(bottom: 12),
               padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF0F6FF),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFCFE0FF)),
-              ),
-              child: const Row(
+              decoration: appStatusDecoration(colors, AppStatusKind.info),
+              child: Row(
                 children: [
-                  Icon(Icons.info_outline, size: 18, color: Color(0xFF2B5EA8)),
-                  SizedBox(width: 8),
+                  Icon(Icons.info_outline, size: 18, color: appStatusTextColor(colors, AppStatusKind.info)),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       '投票进行中，菜谱基于当前选项预览；结束投票后可查看正式结果。',
-                      style: TextStyle(fontSize: 13, color: Color(0xFF2B5EA8), height: 1.35),
+                      style: TextStyle(fontSize: 13, color: appStatusTextColor(colors, AppStatusKind.info), height: 1.35),
                     ),
                   ),
                 ],
@@ -163,34 +212,28 @@ class _RecipeResultPageState extends State<RecipeResultPage> {
             ),
           Container(
             padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFFF8EB),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFFFFE9A8)),
-            ),
+            decoration: appStatusDecoration(colors, AppStatusKind.warning),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFFFFF4D6), Color(0xFFFFE9A8)],
-                    ),
+                    color: colors.chipSelectedBackground,
                     borderRadius: BorderRadius.circular(999),
-                    border: Border.all(color: const Color(0xFFFFD79F)),
+                    border: Border.all(color: colors.chipSelectedBorder),
                   ),
-                  child: const Row(
+                  child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.auto_awesome, size: 14, color: Color(0xFFD86A00)),
-                      SizedBox(width: 4),
+                      Icon(Icons.auto_awesome, size: 14, color: appStatusTextColor(colors, AppStatusKind.warning)),
+                      const SizedBox(width: 4),
                       Text(
                         'AI 推荐',
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
-                          color: Color(0xFF7A4B00),
+                          color: appStatusTextColor(colors, AppStatusKind.warning),
                         ),
                       ),
                     ],
@@ -207,17 +250,17 @@ class _RecipeResultPageState extends State<RecipeResultPage> {
                         children: [
                           Text(
                             widget.isPreview ? '当前参考：${widget.voteResult.title}' : '投票胜出：${widget.voteResult.title}',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.w800,
-                              color: Color(0xFF1E1F23),
+                              color: colors.textPrimary,
                             ),
                           ),
                           const SizedBox(height: 4),
                           Text(
                             '${widget.voteResult.voteCount} 票 · ${widget.voteResult.percent}%'
                             '${widget.roomCode != null ? ' · 房间 ${widget.roomCode}' : ''}',
-                            style: const TextStyle(color: Color(0xFF8D919A), fontSize: 13),
+                            style: TextStyle(color: colors.textSecondary, fontSize: 13),
                           ),
                         ],
                       ),
@@ -229,7 +272,7 @@ class _RecipeResultPageState extends State<RecipeResultPage> {
                   widget.isPreview
                       ? '基于「${widget.voteResult.title}」与你的口味偏好（$_preferenceText）生成预览'
                       : '投票胜出：${widget.voteResult.title} · 已结合口味偏好（$_preferenceText）',
-                  style: const TextStyle(color: Color(0xFF6F7888), fontSize: 13, height: 1.35),
+                  style: TextStyle(color: colors.textSecondary, fontSize: 13, height: 1.35),
                 ),
               ],
             ),
@@ -245,7 +288,7 @@ class _RecipeResultPageState extends State<RecipeResultPage> {
               padding: const EdgeInsets.symmetric(vertical: 16),
               child: Column(
                 children: [
-                  Text(_error!, style: const TextStyle(color: Color(0xFF8D919A))),
+                  Text(_error!, style: TextStyle(color: colors.textSecondary)),
                   const SizedBox(height: 8),
                   OutlinedButton(onPressed: _loadRecipes, child: const Text('重试')),
                 ],
@@ -263,7 +306,7 @@ class _RecipeResultPageState extends State<RecipeResultPage> {
             const SizedBox(height: 8),
             Text(
               _sourceLine,
-              style: const TextStyle(fontSize: 11, color: Color(0xFF8D919A), height: 1.4),
+              style: TextStyle(fontSize: 11, color: colors.textSecondary, height: 1.4),
             ),
           ],
           const SizedBox(height: 16),
@@ -274,7 +317,7 @@ class _RecipeResultPageState extends State<RecipeResultPage> {
                   onPressed: _loadingRecipes ? null : _loadRecipes,
                   style: OutlinedButton.styleFrom(
                     minimumSize: const Size.fromHeight(46),
-                    foregroundColor: const Color(0xFF4D515A),
+                    foregroundColor: colors.textSecondary,
                   ),
                   child: const Text('换一批'),
                 ),
@@ -285,7 +328,6 @@ class _RecipeResultPageState extends State<RecipeResultPage> {
                   onPressed: _recipes.isEmpty ? null : _favoriteAll,
                   style: FilledButton.styleFrom(
                     minimumSize: const Size.fromHeight(46),
-                    backgroundColor: const Color(0xFFFF8A43),
                   ),
                   child: const Text('收藏菜谱'),
                 ),
@@ -301,11 +343,18 @@ class _RecipeResultPageState extends State<RecipeResultPage> {
           ),
           if (!widget.isPreview) ...[
             const SizedBox(height: 8),
+            OutlinedButton(
+              onPressed: _recordingOrder ? null : _recordVoteOrder,
+              style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(48)),
+              child: _recordingOrder
+                  ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2))
+                  : const Text('记入历史订单'),
+            ),
+            const SizedBox(height: 8),
             FilledButton(
               onPressed: () => Navigator.popUntil(context, (route) => route.isFirst),
               style: FilledButton.styleFrom(
                 minimumSize: const Size.fromHeight(48),
-                backgroundColor: const Color(0xFF2B5EA8),
               ),
               child: const Text('返回首页'),
             ),
@@ -329,17 +378,11 @@ class _RecipeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFEFF2F6)),
-        boxShadow: const [
-          BoxShadow(color: Color(0x08000000), blurRadius: 10, offset: Offset(0, 4)),
-        ],
-      ),
+      decoration: appCardDecoration(context),
       child: Row(
         children: [
           VoteOptionThumb(title: item.name),
@@ -350,7 +393,7 @@ class _RecipeCard extends StatelessWidget {
               children: [
                 Text(
                   item.name,
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: colors.textPrimary),
                 ),
                 if (item.reason.isNotEmpty) ...[
                   const SizedBox(height: 4),
@@ -358,7 +401,7 @@ class _RecipeCard extends StatelessWidget {
                     item.reason,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 13, color: Color(0xFF8D919A), height: 1.35),
+                    style: TextStyle(fontSize: 13, color: colors.textSecondary, height: 1.35),
                   ),
                 ],
               ],
@@ -369,7 +412,7 @@ class _RecipeCard extends StatelessWidget {
             children: [
               Text(
                 '${item.score}分',
-                style: const TextStyle(fontWeight: FontWeight.w700, color: Color(0xFFD86A00)),
+                style: TextStyle(fontWeight: FontWeight.w700, color: colors.accent),
               ),
               IconButton(
                 visualDensity: VisualDensity.compact,
@@ -377,7 +420,7 @@ class _RecipeCard extends StatelessWidget {
                 constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
                 icon: Icon(
                   favorited ? Icons.favorite : Icons.favorite_border,
-                  color: const Color(0xFFFF7A22),
+                  color: colors.accent,
                   size: 22,
                 ),
                 onPressed: favorited ? null : onFavorite,

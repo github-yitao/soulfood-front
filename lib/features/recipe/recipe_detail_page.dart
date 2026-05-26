@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:soulfood_front/core/theme/app_semantic_colors.dart';
+import 'package:soulfood_front/core/theme/theme_widgets.dart';
 import 'package:soulfood_front/features/favorite/favorite_repository.dart';
 import 'package:soulfood_front/features/recipe/recipe_repository.dart';
 
@@ -89,6 +91,8 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
       );
     }
 
+    final colors = context.appColors;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(recipe.name),
@@ -97,7 +101,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
             onPressed: _favBusy ? null : _toggleFavorite,
             icon: Icon(
               _favorited ? Icons.favorite : Icons.favorite_border,
-              color: _favorited ? const Color(0xFFFF7A22) : null,
+              color: _favorited ? colors.accent : null,
             ),
             tooltip: _favorited ? '取消收藏' : '收藏菜谱',
           ),
@@ -108,17 +112,13 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
         children: [
           Container(
             padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFFEDF0F6)),
-            ),
+            decoration: appCardDecoration(context),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   '${recipe.category} · ${recipe.difficulty} · ${recipe.durationMin} 分钟 · 评分 ${recipe.score}',
-                  style: const TextStyle(color: Color(0xFF737C8B), fontSize: 13),
+                  style: TextStyle(color: colors.textSecondary, fontSize: 13),
                 ),
                 if (recipe.summary != null && recipe.summary!.isNotEmpty) ...[
                   const SizedBox(height: 10),
@@ -136,7 +136,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('• ', style: TextStyle(color: Color(0xFFFF8A43))),
+                  Text('• ', style: TextStyle(color: colors.accent)),
                   Expanded(child: Text(item)),
                 ],
               ),
@@ -153,7 +153,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                 children: [
                   CircleAvatar(
                     radius: 12,
-                    backgroundColor: const Color(0xFFFFEFBC),
+                    backgroundColor: colors.chipSelectedBackground,
                     child: Text(
                       '${entry.key + 1}',
                       style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800),

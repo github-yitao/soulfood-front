@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:soulfood_front/core/app_bootstrap.dart';
+import 'package:soulfood_front/core/theme/app_semantic_colors.dart';
 import 'package:soulfood_front/features/auth/auth_repository.dart';
 
 class ProfileEditPage extends StatefulWidget {
@@ -15,7 +17,9 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
   late final TextEditingController _nicknameCtrl;
   late final TextEditingController _signatureCtrl;
   late final TextEditingController _avatarCtrl;
+  final _picker = ImagePicker();
   bool _saving = false;
+  bool _uploadingAvatar = false;
 
   @override
   void initState() {
@@ -31,6 +35,25 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
     _signatureCtrl.dispose();
     _avatarCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickAvatar() async {
+    final file = await _picker.pickImage(source: ImageSource.gallery, maxWidth: 1024, imageQuality: 85);
+    if (file == null) return;
+    setState(() => _uploadingAvatar = true);
+    try {
+      final profile = await AppServices.I.auth.uploadAvatar(file.path);
+      _avatarCtrl.text = profile.avatarUrl ?? '';
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('头像已更新')));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+      }
+    } finally {
+      if (mounted) setState(() => _uploadingAvatar = false);
+    }
   }
 
   Future<void> _save() async {
@@ -58,6 +81,9 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
 
   @override
   Widget build(BuildContext context) {
+    final avatarUrl = _avatarCtrl.text.trim();
+    final colors = context.appColors;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('编辑资料'),
@@ -71,6 +97,34 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          Center(
+            child: Stack(
+              children: [
+                CircleAvatar(
+                  radius: 42,
+                  backgroundColor: colors.chipSelectedBackground,
+                  backgroundImage: avatarUrl.isNotEmpty ? NetworkImage(avatarUrl) : null,
+                  child: avatarUrl.isEmpty
+                      ? Text(
+                          widget.profile.nickname.isNotEmpty ? widget.profile.nickname.substring(0, 1) : '?',
+                          style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800),
+                        )
+                      : null,
+                ),
+                Positioned(
+                  right: 0,
+                  bottom: 0,
+                  child: IconButton.filled(
+                    onPressed: _uploadingAvatar ? null : _pickAvatar,
+                    icon: _uploadingAvatar
+                        ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                        : const Icon(Icons.photo_camera_outlined, size: 18),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
           TextField(
             controller: _nicknameCtrl,
             decoration: const InputDecoration(
@@ -98,9 +152,9 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
             ),
           ),
           const SizedBox(height: 12),
-          const Text(
-            '头像暂支持粘贴图片 URL，本地上传后续开放。',
-            style: TextStyle(color: Color(0xFF8D919A), fontSize: 13),
+          Text(
+            '可点击头像从相册上传，或直接粘贴图片 URL。',
+            style: TextStyle(color: colors.textSecondary, fontSize: 13),
           ),
         ],
       ),

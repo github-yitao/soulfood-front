@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
+import 'package:soulfood_front/core/theme/app_semantic_colors.dart';
 
 enum LegalDocumentType { terms, privacy }
 
@@ -20,6 +21,7 @@ class LegalDocumentPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     return Scaffold(
       appBar: AppBar(title: Text(_title)),
       body: Markdown(
@@ -27,7 +29,7 @@ class LegalDocumentPage extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
         styleSheet: MarkdownStyleSheet(
           h2: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-          p: const TextStyle(height: 1.6, color: Color(0xFF4A5568)),
+          p: TextStyle(height: 1.6, color: colors.textSecondary),
         ),
       ),
     );

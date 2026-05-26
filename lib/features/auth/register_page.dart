@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:soulfood_front/core/app_bootstrap.dart';
+import 'package:soulfood_front/core/theme/app_semantic_colors.dart';
 import 'package:soulfood_front/features/room/room_deep_link.dart';
 import 'package:soulfood_front/pages/root_page.dart';
 import 'package:soulfood_front/routing/app_routes.dart';
@@ -70,6 +71,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     return Scaffold(
       appBar: AppBar(title: const Text('注册账号')),
       body: ListView(
@@ -126,17 +128,17 @@ class _RegisterPageState extends State<RegisterPage> {
                     const Text('我已阅读并同意'),
                     GestureDetector(
                       onTap: () => Navigator.pushNamed(context, AppRoutes.legalTerms),
-                      child: const Text(
+                      child: Text(
                         '《用户协议》',
-                        style: TextStyle(color: Color(0xFF2B5EA8), fontWeight: FontWeight.w600),
+                        style: TextStyle(color: colors.infoText, fontWeight: FontWeight.w600),
                       ),
                     ),
                     const Text('和'),
                     GestureDetector(
                       onTap: () => Navigator.pushNamed(context, AppRoutes.legalPrivacy),
-                      child: const Text(
+                      child: Text(
                         '《隐私政策》',
-                        style: TextStyle(color: Color(0xFF2B5EA8), fontWeight: FontWeight.w600),
+                        style: TextStyle(color: colors.infoText, fontWeight: FontWeight.w600),
                       ),
                     ),
                   ],
@@ -149,7 +151,6 @@ class _RegisterPageState extends State<RegisterPage> {
             onPressed: _loading ? null : _register,
             style: FilledButton.styleFrom(
               minimumSize: const Size.fromHeight(48),
-              backgroundColor: const Color(0xFFFF8A43),
             ),
             child: Text(_loading ? '注册中…' : '注册并登录'),
           ),

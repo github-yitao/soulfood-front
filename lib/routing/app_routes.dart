@@ -15,6 +15,7 @@ class AppRoutes {
   static const String recipeLibrary = '/recipes/library';
   static const String randomEat = '/random-eat';
   static const String nearby = '/nearby';
+  static const String restaurantMap = '/nearby/map';
   static const String favorites = '/favorites';
   static const String preference = '/preference';
   static const String orders = '/orders';
@@ -26,6 +27,11 @@ class AppRoutes {
   static const String legalTerms = '/legal/terms';
   static const String legalPrivacy = '/legal/privacy';
   static const String notifications = '/notifications';
+
+  static const String cookMode = '/recipes/cook';
+  static const String wantedRestaurants = '/nearby/wanted';
+  static const String forgotPassword = '/auth/forgot-password';
+  static const String bindPhone = '/profile/bind-phone';
 
   const AppRoutes._();
 }

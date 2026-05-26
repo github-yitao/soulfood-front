@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:soulfood_front/core/app_bootstrap.dart';
+import 'package:soulfood_front/core/theme/app_semantic_colors.dart';
 import 'package:soulfood_front/features/notification/notification_repository.dart';
 import 'package:soulfood_front/routing/app_routes.dart';
 
@@ -39,9 +40,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
     if (!item.read) {
       try {
         await _repo.markRead(item.id);
-      } catch (_) {
-        // 已读失败不阻断跳转
-      }
+      } catch (_) {}
     }
     if (!mounted) return;
     if (item.roomCode != null && item.roomCode!.isNotEmpty) {
@@ -63,6 +62,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     final overview = _overview;
     final unread = overview?.unreadCount ?? 0;
 
@@ -81,20 +81,17 @@ class _NotificationsPageState extends State<NotificationsPage> {
               child: overview == null || overview.items.isEmpty
                   ? ListView(
                       physics: const AlwaysScrollableScrollPhysics(),
-                      children: const [
-                        SizedBox(height: 120),
+                      children: [
+                        const SizedBox(height: 120),
                         Center(
-                          child: Text(
-                            '暂无通知',
-                            style: TextStyle(color: Color(0xFF8D919A)),
-                          ),
+                          child: Text('暂无通知', style: TextStyle(color: colors.textSecondary)),
                         ),
                       ],
                     )
                   : ListView.separated(
                       padding: const EdgeInsets.all(16),
                       itemCount: overview.items.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 10),
+                      separatorBuilder: (context, index) => const SizedBox(height: 10),
                       itemBuilder: (context, index) {
                         final item = overview.items[index];
                         return _NotificationTile(
@@ -116,8 +113,10 @@ class _NotificationTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Material(
-      color: item.read ? Colors.white : const Color(0xFFFFF8F2),
+      color: item.read ? colors.cardBackground : colors.inviteCardBackground,
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
         onTap: onTap,
@@ -126,7 +125,7 @@ class _NotificationTile extends StatelessWidget {
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xFFEDF1F6)),
+            border: Border.all(color: colors.cardBorder),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -135,12 +134,13 @@ class _NotificationTile extends StatelessWidget {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFFEFBC),
+                  color: colors.bannerBackground,
                   borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: colors.bannerBorder),
                 ),
                 child: Icon(
                   item.type == 'room_closed' ? Icons.how_to_vote_outlined : Icons.notifications_outlined,
-                  color: const Color(0xFFD86A00),
+                  color: colors.bannerText,
                 ),
               ),
               const SizedBox(width: 12),
@@ -155,7 +155,7 @@ class _NotificationTile extends StatelessWidget {
                             item.title,
                             style: TextStyle(
                               fontWeight: FontWeight.w800,
-                              color: const Color(0xFF1F2430),
+                              color: colors.textPrimary,
                               fontSize: item.read ? 14 : 15,
                             ),
                           ),
@@ -164,28 +164,25 @@ class _NotificationTile extends StatelessWidget {
                           Container(
                             width: 8,
                             height: 8,
-                            decoration: const BoxDecoration(
-                              color: Color(0xFFE05252),
-                              shape: BoxShape.circle,
-                            ),
+                            decoration: BoxDecoration(color: colors.accent, shape: BoxShape.circle),
                           ),
                       ],
                     ),
                     const SizedBox(height: 6),
                     Text(
                       item.body,
-                      style: const TextStyle(fontSize: 13, color: Color(0xFF6F7888), height: 1.4),
+                      style: TextStyle(fontSize: 13, color: colors.textSecondary, height: 1.4),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       item.createdAt,
-                      style: const TextStyle(fontSize: 12, color: Color(0xFFB3B8C2)),
+                      style: TextStyle(fontSize: 12, color: colors.offline),
                     ),
                   ],
                 ),
               ),
               if (item.roomCode != null)
-                const Icon(Icons.chevron_right, color: Color(0xFFB3B8C2)),
+                Icon(Icons.chevron_right, color: colors.offline),
             ],
           ),
         ),

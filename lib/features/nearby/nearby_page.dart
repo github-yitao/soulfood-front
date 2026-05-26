@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:soulfood_front/core/location/location_service.dart';
+import 'package:soulfood_front/core/theme/app_semantic_colors.dart';
+import 'package:soulfood_front/core/theme/theme_widgets.dart';
 import 'package:soulfood_front/features/agent/agent_repository.dart';
 import 'package:soulfood_front/features/favorite/favorite_repository.dart';
 import 'package:soulfood_front/features/nearby/nearby_repository.dart';
 import 'package:soulfood_front/features/nearby/restaurant_detail_page.dart';
 import 'package:soulfood_front/features/room/room_repository.dart';
+import 'package:soulfood_front/l10n/app_localizations.dart';
 import 'package:soulfood_front/routing/app_routes.dart';
 
 class NearbyPage extends StatefulWidget {
@@ -167,17 +170,28 @@ class _NearbyPageState extends State<NearbyPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final colors = context.appColors;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.transparent,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
           onPressed: () => Navigator.maybePop(context),
         ),
-        title: const Text('附近觅食'),
+        title: Text(l10n.nearbyTitle),
         actions: [
+          IconButton(
+            onPressed: () => Navigator.pushNamed(context, AppRoutes.restaurantMap),
+            icon: const Icon(Icons.map_outlined),
+            tooltip: l10n.nearbyMap,
+          ),
+          IconButton(
+            onPressed: () => Navigator.pushNamed(context, AppRoutes.wantedRestaurants),
+            icon: const Icon(Icons.bookmark_outline),
+            tooltip: l10n.wantedList,
+          ),
           IconButton(
             onPressed: _loading ? null : _load,
             icon: const Icon(Icons.my_location_outlined),
@@ -188,11 +202,11 @@ class _NearbyPageState extends State<NearbyPage> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Padding(
-            padding: EdgeInsets.fromLTRB(16, 0, 16, 8),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
             child: Text(
-              '探店用：看看你周边有什么好吃的',
-              style: TextStyle(fontSize: 13, color: Color(0xFF6E7788), height: 1.35),
+              l10n.nearbySubtitle,
+              style: TextStyle(fontSize: 13, color: colors.textSecondary, height: 1.35),
             ),
           ),
           Padding(
@@ -200,9 +214,8 @@ class _NearbyPageState extends State<NearbyPage> {
             child: TextField(
               controller: _searchCtrl,
               decoration: InputDecoration(
-                hintText: '搜索商圈、餐厅或菜系',
-                hintStyle: const TextStyle(color: Color(0xFF7C8596), fontSize: 14),
-                prefixIcon: const Icon(Icons.search, color: Color(0xFF7C8596)),
+                hintText: l10n.searchRestaurantHint,
+                prefixIcon: Icon(Icons.search, color: colors.textSecondary),
                 suffixIcon: _searchCtrl.text.isNotEmpty
                     ? IconButton(
                         icon: const Icon(Icons.clear, size: 20),
@@ -213,16 +226,6 @@ class _NearbyPageState extends State<NearbyPage> {
                         },
                       )
                     : null,
-                filled: true,
-                fillColor: const Color(0xFFF8FAFD),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  borderSide: const BorderSide(color: Color(0xFFE9EDF4)),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  borderSide: const BorderSide(color: Color(0xFFE9EDF4)),
-                ),
                 contentPadding: const EdgeInsets.symmetric(vertical: 0),
                 isDense: true,
               ),
@@ -240,20 +243,10 @@ class _NearbyPageState extends State<NearbyPage> {
               itemBuilder: (context, index) {
                 final chip = _chips[index];
                 final selected = _category == chip['id'];
-                return FilterChip(
-                  label: Text(chip['label']!),
+                return AppFilterChip(
+                  label: chip['label']!,
                   selected: selected,
                   showCheckmark: false,
-                  labelStyle: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: selected ? const Color(0xFFD86A00) : const Color(0xFF5F697A),
-                  ),
-                  backgroundColor: const Color(0xFFF7F9FC),
-                  selectedColor: const Color(0xFFFFF2E0),
-                  side: BorderSide(
-                    color: selected ? const Color(0xFFFFD79F) : const Color(0xFFE8EDF4),
-                  ),
                   onSelected: (_) {
                     setState(() => _category = chip['id']!);
                     _load();
@@ -295,29 +288,29 @@ class _NearbyPageState extends State<NearbyPage> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFEEF4FF),
+                  color: colors.bannerBackground,
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: const Color(0xFFB8D4F8)),
+                  border: Border.all(color: colors.bannerBorder),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Row(
+                    Row(
                       children: [
-                        Icon(Icons.auto_awesome, color: Color(0xFF2B5EA8), size: 18),
-                        SizedBox(width: 6),
-                        Text('AI 帮你挑', style: TextStyle(fontWeight: FontWeight.w700)),
+                        Icon(Icons.auto_awesome, color: colors.accent, size: 18),
+                        const SizedBox(width: 6),
+                        Text('AI 帮你挑', style: TextStyle(fontWeight: FontWeight.w700, color: colors.bannerText)),
                       ],
                     ),
                     const SizedBox(height: 6),
                     Text(
                       _aiPickName!,
-                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: colors.textPrimary),
                     ),
                     if (_aiPickReason != null && _aiPickReason!.isNotEmpty)
                       Text(
                         _aiPickReason!,
-                        style: const TextStyle(color: Color(0xFF5F6B7F), fontSize: 13),
+                        style: TextStyle(color: colors.textSecondary, fontSize: 13),
                       ),
                   ],
                 ),
@@ -329,21 +322,13 @@ class _NearbyPageState extends State<NearbyPage> {
               onPressed: _loading || _items.isEmpty ? null : _aiRandomPick,
               icon: const Icon(Icons.auto_awesome, size: 18),
               label: const Text('AI 帮我挑一家'),
-              style: OutlinedButton.styleFrom(
-                minimumSize: const Size.fromHeight(44),
-                foregroundColor: const Color(0xFF2B5EA8),
-                side: const BorderSide(color: Color(0xFFB8D4F8)),
-              ),
             ),
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
             child: FilledButton(
               onPressed: _loading || _items.isEmpty ? null : _startVote,
-              style: FilledButton.styleFrom(
-                minimumSize: const Size.fromHeight(46),
-                backgroundColor: const Color(0xFFFF8A43),
-              ),
+              style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(46)),
               child: const Text('用这些店发起投票', style: TextStyle(fontWeight: FontWeight.w800)),
             ),
           ),
@@ -377,31 +362,22 @@ class _ShopCard extends StatelessWidget {
     return Icons.restaurant_outlined;
   }
 
-  List<Color> _thumbGradient() {
-    final cat = item.category.toLowerCase();
-    if (cat.contains('饮') || cat.contains('茶')) {
-      return const [Color(0xFF94E3CB), Color(0xFF39B59A)];
-    }
-    if (cat.contains('快餐')) {
-      return const [Color(0xFFFFC8CA), Color(0xFFFF8F99)];
-    }
-    return const [Color(0xFFFFD58F), Color(0xFFFF9C6A)];
-  }
-
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Material(
-      color: Colors.white,
+      color: colors.cardBackground,
       borderRadius: BorderRadius.circular(18),
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: const Color(0xFFEDF1F6)),
-          boxShadow: const [
+          border: Border.all(color: colors.cardBorder),
+          boxShadow: [
             BoxShadow(
-              color: Color(0x141E2941),
+              color: colors.textPrimary.withValues(alpha: 0.08),
               blurRadius: 22,
-              offset: Offset(0, 10),
+              offset: const Offset(0, 10),
             ),
           ],
         ),
@@ -423,19 +399,19 @@ class _ShopCard extends StatelessWidget {
                           gradient: LinearGradient(
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
-                            colors: _thumbGradient(),
+                            colors: _thumbGradient(colors),
                           ),
-                          border: Border.all(color: Colors.white.withValues(alpha: 0.6)),
+                          border: Border.all(color: colors.cardBackground.withValues(alpha: 0.6)),
                         ),
                         child: Center(
                           child: Container(
                             width: 40,
                             height: 40,
                             decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.94),
+                              color: colors.cardBackground.withValues(alpha: 0.94),
                               borderRadius: BorderRadius.circular(13),
                             ),
-                            child: Icon(_categoryIcon(), size: 22, color: const Color(0xFF3A4252)),
+                            child: Icon(_categoryIcon(), size: 22, color: colors.textPrimary),
                           ),
                         ),
                       ),
@@ -448,10 +424,10 @@ class _ShopCard extends StatelessWidget {
                               item.name,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w800,
-                                color: Color(0xFF1F2633),
+                                color: colors.textPrimary,
                               ),
                             ),
                             const SizedBox(height: 6),
@@ -459,19 +435,10 @@ class _ShopCard extends StatelessWidget {
                               spacing: 8,
                               runSpacing: 4,
                               children: [
-                                Text(
-                                  item.category,
-                                  style: const TextStyle(fontSize: 12, color: Color(0xFF707A8C)),
-                                ),
-                                Text(
-                                  '${item.distanceKm ?? '-'} km',
-                                  style: const TextStyle(fontSize: 12, color: Color(0xFF707A8C)),
-                                ),
+                                Text(item.category, style: TextStyle(fontSize: 12, color: colors.textSecondary)),
+                                Text('${item.distanceKm ?? '-'} km', style: TextStyle(fontSize: 12, color: colors.textSecondary)),
                                 if (item.rating != null)
-                                  Text(
-                                    '★ ${item.rating}',
-                                    style: const TextStyle(fontSize: 12, color: Color(0xFF707A8C)),
-                                  ),
+                                  Text('★ ${item.rating}', style: TextStyle(fontSize: 12, color: colors.textSecondary)),
                               ],
                             ),
                           ],
@@ -485,7 +452,7 @@ class _ShopCard extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Material(
-                    color: const Color(0xFFFFF1E3),
+                    color: colors.chipSelectedBackground,
                     borderRadius: BorderRadius.circular(12),
                     child: InkWell(
                       onTap: onWant,
@@ -494,14 +461,14 @@ class _ShopCard extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: const Color(0xFFFFD8B1)),
+                          border: Border.all(color: colors.chipSelectedBorder),
                         ),
                         child: Text(
                           item.wanted ? '已想去' : '想去',
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
-                            color: item.wanted ? const Color(0xFF8D919A) : const Color(0xFFFF7A22),
+                            color: item.wanted ? colors.textSecondary : colors.chipSelectedText,
                           ),
                         ),
                       ),
@@ -515,9 +482,7 @@ class _ShopCard extends StatelessWidget {
                     icon: Icon(
                       item.favorited ? Icons.favorite : Icons.favorite_border,
                       size: 20,
-                      color: item.favorited
-                          ? const Color(0xFFFF7A22)
-                          : const Color(0xFF8D919A),
+                      color: item.favorited ? colors.accent : colors.textSecondary,
                     ),
                     onPressed: onFavorite,
                   ),
@@ -528,5 +493,16 @@ class _ShopCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  List<Color> _thumbGradient(AppSemanticColors colors) {
+    final cat = item.category.toLowerCase();
+    if (cat.contains('饮') || cat.contains('茶')) {
+      return [colors.accentSecondary.withValues(alpha: 0.5), colors.accent.withValues(alpha: 0.7)];
+    }
+    if (cat.contains('快餐')) {
+      return [colors.accent.withValues(alpha: 0.35), colors.accent];
+    }
+    return [colors.accentSecondary.withValues(alpha: 0.6), colors.accent];
   }
 }

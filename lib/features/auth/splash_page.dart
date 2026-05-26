@@ -48,7 +48,7 @@ class _SplashPageState extends State<SplashPage> {
     final isGhoul = AppServices.I.appearance.variant == AppThemeVariant.ghoul;
 
     return Scaffold(
-      backgroundColor: isGhoul ? const Color(0xFF0A0A0B) : null,
+      backgroundColor: isGhoul ? colors.heroGradientEnd : null,
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -60,8 +60,8 @@ class _SplashPageState extends State<SplashPage> {
                 width: 88,
                 height: 88,
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFFFFD36E), Color(0xFFFF9F5A)],
+                  gradient: LinearGradient(
+                    colors: [colors.heroGradientStart, colors.accent],
                   ),
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
@@ -72,7 +72,7 @@ class _SplashPageState extends State<SplashPage> {
                     ),
                   ],
                 ),
-                child: const Icon(Icons.ramen_dining, color: Colors.white, size: 44),
+                child: Icon(Icons.ramen_dining, color: colors.onAccent, size: 44),
               ),
             const SizedBox(height: 16),
             Text(

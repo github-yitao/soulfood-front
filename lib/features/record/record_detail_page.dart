@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:soulfood_front/core/api/api_client.dart';
+import 'package:soulfood_front/core/theme/app_semantic_colors.dart';
+import 'package:soulfood_front/core/theme/theme_widgets.dart';
 import 'package:soulfood_front/features/favorite/favorites_page.dart';
 import 'package:soulfood_front/features/record/record_models.dart';
 import 'package:soulfood_front/features/room/pages/recipe_result_page.dart';
@@ -78,9 +80,7 @@ class _RecordDetailPageState extends State<RecordDetailPage> {
       if (!mounted) return;
       await Navigator.push<void>(
         context,
-        MaterialPageRoute<void>(
-          builder: (_) => RecipeResultPage(voteResult: result, roomCode: code),
-        ),
+        MaterialPageRoute<void>(builder: (_) => RecipeResultPage(voteResult: result)),
       );
     } else {
       await Navigator.pushNamed(context, AppRoutes.vote, arguments: code);
@@ -90,7 +90,7 @@ class _RecordDetailPageState extends State<RecordDetailPage> {
   String get _actionLabel {
     switch (record.recordType) {
       case 'vote':
-        return record.title.contains('结果') ? '查看投票结果' : '进入投票房间';
+        return '查看投票结果';
       case 'favorite':
         return '查看我的收藏';
       case 'eat':
@@ -104,6 +104,8 @@ class _RecordDetailPageState extends State<RecordDetailPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
+
     return Scaffold(
       appBar: AppBar(title: const Text('记录详情')),
       body: ListView(
@@ -111,13 +113,7 @@ class _RecordDetailPageState extends State<RecordDetailPage> {
         children: [
           Container(
             padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: const [
-                BoxShadow(color: Color(0x12000000), blurRadius: 12, offset: Offset(0, 4)),
-              ],
-            ),
+            decoration: appCardDecoration(context, radius: 20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -126,18 +122,19 @@ class _RecordDetailPageState extends State<RecordDetailPage> {
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFFF0E6),
+                        color: colors.chipSelectedBackground,
                         borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: colors.chipSelectedBorder),
                       ),
-                      child: Icon(record.typeIcon, color: const Color(0xFFFF8A43)),
+                      child: Icon(record.typeIcon, color: colors.accent),
                     ),
                     const SizedBox(width: 12),
                     Text(
                       record.typeLabel,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
-                        color: Color(0xFF6F7888),
+                        color: colors.textSecondary,
                       ),
                     ),
                   ],
@@ -145,30 +142,27 @@ class _RecordDetailPageState extends State<RecordDetailPage> {
                 const SizedBox(height: 16),
                 Text(
                   record.title,
-                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: colors.textPrimary),
                 ),
                 const SizedBox(height: 10),
                 Text(
                   record.detail,
-                  style: const TextStyle(fontSize: 15, color: Color(0xFF6F7888), height: 1.5),
+                  style: TextStyle(fontSize: 15, color: colors.textSecondary, height: 1.5),
                 ),
                 const SizedBox(height: 12),
                 Text(
                   record.dateText,
-                  style: const TextStyle(fontSize: 13, color: Color(0xFFB3B8C2)),
+                  style: TextStyle(fontSize: 13, color: colors.offline),
                 ),
                 if (record.roomCode != null) ...[
                   const SizedBox(height: 12),
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF7F9FC),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+                    decoration: appMutedSurfaceDecoration(context),
                     child: Text(
                       '关联房间号：${record.roomCode}',
-                      style: const TextStyle(fontWeight: FontWeight.w700),
+                      style: TextStyle(fontWeight: FontWeight.w700, color: colors.textPrimary),
                     ),
                   ),
                 ],
@@ -179,15 +173,12 @@ class _RecordDetailPageState extends State<RecordDetailPage> {
           if (record.recordType.isNotEmpty)
             FilledButton(
               onPressed: _loading ? null : _openRelated,
-              style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFFFF8A43),
-                minimumSize: const Size.fromHeight(48),
-              ),
+              style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(48)),
               child: _loading
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 22,
                       height: 22,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      child: CircularProgressIndicator(strokeWidth: 2, color: colors.onAccent),
                     )
                   : Text(_actionLabel),
             ),

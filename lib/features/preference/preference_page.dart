@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:soulfood_front/core/theme/app_semantic_colors.dart';
+import 'package:soulfood_front/core/theme/theme_widgets.dart';
 import 'package:soulfood_front/features/preference/preference_repository.dart';
+import 'package:soulfood_front/l10n/app_localizations.dart';
 
 class PreferencePage extends StatefulWidget {
   const PreferencePage({super.key});
@@ -88,9 +91,11 @@ class _PreferencePageState extends State<PreferencePage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('我的口味偏好'),
+        title: Text(l10n.preferenceTitle),
         actions: [
           IconButton(onPressed: _reset, icon: const Icon(Icons.restart_alt)),
         ],
@@ -100,16 +105,16 @@ class _PreferencePageState extends State<PreferencePage> {
           : ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                _card(
-                  title: '偏好标签',
+                AppSectionCard(
+                  title: l10n.preferenceTags,
                   subtitle: '选择你常吃和喜欢的口味（可多选）',
                   child: Wrap(
                     spacing: 8,
                     runSpacing: 8,
                     children: _allTags.map((tag) {
                       final active = _selectedTags.contains(tag);
-                      return FilterChip(
-                        label: Text(tag),
+                      return AppFilterChip(
+                        label: tag,
                         selected: active,
                         onSelected: (_) {
                           setState(() {
@@ -120,14 +125,12 @@ class _PreferencePageState extends State<PreferencePage> {
                             }
                           });
                         },
-                        selectedColor: const Color(0xFFFFF2E0),
-                        checkmarkColor: const Color(0xFFD86A00),
                       );
                     }).toList(),
                   ),
                 ),
                 const SizedBox(height: 12),
-                _card(
+                AppSectionCard(
                   title: '口味强度',
                   child: Column(
                     children: [
@@ -138,7 +141,7 @@ class _PreferencePageState extends State<PreferencePage> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                _card(
+                AppSectionCard(
                   title: '忌口与过滤',
                   child: Column(
                     children: [
@@ -160,10 +163,7 @@ class _PreferencePageState extends State<PreferencePage> {
                 const SizedBox(height: 20),
                 FilledButton(
                   onPressed: _saving ? null : _save,
-                  style: FilledButton.styleFrom(
-                    minimumSize: const Size.fromHeight(48),
-                    backgroundColor: const Color(0xFFFF8A43),
-                  ),
+                  style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(48)),
                   child: Text(_saving ? '保存中…' : '保存偏好（同步 Agent）'),
                 ),
               ],
@@ -171,38 +171,16 @@ class _PreferencePageState extends State<PreferencePage> {
     );
   }
 
-  Widget _card({required String title, String? subtitle, required Widget child}) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFEDF1F6)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
-          if (subtitle != null) ...[
-            const SizedBox(height: 4),
-            Text(subtitle, style: const TextStyle(fontSize: 12, color: Color(0xFF6F7888))),
-          ],
-          const SizedBox(height: 12),
-          child,
-        ],
-      ),
-    );
-  }
-
   Widget _rangeRow(String label, int value, ValueChanged<int> onChanged) {
+    final colors = context.appColors;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(label, style: const TextStyle(fontWeight: FontWeight.w700)),
-            Text('$value / 5', style: const TextStyle(color: Color(0xFFFF7A21), fontWeight: FontWeight.w800)),
+            Text(label, style: TextStyle(fontWeight: FontWeight.w700, color: colors.textPrimary)),
+            Text('$value / 5', style: TextStyle(color: colors.accent, fontWeight: FontWeight.w800)),
           ],
         ),
         Slider(
@@ -210,7 +188,6 @@ class _PreferencePageState extends State<PreferencePage> {
           min: 1,
           max: 5,
           divisions: 4,
-          activeColor: const Color(0xFFFF8D40),
           onChanged: (v) => onChanged(v.round()),
         ),
       ],

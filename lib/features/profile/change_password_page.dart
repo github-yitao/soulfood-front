@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:soulfood_front/core/app_bootstrap.dart';
+import 'package:soulfood_front/core/theme/app_semantic_colors.dart';
 
 class ChangePasswordPage extends StatefulWidget {
   const ChangePasswordPage({super.key});
@@ -48,6 +49,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     return Scaffold(
       appBar: AppBar(title: const Text('修改密码')),
       body: ListView(
@@ -111,13 +113,12 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
             onPressed: _saving ? null : _submit,
             style: FilledButton.styleFrom(
               minimumSize: const Size.fromHeight(48),
-              backgroundColor: const Color(0xFFFF8A43),
             ),
             child: _saving
-                ? const SizedBox(
+                ? SizedBox(
                     width: 22,
                     height: 22,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    child: CircularProgressIndicator(strokeWidth: 2, color: colors.onAccent),
                   )
                 : const Text('保存', style: TextStyle(fontWeight: FontWeight.w700)),
           ),

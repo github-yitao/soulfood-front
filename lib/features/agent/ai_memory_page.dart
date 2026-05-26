@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:soulfood_front/core/theme/app_semantic_colors.dart';
+import 'package:soulfood_front/core/theme/theme_widgets.dart';
 import 'package:soulfood_front/features/agent/agent_repository.dart';
 
 class AiMemoryPage extends StatefulWidget {
@@ -86,6 +88,7 @@ class _AiMemoryPageState extends State<AiMemoryPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     return Scaffold(
       appBar: AppBar(
         title: const Text('AI 记忆'),
@@ -97,7 +100,7 @@ class _AiMemoryPageState extends State<AiMemoryPage> {
             child: Text(
               '助手会记住你的饮食偏好和近期经历，让推荐越来越懂你。'
               '对话中明确说出的习惯也会自动提取为长期记忆。',
-              style: TextStyle(color: Colors.grey.shade600, fontSize: 13, height: 1.4),
+              style: TextStyle(color: colors.textSecondary, fontSize: 13, height: 1.4),
             ),
           ),
           SizedBox(
@@ -106,26 +109,26 @@ class _AiMemoryPageState extends State<AiMemoryPage> {
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               children: [
-                _FilterChip(
+                AppFilterChip(
                   label: '全部',
                   selected: _filterType == null,
-                  onTap: () {
+                  onSelected: (_) {
                     setState(() => _filterType = null);
                     _load();
                   },
                 ),
-                _FilterChip(
+                AppFilterChip(
                   label: '长期记忆',
                   selected: _filterType == 'long_term',
-                  onTap: () {
+                  onSelected: (_) {
                     setState(() => _filterType = 'long_term');
                     _load();
                   },
                 ),
-                _FilterChip(
+                AppFilterChip(
                   label: '近期经历',
                   selected: _filterType == 'episodic',
-                  onTap: () {
+                  onSelected: (_) {
                     setState(() => _filterType = 'episodic');
                     _load();
                   },
@@ -140,14 +143,14 @@ class _AiMemoryPageState extends State<AiMemoryPage> {
                     onRefresh: _load,
                     child: _items.isEmpty
                         ? ListView(
-                            children: const [
+                            children: [
                               SizedBox(
                                 height: 200,
                                 child: Center(
                                   child: Text(
                                     '暂无记忆\n可在下方手动添加，或通过对话自动积累',
                                     textAlign: TextAlign.center,
-                                    style: TextStyle(color: Color(0xFF8D919A)),
+                                    style: TextStyle(color: colors.textSecondary),
                                   ),
                                 ),
                               ),
@@ -185,7 +188,7 @@ class _AiMemoryPageState extends State<AiMemoryPage> {
                       decoration: InputDecoration(
                         hintText: '手动添加记忆，如「不吃香菜」',
                         filled: true,
-                        fillColor: Colors.white,
+                        fillColor: colors.inputFill,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide.none,
@@ -197,7 +200,6 @@ class _AiMemoryPageState extends State<AiMemoryPage> {
                   const SizedBox(width: 8),
                   FilledButton(
                     onPressed: _addMemory,
-                    style: FilledButton.styleFrom(backgroundColor: const Color(0xFFFF8A43)),
                     child: const Text('添加'),
                   ),
                 ],
@@ -205,30 +207,6 @@ class _AiMemoryPageState extends State<AiMemoryPage> {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _FilterChip extends StatelessWidget {
-  const _FilterChip({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: FilterChip(
-        label: Text(label),
-        selected: selected,
-        onSelected: (_) => onTap(),
       ),
     );
   }

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:soulfood_front/core/theme/app_semantic_colors.dart';
+import 'package:soulfood_front/core/theme/theme_widgets.dart';
 import 'package:soulfood_front/features/recipe/recipe_detail_page.dart';
 import 'package:soulfood_front/features/recipe/recipe_repository.dart';
 
@@ -65,6 +67,7 @@ class _RecipeLibraryPageState extends State<RecipeLibraryPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     return Scaffold(
       appBar: AppBar(title: const Text('菜品库')),
       body: Column(
@@ -98,8 +101,8 @@ class _RecipeLibraryPageState extends State<RecipeLibraryPage> {
               separatorBuilder: (_, _) => const SizedBox(width: 8),
               itemBuilder: (context, index) {
                 final chip = _chips[index];
-                return ChoiceChip(
-                  label: Text(chip['label']!),
+                return AppFilterChip(
+                  label: chip['label']!,
                   selected: _category == chip['id'],
                   onSelected: (_) {
                     setState(() => _category = chip['id']!);
@@ -120,10 +123,10 @@ class _RecipeLibraryPageState extends State<RecipeLibraryPage> {
                     )
                   : _items.isEmpty
                       ? ListView(
-                          children: const [
+                          children: [
                             SizedBox(
                               height: 200,
-                              child: Center(child: Text('暂无菜谱', style: TextStyle(color: Color(0xFF8D919A)))),
+                              child: Center(child: Text('暂无菜谱', style: TextStyle(color: colors.textSecondary))),
                             ),
                           ],
                         )
@@ -136,7 +139,7 @@ class _RecipeLibraryPageState extends State<RecipeLibraryPage> {
                             return Card(
                               child: ListTile(
                                 leading: CircleAvatar(
-                                  backgroundColor: const Color(0xFFFFEFBC),
+                                  backgroundColor: colors.chipSelectedBackground,
                                   child: Text(
                                     item.name.isNotEmpty ? item.name.substring(0, 1) : '?',
                                     style: const TextStyle(fontWeight: FontWeight.w800),
@@ -151,7 +154,7 @@ class _RecipeLibraryPageState extends State<RecipeLibraryPage> {
                                   crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
                                     Text('${item.score}'),
-                                    const Icon(Icons.chevron_right, color: Color(0xFFB3B8C2)),
+                                    Icon(Icons.chevron_right, color: colors.offline),
                                   ],
                                 ),
                                 onTap: () => _openDetail(item),

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:soulfood_front/core/location/location_service.dart';
+import 'package:soulfood_front/core/theme/app_semantic_colors.dart';
+import 'package:soulfood_front/core/theme/theme_widgets.dart';
 import 'package:soulfood_front/features/agent/agent_repository.dart';
 import 'package:soulfood_front/features/nearby/nearby_repository.dart';
 import 'package:soulfood_front/features/room/room_repository.dart';
@@ -94,6 +96,7 @@ class _RandomEatPageState extends State<RandomEatPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     return Scaffold(
       appBar: AppBar(title: const Text('随机吃什么')),
       body: Column(
@@ -106,16 +109,16 @@ class _RandomEatPageState extends State<RandomEatPage> {
               children: [
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFEEF4FF),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Row(
+                  decoration: appStatusDecoration(colors, AppStatusKind.info),
+                  child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.auto_awesome, size: 14, color: Color(0xFF2B5EA8)),
-                      SizedBox(width: 4),
-                      Text('AI 决策', style: TextStyle(fontSize: 12, color: Color(0xFF2B5EA8), fontWeight: FontWeight.w700)),
+                      Icon(Icons.auto_awesome, size: 14, color: colors.infoText),
+                      const SizedBox(width: 4),
+                      Text(
+                        'AI 决策',
+                        style: TextStyle(fontSize: 12, color: colors.infoText, fontWeight: FontWeight.w700),
+                      ),
                     ],
                   ),
                 ),
@@ -125,9 +128,9 @@ class _RandomEatPageState extends State<RandomEatPage> {
                   style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, height: 1.15),
                 ),
                 const SizedBox(height: 6),
-                const Text(
+                Text(
                   '发现附近美食，或由 AI 帮你拍板',
-                  style: TextStyle(color: Color(0xFF6E7788), fontSize: 14),
+                  style: TextStyle(color: colors.textSecondary, fontSize: 14),
                 ),
               ],
             ),
@@ -149,7 +152,7 @@ class _RandomEatPageState extends State<RandomEatPage> {
                             margin: const EdgeInsets.only(bottom: 8),
                             child: ListTile(
                               leading: CircleAvatar(
-                                backgroundColor: const Color(0xFFFFEFBC),
+                                backgroundColor: colors.chipSelectedBackground,
                                 child: Text(
                                   item.name.isNotEmpty ? item.name.substring(0, 1) : '?',
                                   style: const TextStyle(fontWeight: FontWeight.w800),
@@ -166,15 +169,11 @@ class _RandomEatPageState extends State<RandomEatPage> {
                           Container(
                             width: double.infinity,
                             padding: const EdgeInsets.all(14),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFEEF4FF),
-                              borderRadius: BorderRadius.circular(14),
-                              border: Border.all(color: const Color(0xFFB8D4F8)),
-                            ),
+                            decoration: appStatusDecoration(colors, AppStatusKind.info),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text('今天就吃', style: TextStyle(fontSize: 13, color: Color(0xFF5F6B7F))),
+                                Text('今天就吃', style: TextStyle(fontSize: 13, color: colors.textSecondary)),
                                 const SizedBox(height: 4),
                                 Text(
                                   _pickName!,
@@ -184,7 +183,7 @@ class _RandomEatPageState extends State<RandomEatPage> {
                                   const SizedBox(height: 6),
                                   Text(
                                     _pickReason!,
-                                    style: const TextStyle(color: Color(0xFF5F6B7F), fontSize: 13),
+                                    style: TextStyle(color: colors.textSecondary, fontSize: 13),
                                   ),
                                 ],
                               ],
@@ -206,7 +205,6 @@ class _RandomEatPageState extends State<RandomEatPage> {
               label: const Text('AI 随机帮我选'),
               style: OutlinedButton.styleFrom(
                 minimumSize: const Size.fromHeight(48),
-                foregroundColor: const Color(0xFF2B5EA8),
               ),
             ),
           ),
@@ -216,7 +214,6 @@ class _RandomEatPageState extends State<RandomEatPage> {
               onPressed: _picking || _items.isEmpty ? null : _startVote,
               style: FilledButton.styleFrom(
                 minimumSize: const Size.fromHeight(48),
-                backgroundColor: const Color(0xFFFF8A43),
               ),
               child: const Text('发起投票'),
             ),

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:soulfood_front/core/theme/app_semantic_colors.dart';
+import 'package:soulfood_front/core/theme/theme_widgets.dart';
 import 'package:soulfood_front/features/favorite/ai_reply_detail_page.dart';
 import 'package:soulfood_front/features/favorite/favorite_repository.dart';
 import 'package:soulfood_front/features/nearby/restaurant_detail_page.dart';
@@ -118,6 +120,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     return Scaffold(
       appBar: AppBar(title: const Text('我的收藏')),
       body: Column(
@@ -131,14 +134,13 @@ class _FavoritesPageState extends State<FavoritesPage> {
                 final active = _filter == f.$1;
                 return Padding(
                   padding: const EdgeInsets.only(right: 8),
-                  child: FilterChip(
-                    label: Text(f.$2),
+                  child: AppFilterChip(
+                    label: f.$2,
                     selected: active,
                     onSelected: (_) {
                       setState(() => _filter = f.$1);
                       _load();
                     },
-                    selectedColor: const Color(0xFFFFF2E0),
                   ),
                 );
               }).toList(),
@@ -148,11 +150,11 @@ class _FavoritesPageState extends State<FavoritesPage> {
             child: _loading
                 ? const Center(child: CircularProgressIndicator())
                 : _items.isEmpty
-                    ? const Center(
+                    ? Center(
                         child: Text(
                           '暂无收藏\n在附近觅食、菜品库或 AI 对话中可添加收藏',
                           textAlign: TextAlign.center,
-                          style: TextStyle(color: Color(0xFF8D919A)),
+                          style: TextStyle(color: colors.textSecondary),
                         ),
                       )
                     : RefreshIndicator(
@@ -194,8 +196,9 @@ class _FavoriteCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     return Material(
-      color: Colors.white,
+      color: colors.cardBackground,
       borderRadius: BorderRadius.circular(20),
       child: InkWell(
         onTap: onTap,
@@ -204,13 +207,13 @@ class _FavoriteCard extends StatelessWidget {
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: const Color(0xFFEDF0F6)),
+            border: Border.all(color: colors.cardBorder),
           ),
           child: Row(
             children: [
               CircleAvatar(
                 radius: 28,
-                backgroundColor: const Color(0xFFFFEFBC),
+                backgroundColor: colors.chipSelectedBackground,
                 child: Text(
                   item.title.isNotEmpty ? item.title.substring(0, 1) : '?',
                   style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
@@ -232,10 +235,13 @@ class _FavoriteCard extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFFFF2E0),
+                            color: colors.chipSelectedBackground,
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: Text(typeLabel, style: const TextStyle(fontSize: 11, color: Color(0xFFD86A00))),
+                          child: Text(
+                            typeLabel,
+                            style: TextStyle(fontSize: 11, color: colors.chipSelectedText),
+                          ),
                         ),
                       ],
                     ),
@@ -243,7 +249,7 @@ class _FavoriteCard extends StatelessWidget {
                     if (item.targetType == 'ai_reply')
                       Text(
                         item.subtitle ?? 'AI 回复收藏',
-                        style: const TextStyle(color: Color(0xFF737C8B), fontSize: 12),
+                        style: TextStyle(color: colors.textSecondary, fontSize: 12),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       )
@@ -255,16 +261,16 @@ class _FavoriteCard extends StatelessWidget {
                           if (item.category != null) item.category,
                           if (item.subtitle != null && item.subtitle!.isNotEmpty) item.subtitle,
                         ].join(' · '),
-                        style: const TextStyle(color: Color(0xFF737C8B), fontSize: 12),
+                        style: TextStyle(color: colors.textSecondary, fontSize: 12),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
                     if (item.targetType == 'ai_reply')
-                      const Padding(
-                        padding: EdgeInsets.only(top: 4),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
                         child: Text(
                           '点击查看全文',
-                          style: TextStyle(color: Color(0xFF2B5EA8), fontSize: 11, fontWeight: FontWeight.w600),
+                          style: TextStyle(color: colors.infoText, fontSize: 11, fontWeight: FontWeight.w600),
                         ),
                       ),
                   ],
@@ -272,7 +278,7 @@ class _FavoriteCard extends StatelessWidget {
               ),
               IconButton(
                 onPressed: onRemove,
-                icon: const Icon(Icons.favorite, color: Color(0xFFFF7A22)),
+                icon: Icon(Icons.favorite, color: colors.accent),
               ),
             ],
           ),

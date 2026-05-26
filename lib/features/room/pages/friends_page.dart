@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:soulfood_front/core/api/api_client.dart';
+import 'package:soulfood_front/core/theme/app_semantic_colors.dart';
+import 'package:soulfood_front/core/theme/theme_widgets.dart';
 import 'package:soulfood_front/features/friend/friend_repository.dart';
 import 'package:soulfood_front/features/room/room_models.dart';
 import 'package:soulfood_front/features/room/room_repository.dart';
@@ -72,6 +74,7 @@ class _FriendsPageState extends State<FriendsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     return Scaffold(
       body: SafeArea(
         child: RefreshIndicator(
@@ -85,10 +88,10 @@ class _FriendsPageState extends State<FriendsPage> {
                     onPressed: () => Navigator.pop(context),
                     icon: const Icon(Icons.arrow_back_ios_new_rounded),
                   ),
-                  const Expanded(
+                  Expanded(
                     child: Text(
                       '和朋友一起决定',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: colors.textPrimary),
                     ),
                   ),
                 ],
@@ -104,26 +107,26 @@ class _FriendsPageState extends State<FriendsPage> {
                 padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(22),
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF1F2E45), Color(0xFF35527D)],
+                  gradient: LinearGradient(
+                    colors: [colors.heroGradientStart, colors.heroGradientEnd],
                   ),
                 ),
-                child: const Column(
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       '和朋友一起\n决定吃什么',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: colors.heroText,
                         fontSize: 30,
                         fontWeight: FontWeight.w800,
                         height: 1.15,
                       ),
                     ),
-                    SizedBox(height: 8),
+                    const SizedBox(height: 8),
                     Text(
                       '添加好友后可看到对方进行中的房间，也可创建房间邀请投票。',
-                      style: TextStyle(color: Colors.white70, fontSize: 13),
+                      style: TextStyle(color: colors.heroText.withValues(alpha: 0.75), fontSize: 13),
                     ),
                   ],
                 ),
@@ -198,25 +201,22 @@ class _VoteFlowHint extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF7F9FC),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFEDF1F6)),
-      ),
-      child: const Column(
+      decoration: appMutedSurfaceDecoration(context),
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('组局投票流程', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800)),
-          SizedBox(height: 8),
+          Text('组局投票流程', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: colors.textPrimary)),
+          const SizedBox(height: 8),
           Text(
             '1. 创建房间 → 复制房间号发给好友\n'
             '2. 大家进入投票页点选选项\n'
             '3. 底部点「结束投票，查看结果」→ 看胜出项 + AI 菜谱\n'
             '（创建后 30 分钟内有效，超时自动结束）',
-            style: TextStyle(fontSize: 12, color: Color(0xFF6F7888), height: 1.55),
+            style: TextStyle(fontSize: 12, color: colors.textSecondary, height: 1.55),
           ),
         ],
       ),
@@ -232,8 +232,9 @@ class _ManageFriendsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     return Material(
-      color: Colors.white,
+      color: colors.cardBackground,
       borderRadius: BorderRadius.circular(18),
       elevation: 0,
       child: InkWell(
@@ -241,37 +242,31 @@ class _ManageFriendsCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(18),
         child: Container(
           padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: const Color(0xFFFFD4B8)),
-            gradient: const LinearGradient(
-              colors: [Color(0xFFFFF8F2), Color(0xFFFFFFFF)],
-            ),
-          ),
+          decoration: appInviteCardDecoration(context),
           child: Row(
             children: [
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFF8A43),
+                  color: colors.accent,
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: const Icon(Icons.person_add_alt_1_rounded, color: Colors.white),
+                child: Icon(Icons.person_add_alt_1_rounded, color: colors.onAccent),
               ),
               const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('添加 / 管理好友', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+                    Text('添加 / 管理好友', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: colors.textPrimary)),
                     Text(
                       friendCount > 0 ? '已有 $friendCount 位好友，点此添加更多' : '输入邀请码添加好友，或注册时填邀请码',
-                      style: const TextStyle(color: Color(0xFF6F7888), fontSize: 12),
+                      style: TextStyle(color: colors.textSecondary, fontSize: 12),
                     ),
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right, color: Color(0xFF6F7888)),
+              Icon(Icons.chevron_right, color: colors.textSecondary),
             ],
           ),
         ),
@@ -288,19 +283,20 @@ class _SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     return Row(
       children: [
-        Text(title, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
+        Text(title, style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: colors.textPrimary)),
         const SizedBox(width: 8),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
           decoration: BoxDecoration(
-            color: const Color(0xFFFFF0E6),
+            color: colors.chipSelectedBackground,
             borderRadius: BorderRadius.circular(999),
           ),
           child: Text(
             '$count',
-            style: const TextStyle(color: Color(0xFFFF8A43), fontSize: 12, fontWeight: FontWeight.w700),
+            style: TextStyle(color: colors.accent, fontSize: 12, fontWeight: FontWeight.w700),
           ),
         ),
       ],
@@ -316,26 +312,21 @@ class _FriendRoomCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     return Container(
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: const [
-          BoxShadow(color: Color(0x14000000), blurRadius: 12, offset: Offset(0, 4)),
-        ],
-      ),
+      decoration: appCardDecoration(context),
       child: Row(
         children: [
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(room.topic, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                Text(room.topic, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: colors.textPrimary)),
                 const SizedBox(height: 4),
                 Text(
                   '${room.ownerNickname} · 房间号 ${room.code} · ${room.participantCount} 人参与',
-                  style: const TextStyle(color: Color(0xFF6F7888), fontSize: 12),
+                  style: TextStyle(color: colors.textSecondary, fontSize: 12),
                 ),
               ],
             ),
@@ -343,7 +334,6 @@ class _FriendRoomCard extends StatelessWidget {
           FilledButton(
             onPressed: onJoin,
             style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFFFF8A43),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             ),
             child: const Text('进入'),
@@ -361,25 +351,22 @@ class _FriendTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFEDF1F6)),
-      ),
+      decoration: appCardDecoration(context, radius: 14),
       child: Row(
         children: [
           CircleAvatar(
             radius: 22,
-            backgroundColor: const Color(0xFFE8EEF7),
+            backgroundColor: colors.chipBackground,
             backgroundImage: friend.avatarUrl != null && friend.avatarUrl!.isNotEmpty
                 ? NetworkImage(friend.avatarUrl!)
                 : null,
             child: friend.avatarUrl == null || friend.avatarUrl!.isEmpty
                 ? Text(
                     friend.nickname.isNotEmpty ? friend.nickname.substring(0, 1) : '?',
-                    style: const TextStyle(fontWeight: FontWeight.w700, color: Color(0xFF35527D)),
+                    style: TextStyle(fontWeight: FontWeight.w700, color: colors.textPrimary),
                   )
                 : null,
           ),
@@ -388,10 +375,10 @@ class _FriendTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(friend.nickname, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+                Text(friend.nickname, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: colors.textPrimary)),
                 Text(
                   '${friend.sourceLabel} · ${friend.addedAt}',
-                  style: const TextStyle(color: Color(0xFF6F7888), fontSize: 12),
+                  style: TextStyle(color: colors.textSecondary, fontSize: 12),
                 ),
               ],
             ),
@@ -415,25 +402,22 @@ class _EmptyHint extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF7F9FC),
-        borderRadius: BorderRadius.circular(14),
-      ),
+      decoration: appMutedSurfaceDecoration(context),
       child: Column(
         children: [
           Text(
             text,
             textAlign: TextAlign.center,
-            style: const TextStyle(color: Color(0xFF6F7888), fontSize: 13, height: 1.5),
+            style: TextStyle(color: colors.textSecondary, fontSize: 13, height: 1.5),
           ),
           if (actionLabel != null && onAction != null) ...[
             const SizedBox(height: 12),
             FilledButton(
               onPressed: onAction,
-              style: FilledButton.styleFrom(backgroundColor: const Color(0xFFFF8A43)),
               child: Text(actionLabel!),
             ),
           ],
@@ -451,20 +435,17 @@ class _ErrorHint extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFF5F5),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFFFD6D6)),
-      ),
+      decoration: appStatusDecoration(colors, AppStatusKind.error),
       child: Column(
         children: [
           Text(
             text,
             textAlign: TextAlign.center,
-            style: const TextStyle(color: Color(0xFFB42318), fontSize: 13, height: 1.5),
+            style: TextStyle(color: appStatusTextColor(colors, AppStatusKind.error), fontSize: 13, height: 1.5),
           ),
           const SizedBox(height: 12),
           OutlinedButton(onPressed: onRetry, child: const Text('重试')),
@@ -495,28 +476,22 @@ class _ActionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: const [
-          BoxShadow(color: Color(0x14000000), blurRadius: 16, offset: Offset(0, 6)),
-        ],
-      ),
+      decoration: appCardDecoration(context, radius: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+          Text(title, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: colors.textPrimary)),
           const SizedBox(height: 6),
-          Text(subtitle, style: const TextStyle(color: Color(0xFF6F7888), fontSize: 13)),
+          Text(subtitle, style: TextStyle(color: colors.textSecondary, fontSize: 13)),
           const SizedBox(height: 14),
           SizedBox(
             width: double.infinity,
             child: FilledButton(
               onPressed: onPrimary,
               style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFFFF8A43),
                 padding: const EdgeInsets.symmetric(vertical: 14),
               ),
               child: Text(primaryLabel),

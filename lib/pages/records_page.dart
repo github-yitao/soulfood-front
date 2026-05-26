@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:soulfood_front/core/theme/app_semantic_colors.dart';
+import 'package:soulfood_front/core/theme/theme_widgets.dart';
 import 'package:soulfood_front/features/record/record_detail_page.dart';
 import 'package:soulfood_front/features/record/record_models.dart';
 import 'package:soulfood_front/features/record/record_repository.dart';
@@ -34,6 +36,7 @@ class _RecordsPageState extends State<RecordsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(20, 18, 20, 8),
@@ -48,12 +51,12 @@ class _RecordsPageState extends State<RecordsPage> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text(
+                    Text(
                       '记录加载失败，请确认后端已启动',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
-                        color: Color(0xFF646871),
+                        color: colors.textSecondary,
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -69,29 +72,29 @@ class _RecordsPageState extends State<RecordsPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     '我的记录',
                     style: TextStyle(
                       fontSize: 42,
                       fontWeight: FontWeight.w800,
-                      color: Color(0xFF1E1F23),
+                      color: colors.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 24),
                   _StatsGrid(stats: data.stats),
                   const SizedBox(height: 34),
-                  const Text(
+                  Text(
                     '最近记录',
                     style: TextStyle(
                       fontSize: 38,
                       fontWeight: FontWeight.w800,
-                      color: Color(0xFF1E1F23),
+                      color: colors.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 8),
-                  const Text(
+                  Text(
                     '点击查看详情',
-                    style: TextStyle(fontSize: 13, color: Color(0xFF8D919A)),
+                    style: TextStyle(fontSize: 13, color: colors.textSecondary),
                   ),
                   const SizedBox(height: 12),
                   Expanded(
@@ -131,6 +134,7 @@ class _StatsGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     return Wrap(
       spacing: 12,
       runSpacing: 12,
@@ -158,10 +162,10 @@ class _StatsGrid extends StatelessWidget {
                   const Spacer(),
                   Text(
                     '${stat.count ?? 0}次',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.w800,
-                      color: Color(0xFF1E1F23),
+                      color: colors.textPrimary,
                     ),
                   ),
                 ],
@@ -178,14 +182,15 @@ class _EmptyRecords extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    final colors = context.appColors;
+    return Center(
       child: Text(
         '暂无记录，去投票或标记「想去」后会出现在这里',
         textAlign: TextAlign.center,
         style: TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w600,
-          color: Color(0xFF8D919A),
+          color: colors.textSecondary,
         ),
       ),
     );
@@ -200,8 +205,9 @@ class _RecordItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     return Material(
-      color: Colors.white,
+      color: colors.cardBackground,
       borderRadius: BorderRadius.circular(18),
       elevation: 0,
       child: InkWell(
@@ -209,16 +215,7 @@ class _RecordItem extends StatelessWidget {
         borderRadius: BorderRadius.circular(18),
         child: Container(
           padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(18),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x12000000),
-                blurRadius: 10,
-                offset: Offset(0, 4),
-              ),
-            ],
-          ),
+          decoration: appCardDecoration(context, radius: 18),
           child: Row(
             children: [
               ClipRRect(
@@ -226,9 +223,9 @@ class _RecordItem extends StatelessWidget {
                 child: Container(
                   width: 70,
                   height: 70,
-                  color: const Color(0xFFF1F3F6),
+                  color: colors.chipBackground,
                   alignment: Alignment.center,
-                  child: Icon(record.typeIcon, color: const Color(0xFFB3B8C2), size: 30),
+                  child: Icon(record.typeIcon, color: colors.offline, size: 30),
                 ),
               ),
               const SizedBox(width: 14),
@@ -240,10 +237,10 @@ class _RecordItem extends StatelessWidget {
                       record.title,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w700,
-                        color: Color(0xFF1E1F23),
+                        color: colors.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 6),
@@ -251,16 +248,16 @@ class _RecordItem extends StatelessWidget {
                       '${record.detail} · ${record.dateText}',
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
-                        color: Color(0xFF8D919A),
+                        color: colors.textSecondary,
                       ),
                     ),
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right, color: Color(0xFFB3B8C2)),
+              Icon(Icons.chevron_right, color: colors.offline),
             ],
           ),
         ),

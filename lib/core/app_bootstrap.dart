@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:soulfood_front/core/api/api_client.dart';
 import 'package:soulfood_front/core/session/session_store.dart';
+import 'package:soulfood_front/core/settings/app_icon_service.dart';
+import 'package:soulfood_front/core/settings/app_locale.dart';
 import 'package:soulfood_front/core/settings/appearance_store.dart';
 import 'package:soulfood_front/core/theme/app_theme_variant.dart';
 import 'package:soulfood_front/features/auth/auth_repository.dart';
@@ -47,6 +49,7 @@ class AppServices {
       appearance: appearance,
       appearanceNotifier: ValueNotifier<AppearanceSettings>(appearance.settings),
     );
+    await AppIconService.apply(appearance.settings.appIcon);
   }
 
   Future<void> setThemeMode(AppThemeMode mode) async {
@@ -57,6 +60,17 @@ class AppServices {
   Future<void> setThemeVariant(AppThemeVariant variant) async {
     await appearance.saveVariant(variant);
     appearanceNotifier.value = appearance.settings;
+  }
+
+  Future<void> setLocale(AppLocale locale) async {
+    await appearance.saveLocale(locale);
+    appearanceNotifier.value = appearance.settings;
+  }
+
+  Future<bool> setAppIcon(AppIconVariant icon) async {
+    await appearance.saveAppIcon(icon);
+    appearanceNotifier.value = appearance.settings;
+    return AppIconService.apply(icon);
   }
 
   Future<void> setAppearance(AppearanceSettings settings) async {

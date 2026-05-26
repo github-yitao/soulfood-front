@@ -126,16 +126,66 @@ class AppThemeFactory {
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(foregroundColor: semantic.textSecondary),
       ),
+      chipTheme: ChipThemeData(
+        backgroundColor: semantic.chipBackground,
+        selectedColor: semantic.chipSelectedBackground,
+        disabledColor: semantic.chipBackground.withValues(alpha: 0.5),
+        labelStyle: TextStyle(color: semantic.chipText, fontWeight: FontWeight.w600),
+        secondaryLabelStyle: TextStyle(color: semantic.chipSelectedText, fontWeight: FontWeight.w700),
+        side: BorderSide(color: semantic.chipBorder),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+        checkmarkColor: semantic.chipSelectedText,
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      ),
+      sliderTheme: SliderThemeData(
+        activeTrackColor: semantic.sliderActive,
+        thumbColor: semantic.sliderActive,
+        inactiveTrackColor: semantic.chipBorder,
+        overlayColor: semantic.sliderActive.withValues(alpha: 0.12),
+      ),
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return semantic.accent;
+          return semantic.textSecondary;
+        }),
+        trackColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return semantic.accent.withValues(alpha: 0.35);
+          }
+          return semantic.chipBorder;
+        }),
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: semantic.cardBackground,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(color: semantic.cardBorder),
+        ),
+        titleTextStyle: TextStyle(
+          fontFamily: _fontFamily,
+          fontSize: 18,
+          fontWeight: FontWeight.w800,
+          color: semantic.textPrimary,
+        ),
+      ),
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: semantic.cardBackground,
+        surfaceTintColor: Colors.transparent,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+      ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: semantic.cardBackground,
+        fillColor: semantic.inputFill,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: semantic.cardBorder),
+          borderSide: BorderSide(color: semantic.inputBorder),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: semantic.cardBorder),
+          borderSide: BorderSide(color: semantic.inputBorder),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),

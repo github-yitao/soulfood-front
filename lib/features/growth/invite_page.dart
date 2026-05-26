@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:soulfood_front/core/theme/app_semantic_colors.dart';
+import 'package:soulfood_front/core/theme/theme_widgets.dart';
 import 'package:soulfood_front/features/growth/invite_repository.dart';
 
 class InvitePage extends StatefulWidget {
@@ -65,7 +67,7 @@ class _InvitePageState extends State<InvitePage> {
         title: const Text('邀请规则'),
         content: const Text(
           '好友注册时填写你的邀请码即可加入吃饭小队。\n\n'
-          '每成功邀请 1 位好友，进度 +1；累计邀请 5 位可解锁「组局达人」徽章（即将上线）。',
+          '每成功邀请 1 位好友，进度 +1；累计邀请 5 位可解锁「组局达人」徽章。',
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('知道了')),
@@ -77,6 +79,7 @@ class _InvitePageState extends State<InvitePage> {
   @override
   Widget build(BuildContext context) {
     final overview = _overview;
+    final colors = context.appColors;
     return Scaffold(
       appBar: AppBar(
         title: const Text('邀请好友'),
@@ -101,72 +104,83 @@ class _InvitePageState extends State<InvitePage> {
                         Container(
                           padding: const EdgeInsets.fromLTRB(20, 20, 20, 18),
                           decoration: BoxDecoration(
-                            gradient: const LinearGradient(
+                            gradient: LinearGradient(
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
-                              colors: [Color(0xFFFF9F52), Color(0xFFFF6F61), Color(0xFF7F5CFF)],
-                              stops: [0.0, 0.55, 1.0],
+                              colors: [colors.heroGradientStart, colors.heroGradientEnd, colors.accent],
+                              stops: const [0.0, 0.55, 1.0],
                             ),
                             borderRadius: BorderRadius.circular(22),
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFFFF7854).withValues(alpha: 0.28),
+                                color: colors.accent.withValues(alpha: 0.28),
                                 blurRadius: 24,
                                 offset: const Offset(0, 16),
                               ),
                             ],
                           ),
-                          child: const Column(
+                          child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
                                 '邀请 1 位好友，\n一起加入吃饭小队',
                                 style: TextStyle(
-                                  color: Colors.white,
+                                  color: colors.heroText,
                                   fontSize: 28,
                                   fontWeight: FontWeight.w800,
                                   height: 1.24,
                                 ),
                               ),
-                              SizedBox(height: 12),
+                              const SizedBox(height: 12),
                               Text(
                                 '好友注册后即可一起投票选店，解锁「组局达人」徽章',
-                                style: TextStyle(color: Color(0xF0FFFFFF), fontSize: 14, height: 1.5),
+                                style: TextStyle(color: colors.heroText.withValues(alpha: 0.9), fontSize: 14, height: 1.5),
                               ),
                             ],
                           ),
                         ),
                         const SizedBox(height: 12),
                         if (overview != null) ...[
+                          if (overview.badgeUnlocked)
+                            Container(
+                              width: double.infinity,
+                              margin: const EdgeInsets.only(bottom: 12),
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                              decoration: appStatusDecoration(colors, AppStatusKind.warning),
+                              child: Row(
+                                children: [
+                                  Icon(Icons.military_tech, color: appStatusTextColor(colors, AppStatusKind.warning)),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Text(
+                                      '已解锁「组局达人」徽章',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w800,
+                                        color: appStatusTextColor(colors, AppStatusKind.warning),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           Container(
                             padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(18),
-                              border: Border.all(color: const Color(0xFFEDF1F6)),
-                              boxShadow: const [
-                                BoxShadow(
-                                  color: Color(0x141E2941),
-                                  blurRadius: 22,
-                                  offset: Offset(0, 10),
-                                ),
-                              ],
-                            ),
+                            decoration: appCardDecoration(context, radius: 18),
                             child: Row(
                               children: [
                                 Expanded(
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      const Text('我的邀请码', style: TextStyle(fontSize: 12, color: Color(0xFF778197))),
+                                      Text('我的邀请码', style: TextStyle(fontSize: 12, color: colors.textSecondary)),
                                       const SizedBox(height: 4),
                                       Text(
                                         overview.inviteCode,
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                           fontSize: 18,
                                           fontWeight: FontWeight.w800,
                                           letterSpacing: 1,
-                                          color: Color(0xFF111827),
+                                          color: colors.textPrimary,
                                         ),
                                       ),
                                     ],
@@ -175,7 +189,6 @@ class _InvitePageState extends State<InvitePage> {
                                 FilledButton(
                                   onPressed: () => _copyCode(overview.inviteCode),
                                   style: FilledButton.styleFrom(
-                                    backgroundColor: const Color(0xFF1B2538),
                                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                   ),
@@ -215,23 +228,19 @@ class _InvitePageState extends State<InvitePage> {
                           const SizedBox(height: 12),
                           Container(
                             padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFFBFCFF),
-                              borderRadius: BorderRadius.circular(14),
-                              border: Border.all(color: const Color(0xFFEDF1F6)),
-                            ),
+                            decoration: appMutedSurfaceDecoration(context),
                             child: Column(
                               children: [
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
-                                    const Text(
+                                    Text(
                                       '本月邀请进度',
-                                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF2B3342)),
+                                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: colors.textPrimary),
                                     ),
                                     Text(
                                       '${overview.completedCount} / ${overview.targetCount} 人',
-                                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF2B3342)),
+                                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: colors.textPrimary),
                                     ),
                                   ],
                                 ),
@@ -242,8 +251,8 @@ class _InvitePageState extends State<InvitePage> {
                                     value: overview.targetCount == 0
                                         ? 0
                                         : overview.completedCount / overview.targetCount,
-                                    backgroundColor: const Color(0xFFE8EDF4),
-                                    color: const Color(0xFFFF7A43),
+                                    backgroundColor: colors.progressTrack,
+                                    color: colors.accent,
                                     minHeight: 8,
                                   ),
                                 ),
@@ -252,35 +261,24 @@ class _InvitePageState extends State<InvitePage> {
                           ),
                           const SizedBox(height: 12),
                           Container(
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(18),
-                              border: Border.all(color: const Color(0xFFEDF1F6)),
-                              boxShadow: const [
-                                BoxShadow(
-                                  color: Color(0x141E2941),
-                                  blurRadius: 22,
-                                  offset: Offset(0, 10),
-                                ),
-                              ],
-                            ),
+                            decoration: appCardDecoration(context, radius: 18),
                             child: Column(
                               children: [
-                                const Padding(
-                                  padding: EdgeInsets.fromLTRB(14, 12, 14, 12),
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
-                                      Text('邀请记录', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: Color(0xFF202838))),
-                                      Text('最近 30 天', style: TextStyle(fontSize: 12, color: Color(0xFF758095))),
+                                      Text('邀请记录', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: colors.textPrimary)),
+                                      Text('最近 30 天', style: TextStyle(fontSize: 12, color: colors.textSecondary)),
                                     ],
                                   ),
                                 ),
-                                const Divider(height: 1, color: Color(0xFFF2F4F8)),
+                                Divider(height: 1, color: colors.cardBorder),
                                 if (overview.records.isEmpty)
-                                  const Padding(
-                                    padding: EdgeInsets.symmetric(vertical: 24),
-                                    child: Text('暂无邀请记录', style: TextStyle(color: Color(0xFF8D919A))),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 24),
+                                    child: Text('暂无邀请记录', style: TextStyle(color: colors.textSecondary)),
                                   )
                                 else
                                   ...overview.records.asMap().entries.map(
@@ -305,30 +303,12 @@ class _InvitePageState extends State<InvitePage> {
                       child: SizedBox(
                         width: double.infinity,
                         height: 46,
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFFFFB35C), Color(0xFFFF7F43)],
-                            ),
-                            borderRadius: BorderRadius.circular(14),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFFFF783A).withValues(alpha: 0.28),
-                                blurRadius: 18,
-                                offset: const Offset(0, 12),
-                              ),
-                            ],
+                        child: FilledButton(
+                          onPressed: () => _shareInvite(overview.inviteCode),
+                          style: FilledButton.styleFrom(
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                           ),
-                          child: ElevatedButton(
-                            onPressed: () => _shareInvite(overview.inviteCode),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.transparent,
-                              shadowColor: Colors.transparent,
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                            ),
-                            child: const Text('立即邀请好友', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
-                          ),
+                          child: const Text('立即邀请好友', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
                         ),
                       ),
                     ),
@@ -352,27 +332,22 @@ class _ShareTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     return Expanded(
       child: Material(
-        color: Colors.white,
+        color: colors.cardBackground,
         borderRadius: BorderRadius.circular(16),
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(16),
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 12),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFFEDF1F6)),
-              boxShadow: const [
-                BoxShadow(color: Color(0x0F20293D), blurRadius: 14, offset: Offset(0, 6)),
-              ],
-            ),
+            decoration: appCardDecoration(context, radius: 16),
             child: Column(
               children: [
-                Icon(icon, size: 20, color: const Color(0xFFFF7A22)),
+                Icon(icon, size: 20, color: colors.accent),
                 const SizedBox(height: 6),
-                Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF5F697A))),
+                Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: colors.chipText)),
               ],
             ),
           ),
@@ -398,12 +373,13 @@ class _InviteRecordRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final done = record.statusLabel.contains('已加入');
     final initial = record.nickname.isNotEmpty ? record.nickname[0] : '友';
-    final colors = _avatarGradients[index % _avatarGradients.length];
+    final avatarColors = _avatarGradients[index % _avatarGradients.length];
+    final colors = context.appColors;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: Color(0xFFF4F6FA))),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: colors.cardBorder)),
       ),
       child: Row(
         children: [
@@ -416,11 +392,11 @@ class _InviteRecordRow extends StatelessWidget {
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    gradient: LinearGradient(colors: colors),
+                    gradient: LinearGradient(colors: avatarColors),
                   ),
                   child: Text(
                     initial,
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 13),
+                    style: TextStyle(color: colors.onAccent, fontWeight: FontWeight.w800, fontSize: 13),
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -428,11 +404,11 @@ class _InviteRecordRow extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(record.nickname, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: Color(0xFF1F2633))),
+                      Text(record.nickname, style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: colors.textPrimary)),
                       if (record.registeredAt.isNotEmpty)
                         Text(
                           '${record.registeredAt} 注册',
-                          style: const TextStyle(fontSize: 12, color: Color(0xFF778195)),
+                          style: TextStyle(fontSize: 12, color: colors.textSecondary),
                         ),
                     ],
                   ),
@@ -442,17 +418,13 @@ class _InviteRecordRow extends StatelessWidget {
           ),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            decoration: BoxDecoration(
-              color: done ? const Color(0xFFECFDF3) : const Color(0xFFFFF4E7),
-              borderRadius: BorderRadius.circular(999),
-              border: Border.all(color: done ? const Color(0xFFBDECCF) : const Color(0xFFFFD8B1)),
-            ),
+            decoration: appStatusDecoration(colors, done ? AppStatusKind.success : AppStatusKind.warning),
             child: Text(
               record.statusLabel,
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
-                color: done ? const Color(0xFF0F9F55) : const Color(0xFFCF6C16),
+                color: appStatusTextColor(colors, done ? AppStatusKind.success : AppStatusKind.warning),
               ),
             ),
           ),

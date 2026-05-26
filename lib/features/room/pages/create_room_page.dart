@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:soulfood_front/core/storage/recent_rooms_store.dart';
+import 'package:soulfood_front/core/theme/app_semantic_colors.dart';
+import 'package:soulfood_front/core/theme/theme_widgets.dart';
 import 'package:soulfood_front/features/room/room_repository.dart';
 import 'package:soulfood_front/features/room/widgets/room_invite_card.dart';
 import 'package:soulfood_front/routing/app_routes.dart';
@@ -26,6 +29,7 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
         maxPeople: _maxPeople,
         durationMin: _durationMin,
       );
+      await RecentRoomsStore().remember(room.code);
       if (!mounted) return;
       await showRoomCreatedDialog(context, room.code);
       if (!mounted) return;
@@ -45,6 +49,7 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     return Scaffold(
       appBar: AppBar(title: const Text('创建房间')),
       body: ListView(
@@ -70,19 +75,15 @@ class _CreateRoomPageState extends State<CreateRoomPage> {
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF0F7FF),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFB8D4F0)),
-            ),
-            child: const Row(
+            decoration: appStatusDecoration(colors, AppStatusKind.info),
+            child: Row(
               children: [
-                Icon(Icons.timer_outlined, color: Color(0xFF2B5EA8)),
-                SizedBox(width: 10),
+                Icon(Icons.timer_outlined, color: colors.infoText),
+                const SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     '投票限时 30 分钟，超时后系统自动统计票数并结束',
-                    style: TextStyle(color: Color(0xFF2B5EA8), fontSize: 13, height: 1.4),
+                    style: TextStyle(color: colors.infoText, fontSize: 13, height: 1.4),
                   ),
                 ),
               ],

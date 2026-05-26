@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:soulfood_front/core/app_bootstrap.dart';
+import 'package:soulfood_front/core/theme/app_semantic_colors.dart';
 import 'package:soulfood_front/features/auth/register_page.dart';
 import 'package:soulfood_front/features/room/room_deep_link.dart';
 import 'package:soulfood_front/pages/root_page.dart';
+import 'package:soulfood_front/routing/app_routes.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -53,6 +55,7 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     return Scaffold(
       body: SafeArea(
         child: ListView(
@@ -64,9 +67,9 @@ class _LoginPageState extends State<LoginPage> {
               style: TextStyle(fontSize: 32, fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               '使用账号密码登录 DecideMeal',
-              style: TextStyle(color: Color(0xFF8D919A)),
+              style: TextStyle(color: colors.textSecondary),
             ),
             const SizedBox(height: 32),
             TextField(
@@ -92,12 +95,19 @@ class _LoginPageState extends State<LoginPage> {
               ),
               onSubmitted: (_) => _loading ? null : _login(),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: _loading ? null : () => Navigator.pushNamed(context, AppRoutes.forgotPassword),
+                child: const Text('忘记密码？'),
+              ),
+            ),
+            const SizedBox(height: 8),
             FilledButton(
               onPressed: _loading ? null : _login,
               style: FilledButton.styleFrom(
                 minimumSize: const Size.fromHeight(48),
-                backgroundColor: const Color(0xFFFF8A43),
               ),
               child: Text(_loading ? '登录中…' : '登录'),
             ),

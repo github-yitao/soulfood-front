@@ -38,6 +38,8 @@ class AuthSessionGuard {
   static bool shouldIgnorePath(String path) {
     return path.contains('/auth/login') ||
         path.contains('/auth/register') ||
-        path.contains('/auth/login/mock');
+        path.contains('/auth/login/mock') ||
+        path.contains('/auth/refresh') ||
+        path.contains('/auth/password/reset');
   }
 }

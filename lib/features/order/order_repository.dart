@@ -121,4 +121,20 @@ class OrderRepository {
       parser: (json) => json as Map<String, dynamic>,
     );
   }
+
+  Future<void> createFromVote({
+    required String winnerTitle,
+    required double amount,
+    String? roomCode,
+  }) async {
+    await _api.postData<Map<String, dynamic>>(
+      '/api/v1/orders/from-vote',
+      data: {
+        'winnerTitle': winnerTitle,
+        'amount': amount,
+        if (roomCode != null && roomCode.isNotEmpty) 'roomCode': roomCode,
+      },
+      parser: (json) => json as Map<String, dynamic>,
+    );
+  }
 }

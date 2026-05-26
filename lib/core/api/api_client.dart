@@ -42,13 +42,28 @@ class ApiClient {
           handler.next(options);
         },
         onResponse: (response, handler) {
-          _maybeHandleUnauthorized(response.requestOptions.path, response.data);
+          if (response.requestOptions.extra['skip_auth_recovery'] != true) {
+            _maybeHandleUnauthorized(response.requestOptions.path, response.data);
+          }
           handler.next(response);
         },
-        onError: (error, handler) {
+        onError: (error, handler) async {
           final path = error.requestOptions.path;
           final status = error.response?.statusCode;
-          if (status == 401) {
+          final skipRecovery = error.requestOptions.extra['skip_auth_recovery'] == true;
+          final alreadyRetried = error.requestOptions.extra['_auth_refresh_tried'] == true;
+
+          if (!skipRecovery && status == 401 && !alreadyRetried) {
+            final refreshed = await _tryRefreshToken();
+            if (refreshed) {
+              error.requestOptions.extra['_auth_refresh_tried'] = true;
+              try {
+                final response = await _dio.fetch(error.requestOptions);
+                return handler.resolve(response);
+              } on DioException catch (retryError) {
+                return handler.next(retryError);
+              }
+            }
             final data = error.response?.data;
             final message = data is Map ? data['message'] as String? : null;
             _maybeHandleUnauthorized(path, data, force: true, message: message);
@@ -62,6 +77,7 @@ class ApiClient {
 
   final SessionStore _session;
   late final Dio _dio;
+  bool _refreshing = false;
 
   Future<T> getData<T>(
     String path, {
@@ -80,19 +96,49 @@ class ApiClient {
     String path, {
     Object? data,
     required T Function(Object? json) parser,
+    bool skipAuthRecovery = false,
   }) async {
     try {
-      final response = await _dio.post<Map<String, dynamic>>(path, data: data);
+      final response = await _dio.post<Map<String, dynamic>>(
+        path,
+        data: data,
+        options: Options(extra: {if (skipAuthRecovery) 'skip_auth_recovery': true}),
+      );
       return _parse(response.data, parser);
     } on DioException catch (e) {
       throw _toApiException(e);
     }
   }
 
-  Future<void> postVoid(String path, {Object? data}) async {
+  Future<void> postVoid(String path, {Object? data, bool skipAuthRecovery = false}) async {
     try {
-      final response = await _dio.post<Map<String, dynamic>>(path, data: data);
+      final response = await _dio.post<Map<String, dynamic>>(
+        path,
+        data: data,
+        options: Options(extra: {if (skipAuthRecovery) 'skip_auth_recovery': true}),
+      );
       _ensureOk(response.data);
+    } on DioException catch (e) {
+      throw _toApiException(e);
+    }
+  }
+
+  Future<T> postMultipart<T>(
+    String path, {
+    required String filePath,
+    required String fieldName,
+    required T Function(Object? json) parser,
+  }) async {
+    try {
+      final formData = FormData.fromMap({
+        fieldName: await MultipartFile.fromFile(filePath),
+      });
+      final response = await _dio.post<Map<String, dynamic>>(
+        path,
+        data: formData,
+        options: Options(contentType: 'multipart/form-data'),
+      );
+      return _parse(response.data, parser);
     } on DioException catch (e) {
       throw _toApiException(e);
     }
@@ -227,6 +273,34 @@ class ApiClient {
     }
     if (code == 401) {
       unawaited(AuthSessionGuard.handleUnauthorized(message: msg ?? '登录已过期，请重新登录'));
+    }
+  }
+
+  Future<bool> _tryRefreshToken() async {
+    if (_refreshing) return false;
+    final refresh = _session.refreshToken;
+    if (refresh == null || refresh.isEmpty) return false;
+
+    _refreshing = true;
+    try {
+      final response = await _dio.post<Map<String, dynamic>>(
+        '/api/v1/auth/refresh',
+        data: {'refreshToken': refresh},
+        options: Options(extra: {'skip_auth_recovery': true}),
+      );
+      final json = response.data;
+      if (json == null || (json['code'] as int? ?? -1) != 0) return false;
+      final data = json['data'] as Map<String, dynamic>?;
+      if (data == null) return false;
+      final access = data['token'] as String? ?? '';
+      final nextRefresh = data['refreshToken'] as String? ?? '';
+      if (access.isEmpty || nextRefresh.isEmpty) return false;
+      await _session.updateTokens(accessToken: access, refreshToken: nextRefresh);
+      return true;
+    } catch (_) {
+      return false;
+    } finally {
+      _refreshing = false;
     }
   }
 

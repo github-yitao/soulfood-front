@@ -3,9 +3,12 @@ import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:soulfood_front/core/app_bootstrap.dart';
 import 'package:soulfood_front/core/settings/appearance_store.dart';
+import 'package:soulfood_front/core/theme/app_semantic_colors.dart';
+import 'package:soulfood_front/core/theme/app_theme_l10n.dart';
 import 'package:soulfood_front/core/theme/app_theme_variant.dart';
 import 'package:soulfood_front/features/auth/login_page.dart';
 import 'package:soulfood_front/features/profile/change_password_page.dart';
+import 'package:soulfood_front/l10n/app_localizations.dart';
 import 'package:soulfood_front/routing/app_routes.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -80,18 +83,18 @@ class _SettingsPageState extends State<SettingsPage> {
     await _refreshLocationStatus();
   }
 
-  String _themeModeLabel(AppThemeMode mode) => switch (mode) {
-        AppThemeMode.light => '浅色模式',
-        AppThemeMode.dark => '深色模式',
-        AppThemeMode.system => '跟随系统',
+  String _themeModeLabel(AppLocalizations l10n, AppThemeMode mode) => switch (mode) {
+        AppThemeMode.light => l10n.themeModeLight,
+        AppThemeMode.dark => l10n.themeModeDark,
+        AppThemeMode.system => l10n.themeModeSystem,
       };
 
-  String _appearanceLabel() {
+  String _appearanceLabel(AppLocalizations l10n) {
     final variant = AppServices.I.appearance.variant;
     if (variant == AppThemeVariant.ghoul) {
-      return variant.label;
+      return variant.labelOf(l10n);
     }
-    return '${variant.label} · ${_themeModeLabel(AppServices.I.appearance.mode)}';
+    return '${variant.labelOf(l10n)} · ${_themeModeLabel(l10n, AppServices.I.appearance.mode)}';
   }
 
   Future<void> _logout(BuildContext context) async {
@@ -129,7 +132,7 @@ class _SettingsPageState extends State<SettingsPage> {
             children: [
               const Text('账号与安全', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
               const SizedBox(height: 8),
-              Text('当前账号：$username', style: const TextStyle(color: Color(0xFF6F7889), fontSize: 13)),
+              Text('当前账号：$username', style: TextStyle(color: context.appColors.textSecondary, fontSize: 13)),
               const SizedBox(height: 12),
               ListTile(
                 contentPadding: EdgeInsets.zero,
@@ -148,8 +151,12 @@ class _SettingsPageState extends State<SettingsPage> {
                 contentPadding: EdgeInsets.zero,
                 leading: const Icon(Icons.phone_android_outlined),
                 title: const Text('绑定手机'),
-                subtitle: const Text('即将上线', style: TextStyle(fontSize: 12)),
-                enabled: false,
+                subtitle: const Text('用于找回密码', style: TextStyle(fontSize: 12)),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  Navigator.pushNamed(context, AppRoutes.bindPhone);
+                },
               ),
             ],
           ),
@@ -217,10 +224,12 @@ class _SettingsPageState extends State<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final themeLabel = _appearanceLabel();
+    final l10n = AppLocalizations.of(context)!;
+    final themeLabel = _appearanceLabel(l10n);
+    final colors = context.appColors;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('设置')),
+      appBar: AppBar(title: Text(l10n.settings)),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
         children: [
@@ -281,8 +290,8 @@ class _SettingsPageState extends State<SettingsPage> {
             onPressed: () => _logout(context),
             style: OutlinedButton.styleFrom(
               minimumSize: const Size.fromHeight(48),
-              foregroundColor: const Color(0xFFE05252),
-              side: const BorderSide(color: Color(0xFFE05252)),
+              foregroundColor: colors.errorText,
+              side: BorderSide(color: colors.errorBorder),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
             ),
             child: const Text('退出登录', style: TextStyle(fontWeight: FontWeight.w700)),
@@ -300,16 +309,17 @@ class _SettingsGroup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colors.cardBackground,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFEDF1F6)),
+        border: Border.all(color: colors.cardBorder),
       ),
       child: Column(
         children: [
           for (var i = 0; i < children.length; i++) ...[
-            if (i > 0) const Divider(height: 1, color: Color(0xFFF2F4F8)),
+            if (i > 0) Divider(height: 1, color: colors.cardBorder),
             children[i],
           ],
         ],
@@ -335,18 +345,19 @@ class _SettingsTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     return ListTile(
       onTap: onTap,
-      leading: Icon(icon, color: const Color(0xFF1F2430)),
-      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF1F2430))),
+      leading: Icon(icon, color: colors.textPrimary),
+      title: Text(title, style: TextStyle(fontWeight: FontWeight.w600, color: colors.textPrimary)),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           if (trailing != null)
-            Text(trailing!, style: const TextStyle(fontSize: 13, color: Color(0xFF758095))),
+            Text(trailing!, style: TextStyle(fontSize: 13, color: colors.textSecondary)),
           if (showChevron) ...[
             if (trailing != null) const SizedBox(width: 4),
-            const Icon(Icons.chevron_right, color: Color(0xFF758095)),
+            Icon(Icons.chevron_right, color: colors.textSecondary),
           ],
         ],
       ),

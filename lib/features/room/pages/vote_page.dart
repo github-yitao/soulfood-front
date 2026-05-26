@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:soulfood_front/core/app_bootstrap.dart';
+import 'package:soulfood_front/core/theme/app_semantic_colors.dart';
+import 'package:soulfood_front/core/theme/theme_widgets.dart';
 import 'package:soulfood_front/features/agent/agent_repository.dart';
 import 'package:soulfood_front/features/room/pages/recipe_result_page.dart';
 import 'package:soulfood_front/features/room/room_models.dart';
@@ -235,7 +237,6 @@ class _VotePageState extends State<VotePage> {
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('再等一会')),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
-            style: FilledButton.styleFrom(backgroundColor: const Color(0xFFFF8A43)),
             child: const Text('结束并查看结果'),
           ),
         ],
@@ -340,6 +341,7 @@ class _VotePageState extends State<VotePage> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     final room = _room;
     final isClosed = room?.status == 'closed';
     final hasVoted = room?.myVoteOptionId != null;
@@ -385,17 +387,17 @@ class _VotePageState extends State<VotePage> {
                       const SizedBox(height: 12),
                       Text(
                         room.topic,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.w800,
                           height: 1.15,
-                          color: Color(0xFF1E1F23),
+                          color: colors.textPrimary,
                         ),
                       ),
                       const SizedBox(height: 6),
                       Text(
                         '房间号：${room.code}　　${room.participantCount} 人参与',
-                        style: const TextStyle(fontSize: 13, color: Color(0xFF8D919A)),
+                        style: TextStyle(fontSize: 13, color: colors.textSecondary),
                       ),
                       const SizedBox(height: 12),
                       if (!isClosed && _remainingSeconds > 0)
@@ -403,25 +405,19 @@ class _VotePageState extends State<VotePage> {
                           width: double.infinity,
                           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                           margin: const EdgeInsets.only(bottom: 8),
-                          decoration: BoxDecoration(
-                            color: _remainingSeconds <= 300
-                                ? const Color(0xFFFFF5F5)
-                                : const Color(0xFFF0F7FF),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: _remainingSeconds <= 300
-                                  ? const Color(0xFFFFD6D6)
-                                  : const Color(0xFFB8D4F0),
-                            ),
+                          decoration: appStatusDecoration(
+                            colors,
+                            _remainingSeconds <= 300 ? AppStatusKind.error : AppStatusKind.info,
                           ),
                           child: Row(
                             children: [
                               Icon(
                                 Icons.timer_outlined,
                                 size: 18,
-                                color: _remainingSeconds <= 300
-                                    ? const Color(0xFFB42318)
-                                    : const Color(0xFF2B5EA8),
+                                color: appStatusTextColor(
+                                  colors,
+                                  _remainingSeconds <= 300 ? AppStatusKind.error : AppStatusKind.info,
+                                ),
                               ),
                               const SizedBox(width: 8),
                               Expanded(
@@ -430,9 +426,10 @@ class _VotePageState extends State<VotePage> {
                                   style: TextStyle(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w600,
-                                    color: _remainingSeconds <= 300
-                                        ? const Color(0xFFB42318)
-                                        : const Color(0xFF2B5EA8),
+                                    color: appStatusTextColor(
+                                      colors,
+                                      _remainingSeconds <= 300 ? AppStatusKind.error : AppStatusKind.info,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -445,21 +442,20 @@ class _VotePageState extends State<VotePage> {
                           width: double.infinity,
                           padding: const EdgeInsets.all(14),
                           margin: const EdgeInsets.only(bottom: 12),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFE8F5E9),
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(color: const Color(0xFFB7DFC0)),
-                          ),
-                          child: const Row(
+                          decoration: appStatusDecoration(colors, AppStatusKind.success),
+                          child: Row(
                             children: [
-                              Icon(Icons.check_circle_outline, color: Color(0xFF2E7D32)),
-                              SizedBox(width: 8),
+                              Icon(
+                                Icons.check_circle_outline,
+                                color: appStatusTextColor(colors, AppStatusKind.success),
+                              ),
+                              const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
                                   '投票已结束（手动结束或超过30分钟自动结束）',
                                   style: TextStyle(
                                     fontWeight: FontWeight.w700,
-                                    color: Color(0xFF2E7D32),
+                                    color: appStatusTextColor(colors, AppStatusKind.success),
                                   ),
                                 ),
                               ),
@@ -471,15 +467,12 @@ class _VotePageState extends State<VotePage> {
                         Container(
                           width: double.infinity,
                           padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFFF4E8),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
+                          decoration: appStatusDecoration(colors, AppStatusKind.warning),
                           child: Text(
                             '你的选择：$_myPickTitle',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontWeight: FontWeight.w700,
-                              color: Color(0xFFD86A00),
+                              color: appStatusTextColor(colors, AppStatusKind.warning),
                             ),
                           ),
                         ),
@@ -490,7 +483,7 @@ class _VotePageState extends State<VotePage> {
                           Expanded(
                             child: Text(
                               '${room.participantCount} 人参与 · ${room.options.fold<int>(0, (sum, o) => sum + o.voteCount)} 票',
-                              style: const TextStyle(color: Color(0xFF6F7888), fontWeight: FontWeight.w600),
+                              style: TextStyle(color: colors.textSecondary, fontWeight: FontWeight.w600),
                             ),
                           ),
                           if (!isClosed)
@@ -500,14 +493,14 @@ class _VotePageState extends State<VotePage> {
                                 Icon(
                                   Icons.circle,
                                   size: 8,
-                                  color: _wsConnected ? const Color(0xFF2E7D32) : const Color(0xFFB3B8C2),
+                                  color: _wsConnected ? colors.online : colors.offline,
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
                                   _wsConnected ? '实时同步' : '连接中…',
                                   style: TextStyle(
                                     fontSize: 11,
-                                    color: _wsConnected ? const Color(0xFF2E7D32) : const Color(0xFF8D919A),
+                                    color: _wsConnected ? colors.online : colors.textSecondary,
                                   ),
                                 ),
                               ],
@@ -515,9 +508,9 @@ class _VotePageState extends State<VotePage> {
                         ],
                       ),
                       const SizedBox(height: 8),
-                      const Text(
+                      Text(
                         '点选一项即完成投票（可改选）',
-                        style: TextStyle(color: Color(0xFF8D919A), fontSize: 13),
+                        style: TextStyle(color: colors.textSecondary, fontSize: 13),
                       ),
                       const SizedBox(height: 12),
                       ...room.options.map(
@@ -535,9 +528,9 @@ class _VotePageState extends State<VotePage> {
                           label: const Text('AI 补选项'),
                           style: OutlinedButton.styleFrom(
                             minimumSize: const Size.fromHeight(44),
-                            foregroundColor: const Color(0xFF2B5EA8),
-                            side: const BorderSide(color: Color(0xFFCFE0FF)),
-                            backgroundColor: const Color(0xFFF0F6FF),
+                            foregroundColor: colors.infoText,
+                            side: BorderSide(color: colors.infoBorder),
+                            backgroundColor: colors.infoBackground,
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -550,17 +543,17 @@ class _VotePageState extends State<VotePage> {
                         FilledButton.icon(
                           onPressed: (_submitting || _previewLoading) ? null : _previewRecipes,
                           icon: _previewLoading
-                              ? const SizedBox(
+                              ? SizedBox(
                                   width: 18,
                                   height: 18,
-                                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: colors.onAccent,
+                                  ),
                                 )
                               : const Icon(Icons.restaurant_menu_outlined),
                           label: const Text('生成菜谱（Agent）'),
-                          style: FilledButton.styleFrom(
-                            minimumSize: const Size.fromHeight(48),
-                            backgroundColor: const Color(0xFFFF8A43),
-                          ),
+                          style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(48)),
                         ),
                       ],
                     ],
@@ -578,10 +571,11 @@ class _VoteFlowSteps extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colors.cardBackground,
         borderRadius: BorderRadius.circular(16),
         boxShadow: const [
           BoxShadow(color: Color(0x10000000), blurRadius: 10, offset: Offset(0, 4)),
@@ -615,11 +609,12 @@ class _StepDot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     final color = done
-        ? const Color(0xFF2E7D32)
+        ? colors.successText
         : active
-            ? const Color(0xFFFF8A43)
-            : const Color(0xFFB3B8C2);
+            ? colors.accent
+            : colors.offline;
     return Expanded(
       child: Column(
         children: [
@@ -647,11 +642,12 @@ class _StepLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     return Expanded(
       child: Container(
         height: 2,
         margin: const EdgeInsets.only(bottom: 18),
-        color: done ? const Color(0xFF2E7D32) : const Color(0xFFE0E4EA),
+        color: done ? colors.successText : colors.progressTrack,
       ),
     );
   }
@@ -674,11 +670,12 @@ class _VoteBottomBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     return SafeArea(
       child: Container(
         padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: colors.cardBackground,
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.06),
@@ -692,38 +689,35 @@ class _VoteBottomBar extends StatelessWidget {
                 onPressed: submitting ? null : onViewResult,
                 icon: const Icon(Icons.emoji_events_outlined),
                 label: const Text('查看投票结果与菜谱'),
-                style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFFFF8A43),
-                  minimumSize: const Size.fromHeight(50),
-                ),
+                style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(50)),
               )
             : Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   if (!hasVoted)
-                    const Padding(
-                      padding: EdgeInsets.only(bottom: 8),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
                       child: Text(
                         '请先点选一个选项完成投票',
                         textAlign: TextAlign.center,
-                        style: TextStyle(color: Color(0xFF8D919A), fontSize: 12),
+                        style: TextStyle(color: colors.textSecondary, fontSize: 12),
                       ),
                     ),
                   FilledButton.icon(
                     onPressed: submitting ? null : onFinish,
                     icon: submitting
-                        ? const SizedBox(
+                        ? SizedBox(
                             width: 18,
                             height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: colors.onAccent,
+                            ),
                           )
                         : const Icon(Icons.flag_rounded),
                     label: const Text('结束投票，查看结果'),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFFFF8A43),
-                      minimumSize: const Size.fromHeight(50),
-                    ),
+                    style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(50)),
                   ),
                 ],
               ),
@@ -745,6 +739,7 @@ class _OptionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     final meta = option.source == 'ai'
         ? 'AI 建议 · ${option.voteCount}票'
         : '${option.voteCount} 票';
@@ -752,10 +747,10 @@ class _OptionCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colors.cardBackground,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: selected ? const Color(0xFFFF8A43) : const Color(0xFFEFF2F6),
+          color: selected ? colors.accent : colors.progressTrack,
           width: selected ? 2 : 1,
         ),
         boxShadow: const [
@@ -781,9 +776,9 @@ class _OptionCard extends StatelessWidget {
                         Row(
                           children: [
                             if (selected)
-                              const Padding(
-                                padding: EdgeInsets.only(right: 4),
-                                child: Icon(Icons.check_circle, color: Color(0xFFFF8A43), size: 18),
+                              Padding(
+                                padding: const EdgeInsets.only(right: 4),
+                                child: Icon(Icons.check_circle, color: colors.accent, size: 18),
                               ),
                             Expanded(
                               child: Text(
@@ -791,14 +786,14 @@ class _OptionCard extends StatelessWidget {
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w700,
-                                  color: selected ? const Color(0xFFD86A00) : const Color(0xFF1E1F23),
+                                  color: selected ? colors.warningText : colors.textPrimary,
                                 ),
                               ),
                             ),
                           ],
                         ),
                         const SizedBox(height: 2),
-                        Text(meta, style: const TextStyle(fontSize: 12, color: Color(0xFF8D919A))),
+                        Text(meta, style: TextStyle(fontSize: 12, color: colors.textSecondary)),
                       ],
                     ),
                   ),
@@ -814,8 +809,8 @@ class _OptionCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(4),
                   child: LinearProgressIndicator(
                     value: option.percent / 100,
-                    backgroundColor: const Color(0xFFEFF2F6),
-                    color: const Color(0xFFFF8A43),
+                    backgroundColor: colors.progressTrack,
+                    color: colors.accent,
                     minHeight: 8,
                   ),
                 ),

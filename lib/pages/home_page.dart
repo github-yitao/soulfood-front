@@ -74,7 +74,7 @@ class HomePage extends StatelessWidget {
                 Expanded(
                   child: FeatureCard(
                     icon: Icons.groups_rounded,
-                    iconColor: isGhoul ? const Color(0xFFFF3B30) : const Color(0xFFFF6268),
+                    iconColor: colors.accent,
                     title: '和朋友一起\n决定',
                     onTap: () => Navigator.pushNamed(context, AppRoutes.friends),
                   ),
@@ -83,7 +83,7 @@ class HomePage extends StatelessWidget {
                 Expanded(
                   child: FeatureCard(
                     icon: Icons.touch_app_rounded,
-                    iconColor: isGhoul ? const Color(0xFFC0C0C0) : const Color(0xFF3ABC77),
+                    iconColor: isGhoul ? colors.accentSecondary : colors.successText,
                     title: '附近觅食\n(探店用呀)',
                     onTap: () => Navigator.pushNamed(context, AppRoutes.nearby),
                   ),
@@ -96,7 +96,7 @@ class HomePage extends StatelessWidget {
                 Expanded(
                   child: FeatureCard(
                     icon: Icons.location_on_rounded,
-                    iconColor: isGhoul ? const Color(0xFF757575) : const Color(0xFF8D6DF2),
+                    iconColor: colors.textSecondary,
                     title: '随机吃什么',
                     onTap: () => Navigator.pushNamed(context, AppRoutes.randomEat),
                   ),
@@ -105,11 +105,11 @@ class HomePage extends StatelessWidget {
                 Expanded(
                   child: FeatureCard(
                     icon: Icons.auto_awesome_rounded,
-                    iconColor: isGhoul ? const Color(0xFFFF3B30) : const Color(0xFF2B5EA8),
+                    iconColor: isGhoul ? colors.accent : colors.infoText,
                     title: 'AI 推荐\n菜谱',
-                    backgroundColor: isGhoul ? const Color(0xFF1C1C1E) : const Color(0xFFEEF4FF),
-                    borderColor: isGhoul ? const Color(0xFF4A4A48) : const Color(0xFFB8D4F8),
-                    textColor: isGhoul ? const Color(0xFFE6E6E6) : const Color(0xFF2B5EA8),
+                    backgroundColor: isGhoul ? colors.cardBackground : colors.infoBackground,
+                    borderColor: isGhoul ? colors.cardBorder : colors.infoBorder,
+                    textColor: isGhoul ? colors.featureDefaultText : colors.infoText,
                     onTap: () => Navigator.pushNamed(context, AppRoutes.aiQuick),
                   ),
                 ),
@@ -121,6 +121,14 @@ class HomePage extends StatelessWidget {
                 onPressed: () => Navigator.pushNamed(context, AppRoutes.recipeLibrary),
                 icon: const Icon(Icons.menu_book_outlined, size: 16),
                 label: const Text('浏览菜品库', style: TextStyle(fontSize: 13)),
+                style: TextButton.styleFrom(foregroundColor: colors.textSecondary),
+              ),
+            ),
+            Center(
+              child: TextButton.icon(
+                onPressed: () => Navigator.pushNamed(context, AppRoutes.cookMode),
+                icon: const Icon(Icons.soup_kitchen_outlined, size: 16),
+                label: const Text('烹饪模式 · 选食材出菜谱', style: TextStyle(fontSize: 13)),
                 style: TextButton.styleFrom(foregroundColor: colors.textSecondary),
               ),
             ),
@@ -172,12 +180,12 @@ class _HomeHeroState extends State<_HomeHero> {
                       radius: 0.95,
                       colors: [colors.heroGradientStart, colors.heroGradientEnd],
                     )
-                  : const RadialGradient(
-                      center: Alignment(0.36, 0.24),
+                  : RadialGradient(
+                      center: const Alignment(0.36, 0.24),
                       radius: 0.78,
-                      colors: [Color(0xFFFBF0A8), Color(0xFFF6CF57)],
+                      colors: [colors.heroGradientStart, colors.heroGradientEnd],
                     ),
-              border: isGhoul ? Border.all(color: const Color(0xFF4A4A48), width: 1.5) : null,
+              border: isGhoul ? Border.all(color: colors.cardBorder, width: 1.5) : null,
               boxShadow: [
                 BoxShadow(
                   color: isGhoul

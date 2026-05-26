@@ -6,12 +6,14 @@ class InviteOverview {
     required this.inviteCode,
     required this.completedCount,
     required this.targetCount,
+    required this.badgeUnlocked,
     required this.records,
   });
 
   final String inviteCode;
   final int completedCount;
   final int targetCount;
+  final bool badgeUnlocked;
   final List<InviteRecord> records;
 
   factory InviteOverview.fromJson(Map<String, dynamic> json) {
@@ -20,6 +22,7 @@ class InviteOverview {
       inviteCode: json['inviteCode'] as String? ?? '',
       completedCount: (json['completedCount'] as num?)?.toInt() ?? 0,
       targetCount: (json['targetCount'] as num?)?.toInt() ?? 5,
+      badgeUnlocked: json['badgeUnlocked'] as bool? ?? false,
       records: recordsJson
           .map((e) => InviteRecord.fromJson(e as Map<String, dynamic>))
           .toList(),

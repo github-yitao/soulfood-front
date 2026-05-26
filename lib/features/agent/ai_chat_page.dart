@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
+import 'package:soulfood_front/core/theme/app_semantic_colors.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:soulfood_front/core/location/location_service.dart';
 import 'package:soulfood_front/features/agent/agent_repository.dart';
@@ -484,6 +485,7 @@ class _AiChatPageState extends State<AiChatPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     return Scaffold(
       appBar: AppBar(
         title: const Text('AI 美食助手'),
@@ -571,10 +573,10 @@ class _AiChatPageState extends State<AiChatPage> {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  const Expanded(
+                  Expanded(
                     child: Text(
                       '已选图片，可补充说明或直接发送',
-                      style: TextStyle(fontSize: 13, color: Color(0xFF8D919A)),
+                      style: TextStyle(fontSize: 13, color: colors.textSecondary),
                     ),
                   ),
                   IconButton(
@@ -605,7 +607,7 @@ class _AiChatPageState extends State<AiChatPage> {
                       decoration: InputDecoration(
                         hintText: '问我吃什么、怎么做…',
                         filled: true,
-                        fillColor: Colors.white,
+                        fillColor: colors.inputFill,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(20),
                           borderSide: BorderSide.none,
@@ -623,7 +625,6 @@ class _AiChatPageState extends State<AiChatPage> {
                     style: FilledButton.styleFrom(
                       minimumSize: const Size(48, 48),
                       padding: EdgeInsets.zero,
-                      backgroundColor: const Color(0xFFFF8A43),
                       shape: const CircleBorder(),
                     ),
                     child: const Icon(Icons.send_rounded),
@@ -661,6 +662,7 @@ class _Bubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     final isUser = message.isUser;
     if (!isUser && message.streaming && message.text.isEmpty) {
       return _ThinkingBubble(elapsed: thinkingElapsed ?? 0);
@@ -673,15 +675,15 @@ class _Bubble extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         constraints: BoxConstraints(maxWidth: maxWidth),
         decoration: BoxDecoration(
-          color: isUser ? const Color(0xFFFF8A43) : Colors.white,
+          color: isUser ? colors.accent : colors.cardBackground,
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(16),
             topRight: const Radius.circular(16),
             bottomLeft: Radius.circular(isUser ? 16 : 4),
             bottomRight: Radius.circular(isUser ? 4 : 16),
           ),
-          boxShadow: const [
-            BoxShadow(color: Color(0x0F000000), blurRadius: 6, offset: Offset(0, 2)),
+          boxShadow: [
+            BoxShadow(color: colors.textPrimary.withValues(alpha: 0.06), blurRadius: 6, offset: const Offset(0, 2)),
           ],
         ),
         child: Column(
@@ -703,14 +705,14 @@ class _Bubble extends StatelessWidget {
               if (message.text.isNotEmpty)
                 Text(
                   message.text,
-                  style: const TextStyle(color: Colors.white, height: 1.45),
+                  style: TextStyle(color: colors.onAccent, height: 1.45),
                 ),
             ]
             else
               MarkdownBody(
                 data: message.text.isEmpty ? '…' : message.text,
                 selectable: true,
-                styleSheet: _assistantMarkdownStyle,
+                styleSheet: _assistantMarkdownStyle(colors),
               ),
             if (!isUser && message.cards.isNotEmpty) ...[
               const SizedBox(height: 10),
@@ -731,7 +733,7 @@ class _Bubble extends StatelessWidget {
                     label: const Text('用这些店发起投票'),
                     style: OutlinedButton.styleFrom(
                       visualDensity: VisualDensity.compact,
-                      foregroundColor: const Color(0xFF2B5EA8),
+                      foregroundColor: colors.infoText,
                     ),
                   ),
                 ),
@@ -743,7 +745,7 @@ class _Bubble extends StatelessWidget {
                   if (message.thinkingSeconds != null)
                     Text(
                       '思考 ${_formatThinking(message.thinkingSeconds!)}',
-                      style: const TextStyle(fontSize: 11, color: Color(0xFF8D919A)),
+                      style: TextStyle(fontSize: 11, color: colors.textSecondary),
                     ),
                   const Spacer(),
                   if (onFavorite != null)
@@ -755,9 +757,7 @@ class _Bubble extends StatelessWidget {
                         child: Icon(
                           message.favorited ? Icons.favorite : Icons.favorite_border,
                           size: 18,
-                          color: message.favorited
-                              ? const Color(0xFFFF7A22)
-                              : const Color(0xFF8D919A),
+                          color: message.favorited ? colors.accent : colors.textSecondary,
                         ),
                       ),
                     ),
@@ -770,21 +770,21 @@ class _Bubble extends StatelessWidget {
     );
   }
 
-  static final MarkdownStyleSheet _assistantMarkdownStyle = MarkdownStyleSheet(
-    p: const TextStyle(color: Color(0xFF1E1F23), height: 1.5, fontSize: 15),
-    strong: const TextStyle(
+  static MarkdownStyleSheet _assistantMarkdownStyle(AppSemanticColors colors) => MarkdownStyleSheet(
+    p: TextStyle(color: colors.textPrimary, height: 1.5, fontSize: 15),
+    strong: TextStyle(
       fontWeight: FontWeight.w800,
-      color: Color(0xFF1E1F23),
+      color: colors.textPrimary,
     ),
-    em: const TextStyle(fontStyle: FontStyle.italic, color: Color(0xFF1E1F23)),
-    h1: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Color(0xFF1E1F23)),
-    h2: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Color(0xFF1E1F23)),
-    h3: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFF1E1F23)),
-    listBullet: const TextStyle(color: Color(0xFF1E1F23), fontSize: 15),
+    em: TextStyle(fontStyle: FontStyle.italic, color: colors.textPrimary),
+    h1: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: colors.textPrimary),
+    h2: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: colors.textPrimary),
+    h3: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: colors.textPrimary),
+    listBullet: TextStyle(color: colors.textPrimary, fontSize: 15),
     listIndent: 22,
     blockSpacing: 10,
     horizontalRuleDecoration: BoxDecoration(
-      border: Border(top: BorderSide(color: Color(0xFFE8EBF0))),
+      border: Border(top: BorderSide(color: colors.cardBorder)),
     ),
   );
 
@@ -808,6 +808,7 @@ class _CardBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     final icon = switch (card.type) {
       'recipe' => Icons.restaurant_menu_outlined,
       'vote_room' => Icons.how_to_vote_outlined,
@@ -823,7 +824,7 @@ class _CardBlock extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ActionChip(
-            avatar: Icon(icon, size: 16, color: const Color(0xFF2B5EA8)),
+            avatar: Icon(icon, size: 16, color: colors.infoText),
             label: Text(label),
             onPressed: onOpenCard != null ? () => onOpenCard!(card) : null,
           ),
@@ -853,6 +854,7 @@ class _MiniAction extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     return TextButton(
       onPressed: onTap,
       style: TextButton.styleFrom(
@@ -860,7 +862,7 @@ class _MiniAction extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 8),
         minimumSize: Size.zero,
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        foregroundColor: const Color(0xFF8D919A),
+        foregroundColor: colors.textSecondary,
         textStyle: const TextStyle(fontSize: 12),
       ),
       child: Text(label),
@@ -875,16 +877,17 @@ class _ThinkingBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     return Align(
       alignment: Alignment.centerLeft,
       child: Container(
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: colors.cardBackground,
           borderRadius: BorderRadius.circular(16),
-          boxShadow: const [
-            BoxShadow(color: Color(0x0F000000), blurRadius: 6, offset: Offset(0, 2)),
+          boxShadow: [
+            BoxShadow(color: colors.textPrimary.withValues(alpha: 0.06), blurRadius: 6, offset: const Offset(0, 2)),
           ],
         ),
         child: Row(
@@ -898,7 +901,7 @@ class _ThinkingBubble extends StatelessWidget {
             const SizedBox(width: 8),
             Text(
               '思考中 ${elapsed.toStringAsFixed(2)} 秒',
-              style: const TextStyle(color: Color(0xFF8D919A), fontSize: 13),
+              style: TextStyle(color: colors.textSecondary, fontSize: 13),
             ),
           ],
         ),

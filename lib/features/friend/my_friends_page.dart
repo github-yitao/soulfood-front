@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:soulfood_front/core/api/api_client.dart';
+import 'package:soulfood_front/core/theme/app_semantic_colors.dart';
+import 'package:soulfood_front/core/theme/theme_widgets.dart';
 import 'package:soulfood_front/features/friend/friend_repository.dart';
 import 'package:soulfood_front/features/growth/invite_repository.dart';
 import 'package:soulfood_front/routing/app_routes.dart';
@@ -104,6 +106,7 @@ class _MyFriendsPageState extends State<MyFriendsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     return Scaffold(
       appBar: AppBar(
         title: const Text('我的好友'),
@@ -137,14 +140,11 @@ class _MyFriendsPageState extends State<MyFriendsPage> {
                 if (!_loading)
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFFF0E6),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
+                    decoration: appStatusDecoration(colors, AppStatusKind.warning),
                     child: Text(
                       '${_friends.length}',
-                      style: const TextStyle(
-                        color: Color(0xFFFF8A43),
+                      style: TextStyle(
+                        color: colors.warningText,
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
                       ),
@@ -197,15 +197,10 @@ class _AddFriendCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: const [
-          BoxShadow(color: Color(0x14000000), blurRadius: 16, offset: Offset(0, 6)),
-        ],
-      ),
+      decoration: appCardDecoration(context, radius: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -214,20 +209,20 @@ class _AddFriendCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFFF0E6),
+                  color: colors.chipSelectedBackground,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.person_add_alt_1_rounded, color: Color(0xFFFF8A43)),
+                child: Icon(Icons.person_add_alt_1_rounded, color: colors.accent),
               ),
               const SizedBox(width: 12),
-              const Expanded(
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('添加好友', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+                    const Text('添加好友', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
                     Text(
                       '输入对方邀请码（如 DM123456）',
-                      style: TextStyle(color: Color(0xFF6F7888), fontSize: 13),
+                      style: TextStyle(color: colors.textSecondary, fontSize: 13),
                     ),
                   ],
                 ),
@@ -251,14 +246,13 @@ class _AddFriendCard extends StatelessWidget {
             child: FilledButton(
               onPressed: loading ? null : onAdd,
               style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFFFF8A43),
                 padding: const EdgeInsets.symmetric(vertical: 14),
               ),
               child: loading
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 20,
                       height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      child: CircularProgressIndicator(strokeWidth: 2, color: colors.onAccent),
                     )
                   : const Text('确认添加'),
             ),
@@ -277,20 +271,20 @@ class _MyCodeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     return Container(
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF7F9FC),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFEDF1F6)),
-      ),
+      decoration: appMutedSurfaceDecoration(context),
       child: Row(
         children: [
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('我的邀请码（发给朋友让对方添加你）', style: TextStyle(fontSize: 12, color: Color(0xFF6F7888))),
+                Text(
+                  '我的邀请码（发给朋友让对方添加你）',
+                  style: TextStyle(fontSize: 12, color: colors.textSecondary),
+                ),
                 const SizedBox(height: 4),
                 Text(code, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, letterSpacing: 1)),
               ],
@@ -310,25 +304,22 @@ class _FriendTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFEDF1F6)),
-      ),
+      decoration: appCardDecoration(context, radius: 14),
       child: Row(
         children: [
           CircleAvatar(
             radius: 22,
-            backgroundColor: const Color(0xFFE8EEF7),
+            backgroundColor: colors.infoBackground,
             backgroundImage: friend.avatarUrl != null && friend.avatarUrl!.isNotEmpty
                 ? NetworkImage(friend.avatarUrl!)
                 : null,
             child: friend.avatarUrl == null || friend.avatarUrl!.isEmpty
                 ? Text(
                     friend.nickname.isNotEmpty ? friend.nickname.substring(0, 1) : '?',
-                    style: const TextStyle(fontWeight: FontWeight.w700, color: Color(0xFF35527D)),
+                    style: TextStyle(fontWeight: FontWeight.w700, color: colors.infoText),
                   )
                 : null,
           ),
@@ -340,7 +331,7 @@ class _FriendTile extends StatelessWidget {
                 Text(friend.nickname, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
                 Text(
                   '${friend.sourceLabel} · ${friend.addedAt}',
-                  style: const TextStyle(color: Color(0xFF6F7888), fontSize: 12),
+                  style: TextStyle(color: colors.textSecondary, fontSize: 12),
                 ),
               ],
             ),
@@ -366,21 +357,20 @@ class _HintBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: isError ? const Color(0xFFFFF5F5) : const Color(0xFFF7F9FC),
-        borderRadius: BorderRadius.circular(14),
-        border: isError ? Border.all(color: const Color(0xFFFFD6D6)) : null,
-      ),
+      decoration: isError
+          ? appStatusDecoration(colors, AppStatusKind.error)
+          : appMutedSurfaceDecoration(context),
       child: Column(
         children: [
           Text(
             text,
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: isError ? const Color(0xFFB42318) : const Color(0xFF6F7888),
+              color: isError ? colors.errorText : colors.textSecondary,
               fontSize: 13,
               height: 1.5,
             ),

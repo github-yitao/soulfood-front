@@ -1,17 +1,6 @@
 import 'package:soulfood_front/core/api/api_client.dart';
+import 'package:soulfood_front/core/config/app_config.dart';
 import 'package:soulfood_front/core/session/session_store.dart';
-
-class LoginResult {
-  LoginResult({
-    required this.userId,
-    required this.nickname,
-    this.username,
-  });
-
-  final int userId;
-  final String nickname;
-  final String? username;
-}
 
 class UserProfile {
   UserProfile({
@@ -20,6 +9,8 @@ class UserProfile {
     this.username,
     this.avatarUrl,
     this.signature,
+    this.phone,
+    this.inviteBadgeUnlocked = false,
   });
 
   final int userId;
@@ -27,16 +18,28 @@ class UserProfile {
   final String? username;
   final String? avatarUrl;
   final String? signature;
+  final String? phone;
+  final bool inviteBadgeUnlocked;
 
   factory UserProfile.fromJson(Map<String, dynamic> json) {
     return UserProfile(
       userId: (json['userId'] as num).toInt(),
       nickname: json['nickname'] as String? ?? '用户',
       username: json['username'] as String?,
-      avatarUrl: json['avatarUrl'] as String?,
+      avatarUrl: _resolveMediaUrl(json['avatarUrl'] as String?),
       signature: json['signature'] as String?,
+      phone: json['phone'] as String?,
+      inviteBadgeUnlocked: json['inviteBadgeUnlocked'] as bool? ?? false,
     );
   }
+}
+
+String? _resolveMediaUrl(String? path) {
+  if (path == null || path.isEmpty) return path;
+  if (path.startsWith('http://') || path.startsWith('https://')) return path;
+  final base = AppConfig.baseUrl;
+  if (path.startsWith('/')) return '$base$path';
+  return '$base/$path';
 }
 
 class AuthRepository {
@@ -108,6 +111,23 @@ class AuthRepository {
     return profile;
   }
 
+  Future<UserProfile> bindPhone(String phone) async {
+    return _api.patchData(
+      '/api/v1/auth/me/phone',
+      data: {'phone': phone},
+      parser: (json) => UserProfile.fromJson(json as Map<String, dynamic>),
+    );
+  }
+
+  Future<UserProfile> uploadAvatar(String filePath) async {
+    return _api.postMultipart(
+      '/api/v1/auth/me/avatar',
+      filePath: filePath,
+      fieldName: 'file',
+      parser: (json) => UserProfile.fromJson(json as Map<String, dynamic>),
+    );
+  }
+
   Future<void> changePassword({
     required String oldPassword,
     required String newPassword,
@@ -121,10 +141,27 @@ class AuthRepository {
     );
   }
 
+  Future<void> resetPassword({
+    required String username,
+    required String phone,
+    required String newPassword,
+  }) async {
+    await _api.postVoid(
+      '/api/v1/auth/password/reset',
+      data: {
+        'username': username,
+        'phone': phone,
+        'newPassword': newPassword,
+      },
+      skipAuthRecovery: true,
+    );
+  }
+
   Future<void> _saveFromResponse(Map<String, dynamic> data, {String? username}) async {
     final userId = (data['userId'] as num).toInt();
     final nickname = data['nickname'] as String? ?? username ?? '用户';
     final token = data['token'] as String? ?? '';
+    final refresh = data['refreshToken'] as String? ?? '';
     if (token.isEmpty) {
       throw ApiException('登录响应缺少 token');
     }
@@ -132,6 +169,7 @@ class AuthRepository {
       userId: userId,
       nickname: nickname,
       accessToken: token,
+      refreshToken: refresh.isEmpty ? null : refresh,
       username: username,
     );
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:soulfood_front/core/theme/app_semantic_colors.dart';
 import 'package:soulfood_front/features/room/room_join_flow.dart';
 import 'package:soulfood_front/features/room/room_join_link.dart';
 
@@ -49,6 +50,7 @@ class _ScanJoinRoomPageState extends State<ScanJoinRoomPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     return Scaffold(
       appBar: AppBar(
         title: const Text('扫码入房'),
@@ -90,27 +92,27 @@ class _ScanJoinRoomPageState extends State<ScanJoinRoomPage> {
               margin: const EdgeInsets.all(16),
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.55),
+                color: colors.textPrimary.withValues(alpha: 0.75),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (_processing)
-                    const Padding(
-                      padding: EdgeInsets.only(bottom: 12),
-                      child: CircularProgressIndicator(color: Colors.white),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: CircularProgressIndicator(color: colors.onAccent),
                     ),
-                  const Text(
+                  Text(
                     '将好友分享的房间二维码放入框内',
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                    style: TextStyle(color: colors.onAccent, fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 6),
-                  const Text(
+                  Text(
                     '支持 DecideMeal 二维码或 6 位房间号',
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.white70, fontSize: 12),
+                    style: TextStyle(color: colors.onAccent.withValues(alpha: 0.7), fontSize: 12),
                   ),
                 ],
               ),

@@ -77,6 +77,19 @@ class NearbyRepository {
     await _api.postVoid('/api/v1/restaurants/$restaurantId/want');
   }
 
+  Future<List<RestaurantItem>> listWanted() async {
+    return _api.getData(
+      '/api/v1/restaurants/wanted',
+      parser: (json) => (json as List<dynamic>)
+          .map((e) => RestaurantItem.fromJson(e as Map<String, dynamic>))
+          .toList(),
+    );
+  }
+
+  Future<void> removeWant(int restaurantId) async {
+    await _api.deleteVoid('/api/v1/restaurants/$restaurantId/want');
+  }
+
   Future<RestaurantItem> getById(int restaurantId) async {
     return _api.getData<RestaurantItem>(
       '/api/v1/restaurants/$restaurantId',

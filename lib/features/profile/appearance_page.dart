@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:soulfood_front/core/app_bootstrap.dart';
+import 'package:soulfood_front/core/settings/app_icon_service.dart';
+import 'package:soulfood_front/core/settings/app_locale.dart';
 import 'package:soulfood_front/core/settings/appearance_store.dart';
 import 'package:soulfood_front/core/theme/app_semantic_colors.dart';
+import 'package:soulfood_front/core/theme/app_theme_l10n.dart';
 import 'package:soulfood_front/core/theme/app_theme_variant.dart';
 import 'package:soulfood_front/core/theme/ghoul_eye_mark.dart';
+import 'package:soulfood_front/l10n/app_localizations.dart';
 
 class AppearancePage extends StatefulWidget {
   const AppearancePage({super.key});
@@ -14,34 +18,57 @@ class AppearancePage extends StatefulWidget {
 
 class _AppearancePageState extends State<AppearancePage> {
   late AppearanceSettings _settings;
+  bool _iconSupported = false;
 
   @override
   void initState() {
     super.initState();
     _settings = AppServices.I.appearance.settings;
+    _checkIconSupport();
+  }
+
+  Future<void> _checkIconSupport() async {
+    final supported = await AppIconService.isSupported;
+    if (mounted) setState(() => _iconSupported = supported);
   }
 
   Future<void> _selectVariant(AppThemeVariant variant) async {
-    setState(() => _settings = AppearanceSettings(variant: variant, mode: _settings.mode));
+    setState(() => _settings = _settings.copyWith(variant: variant));
     await AppServices.I.setThemeVariant(variant);
   }
 
   Future<void> _selectMode(AppThemeMode mode) async {
-    setState(() => _settings = AppearanceSettings(variant: _settings.variant, mode: mode));
+    setState(() => _settings = _settings.copyWith(mode: mode));
     await AppServices.I.setThemeMode(mode);
+  }
+
+  Future<void> _selectLocale(AppLocale locale) async {
+    setState(() => _settings = _settings.copyWith(locale: locale));
+    await AppServices.I.setLocale(locale);
+  }
+
+  Future<void> _selectAppIcon(AppIconVariant icon) async {
+    setState(() => _settings = _settings.copyWith(appIcon: icon));
+    final ok = await AppServices.I.setAppIcon(icon);
+    if (!mounted) return;
+    final l10n = AppLocalizations.of(context)!;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(ok ? l10n.appIconChanged : l10n.appIconUnsupported)),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final colors = context.appColors;
     final isGhoul = _settings.variant == AppThemeVariant.ghoul;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('外观设置')),
+      appBar: AppBar(title: Text(l10n.appearance)),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          Text('主题风格', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: colors.textPrimary)),
+          Text(l10n.themeStyle, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: colors.textPrimary)),
           const SizedBox(height: 12),
           _VariantCard(
             variant: AppThemeVariant.classic,
@@ -56,7 +83,7 @@ class _AppearancePageState extends State<AppearancePage> {
           ),
           const SizedBox(height: 24),
           Text(
-            '明暗模式',
+            l10n.themeMode,
             style: TextStyle(
               fontWeight: FontWeight.w800,
               fontSize: 16,
@@ -65,35 +92,61 @@ class _AppearancePageState extends State<AppearancePage> {
           ),
           if (isGhoul) ...[
             const SizedBox(height: 8),
-            Text(
-              '喰种暗红主题为固定暗色风格',
-              style: TextStyle(color: colors.textSecondary, fontSize: 13),
-            ),
+            Text(l10n.ghoulModeFixed, style: TextStyle(color: colors.textSecondary, fontSize: 13)),
           ],
           const SizedBox(height: 12),
           _ModeTile(
-            label: '浅色模式',
+            label: l10n.themeModeLight,
             enabled: !isGhoul,
             selected: _settings.mode == AppThemeMode.light,
             onTap: () => _selectMode(AppThemeMode.light),
           ),
           _ModeTile(
-            label: '深色模式',
+            label: l10n.themeModeDark,
             enabled: !isGhoul,
             selected: _settings.mode == AppThemeMode.dark,
             onTap: () => _selectMode(AppThemeMode.dark),
           ),
           _ModeTile(
-            label: '跟随系统',
+            label: l10n.themeModeSystem,
             enabled: !isGhoul,
             selected: _settings.mode == AppThemeMode.system,
             onTap: () => _selectMode(AppThemeMode.system),
           ),
-          const SizedBox(height: 16),
-          Text(
-            '主题设置仅在当前设备生效',
-            style: TextStyle(color: colors.textSecondary, fontSize: 13),
+          const SizedBox(height: 24),
+          Text(l10n.language, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: colors.textPrimary)),
+          const SizedBox(height: 12),
+          _ModeTile(
+            label: l10n.languageZh,
+            selected: _settings.locale == AppLocale.zh,
+            onTap: () => _selectLocale(AppLocale.zh),
           ),
+          _ModeTile(
+            label: l10n.languageEn,
+            selected: _settings.locale == AppLocale.en,
+            onTap: () => _selectLocale(AppLocale.en),
+          ),
+          const SizedBox(height: 24),
+          Text(l10n.appIcon, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: colors.textPrimary)),
+          if (!_iconSupported) ...[
+            const SizedBox(height: 8),
+            Text(l10n.appIconUnsupported, style: TextStyle(color: colors.textSecondary, fontSize: 13)),
+          ],
+          const SizedBox(height: 12),
+          _ModeTile(
+            label: l10n.appIconClassic,
+            enabled: _iconSupported,
+            selected: _settings.appIcon == AppIconVariant.classic,
+            onTap: () => _selectAppIcon(AppIconVariant.classic),
+          ),
+          _ModeTile(
+            label: l10n.appIconGhoul,
+            enabled: _iconSupported,
+            selected: _settings.appIcon == AppIconVariant.ghoul,
+            onTap: () => _selectAppIcon(AppIconVariant.ghoul),
+          ),
+          const SizedBox(height: 16),
+          Text(l10n.appearanceLocalOnly, style: TextStyle(color: colors.textSecondary, fontSize: 13)),
         ],
       ),
     );
@@ -113,6 +166,7 @@ class _VariantCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final colors = context.appColors;
     final isGhoul = variant == AppThemeVariant.ghoul;
 
@@ -140,16 +194,12 @@ class _VariantCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      variant.label,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w800,
-                        fontSize: 16,
-                        color: colors.textPrimary,
-                      ),
+                      variant.labelOf(l10n),
+                      style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: colors.textPrimary),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      variant.description,
+                      variant.descriptionOf(l10n),
                       style: TextStyle(fontSize: 12, color: colors.textSecondary, height: 1.35),
                     ),
                   ],
@@ -174,16 +224,17 @@ class _ThemePreviewMini extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appColors;
     if (variant == AppThemeVariant.ghoul) {
       return Container(
         width: 56,
         height: 56,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(14),
-          color: const Color(0xFF1C1C1E),
-          border: Border.all(color: const Color(0xFF4A4A48)),
+          color: colors.heroGradientStart,
+          border: Border.all(color: colors.cardBorder),
         ),
-        child: const Center(child: GhoulEyeMark(size: 36, glow: false)),
+        child: Center(child: GhoulEyeMark(size: 36, glow: false)),
       );
     }
 
@@ -192,13 +243,13 @@ class _ThemePreviewMini extends StatelessWidget {
       height: 56,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(14),
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFFFFD36E), Color(0xFFFF9F5A)],
+          colors: [colors.accentSecondary, colors.accent],
         ),
       ),
-      child: const Icon(Icons.ramen_dining, color: Colors.white),
+      child: Icon(Icons.ramen_dining, color: colors.heroText),
     );
   }
 }
