@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:soulfood_front/core/app_bootstrap.dart';
 import 'package:soulfood_front/core/theme/app_semantic_colors.dart';
+import 'package:soulfood_front/core/theme/ghoul_theme_copy.dart';
 import 'package:soulfood_front/core/theme/theme_widgets.dart';
 import 'package:soulfood_front/features/auth/auth_repository.dart';
 import 'package:soulfood_front/features/friend/my_friends_page.dart';
@@ -61,12 +62,17 @@ class _ProfilePageState extends State<ProfilePage> {
               padding: const EdgeInsets.all(20),
               children: [
                 Text(
-                  '我的',
-                  style: TextStyle(fontSize: 36, fontWeight: FontWeight.w800, color: colors.textPrimary),
+                  ghoulThemedText('我的', ghoul: '档案'),
+                  style: TextStyle(
+                    fontSize: 36,
+                    fontWeight: FontWeight.w800,
+                    color: colors.textPrimary,
+                    letterSpacing: isGhoulTheme ? 0.4 : 0,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '账号与偏好',
+                  ghoulThemedText('账号与偏好', ghoul: '暗红档案 · 偏好与身份'),
                   style: TextStyle(fontSize: 13, color: colors.textSecondary),
                 ),
                 const SizedBox(height: 20),
@@ -131,7 +137,10 @@ class _ProfilePageState extends State<ProfilePage> {
                             Text(
                               profile.signature?.isNotEmpty == true
                                   ? profile.signature!
-                                  : '让选择变得更简单',
+                                  : ghoulThemedText(
+                                      '让选择变得更简单',
+                                      ghoul: '在暗夜里，照样能选出归宿',
+                                    ),
                               style: TextStyle(color: colors.textSecondary),
                             ),
                           ],

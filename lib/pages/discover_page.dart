@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:soulfood_front/core/app_bootstrap.dart';
 import 'package:soulfood_front/core/theme/app_semantic_colors.dart';
-import 'package:soulfood_front/core/theme/app_theme_variant.dart';
+import 'package:soulfood_front/core/theme/ghoul_theme_copy.dart';
 import 'package:soulfood_front/routing/app_routes.dart';
 import 'package:soulfood_front/widgets/feature_card.dart';
 
@@ -12,7 +11,7 @@ class DiscoverPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
-    final isGhoul = AppServices.I.appearance.variant == AppThemeVariant.ghoul;
+    final isGhoul = isGhoulTheme;
 
     return SafeArea(
       child: SingleChildScrollView(
@@ -21,21 +20,25 @@ class DiscoverPage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '觅食',
+              ghoulThemedText('觅食', ghoul: '猎食'),
               style: TextStyle(
                 fontSize: 36,
                 fontWeight: FontWeight.w800,
                 color: colors.textPrimary,
+                letterSpacing: isGhoul ? 0.4 : 0,
               ),
             ),
             const SizedBox(height: 6),
             Text(
-              isGhoul ? '出门探店，或在家动手做' : '看看附近有什么好吃的，或在家开伙',
+              ghoulThemedText(
+                '看看附近有什么好吃的，或在家开伙',
+                ghoul: '在暗巷与厨房之间，寻找下一顿归宿',
+              ),
               style: TextStyle(fontSize: 13, color: colors.textSecondary, height: 1.35),
             ),
             const SizedBox(height: 24),
             Text(
-              '出门探店',
+              ghoulThemedText('出门探店', ghoul: '暗夜外出'),
               style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: colors.textPrimary),
             ),
             const SizedBox(height: 10),
@@ -84,7 +87,7 @@ class DiscoverPage extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             Text(
-              '在家做饭',
+              ghoulThemedText('在家做饭', ghoul: '巢穴烹饪'),
               style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: colors.textPrimary),
             ),
             const SizedBox(height: 10),

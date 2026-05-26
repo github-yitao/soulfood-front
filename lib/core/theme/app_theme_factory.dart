@@ -204,6 +204,44 @@ class AppThemeFactory {
         iconColor: semantic.textPrimary,
         textColor: semantic.textPrimary,
       ),
+      textTheme: isGhoul
+          ? TextTheme(
+              displayLarge: TextStyle(
+                color: semantic.textPrimary,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.6,
+              ),
+              displayMedium: TextStyle(
+                color: semantic.textPrimary,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.4,
+              ),
+              headlineMedium: TextStyle(
+                color: semantic.textPrimary,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.3,
+              ),
+              titleLarge: TextStyle(
+                color: semantic.textPrimary,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.2,
+              ),
+              titleMedium: TextStyle(
+                color: semantic.textPrimary,
+                fontWeight: FontWeight.w600,
+              ),
+              bodyLarge: TextStyle(color: semantic.textPrimary, height: 1.45),
+              bodyMedium: TextStyle(color: semantic.textPrimary, height: 1.4),
+              bodySmall: TextStyle(color: semantic.textSecondary, height: 1.35),
+              labelLarge: TextStyle(
+                color: semantic.textSecondary,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.15,
+              ),
+              labelMedium: TextStyle(color: semantic.textSecondary),
+              labelSmall: TextStyle(color: semantic.offline, fontSize: 11),
+            )
+          : null,
     );
   }
 }

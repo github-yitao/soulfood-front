@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:soulfood_front/core/app_bootstrap.dart';
 import 'package:soulfood_front/core/theme/app_semantic_colors.dart';
+import 'package:soulfood_front/core/theme/ghoul_theme_copy.dart';
 import 'package:soulfood_front/core/theme/theme_widgets.dart';
 import 'package:soulfood_front/features/favorite/favorites_page.dart';
 import 'package:soulfood_front/features/notification/notification_repository.dart';
@@ -104,18 +105,19 @@ class _RecordsPageState extends State<RecordsPage> {
               padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
               children: [
                 Text(
-                  '我的记录',
+                  ghoulThemedText('我的记录', ghoul: '我的喰迹'),
                   style: TextStyle(
                     fontSize: 42,
                     fontWeight: FontWeight.w800,
                     color: colors.textPrimary,
+                    letterSpacing: isGhoulTheme ? 0.5 : 0,
                   ),
                 ),
                 const SizedBox(height: 24),
                 _StatsGrid(stats: data.stats),
                 const SizedBox(height: 28),
                 Text(
-                  '我的足迹',
+                  ghoulThemedText('我的足迹', ghoul: '觅食足迹'),
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w800,
@@ -150,7 +152,7 @@ class _RecordsPageState extends State<RecordsPage> {
                 ),
                 const SizedBox(height: 28),
                 Text(
-                  '最近记录',
+                  ghoulThemedText('最近记录', ghoul: '最近喰迹'),
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.w800,
@@ -159,7 +161,7 @@ class _RecordsPageState extends State<RecordsPage> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '点击查看详情',
+                  ghoulThemedText('点击查看详情', ghoul: '点开回顾那一餐'),
                   style: TextStyle(fontSize: 13, color: colors.textSecondary),
                 ),
                 const SizedBox(height: 12),
@@ -248,7 +250,10 @@ class _EmptyRecords extends StatelessWidget {
     final colors = context.appColors;
     return Center(
       child: Text(
-        '暂无记录，去投票或标记「想去」后会出现在这里',
+        ghoulThemedText(
+          '暂无记录，去投票或标记「想去」后会出现在这里',
+          ghoul: '暂无喰迹，组局投票或标记「想去」后会留在这里',
+        ),
         textAlign: TextAlign.center,
         style: TextStyle(
           fontSize: 16,

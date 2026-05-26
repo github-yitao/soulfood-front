@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:soulfood_front/core/app_bootstrap.dart';
 import 'package:soulfood_front/core/theme/app_semantic_colors.dart';
-import 'package:soulfood_front/core/theme/app_theme_variant.dart';
+import 'package:soulfood_front/core/theme/ghoul_theme_copy.dart';
 import 'package:soulfood_front/core/theme/ghoul_eye_mark.dart';
 import 'package:soulfood_front/features/auth/login_page.dart';
 import 'package:soulfood_front/features/room/room_deep_link.dart';
@@ -45,7 +45,7 @@ class _SplashPageState extends State<SplashPage> {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
-    final isGhoul = AppServices.I.appearance.variant == AppThemeVariant.ghoul;
+    final isGhoul = isGhoulTheme;
 
     return Scaffold(
       backgroundColor: isGhoul ? colors.heroGradientEnd : null,
@@ -86,7 +86,7 @@ class _SplashPageState extends State<SplashPage> {
             ),
             const SizedBox(height: 8),
             Text(
-              isGhoul ? '在黑暗中，做出你的选择' : '帮你更快决定吃什么',
+              ghoulThemedText('帮你更快决定吃什么', ghoul: '在饥饿与纠结之间，选出今晚的归宿'),
               style: TextStyle(color: colors.textSecondary),
             ),
           ],

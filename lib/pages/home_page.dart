@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:soulfood_front/core/app_bootstrap.dart';
 import 'package:soulfood_front/core/theme/app_semantic_colors.dart';
-import 'package:soulfood_front/core/theme/app_theme_variant.dart';
+import 'package:soulfood_front/core/theme/ghoul_theme_copy.dart';
 import 'package:soulfood_front/core/theme/ghoul_eye_mark.dart';
 import 'package:soulfood_front/features/notification/notification_repository.dart';
 import 'package:soulfood_front/routing/app_routes.dart';
@@ -39,7 +39,7 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
-    final isGhoul = AppServices.I.appearance.variant == AppThemeVariant.ghoul;
+    final isGhoul = isGhoulTheme;
 
     return SafeArea(
       child: SingleChildScrollView(
@@ -93,7 +93,7 @@ class _HomePageState extends State<HomePage> {
             const Center(child: _HomeHero()),
             const SizedBox(height: 20),
             Text(
-              '一起决定',
+              ghoulThemedText('一起决定', ghoul: '暗夜组局'),
               style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: colors.textPrimary),
             ),
             const SizedBox(height: 10),
@@ -120,7 +120,7 @@ class _HomePageState extends State<HomePage> {
             ),
             const SizedBox(height: 20),
             Text(
-              'AI 助手',
+              ghoulThemedText('AI 助手', ghoul: '喰种智囊'),
               style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: colors.textPrimary),
             ),
             const SizedBox(height: 10),
@@ -205,7 +205,7 @@ class _HomeHeroState extends State<_HomeHero> {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
-    final isGhoul = AppServices.I.appearance.variant == AppThemeVariant.ghoul;
+    final isGhoul = isGhoulTheme;
 
     return Semantics(
       button: true,
@@ -254,7 +254,7 @@ class _HomeHeroState extends State<_HomeHero> {
                   const Text('🍜', style: TextStyle(fontSize: 44)),
                 SizedBox(height: isGhoul ? 8 : 10),
                 Text(
-                  '帮我决定\n吃什么',
+                  ghoulThemedText('帮我决定\n吃什么', ghoul: '今夜喰\n什么'),
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: isGhoul ? 24 : 28,

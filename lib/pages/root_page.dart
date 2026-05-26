@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:soulfood_front/core/theme/app_semantic_colors.dart';
+import 'package:soulfood_front/core/theme/ghoul_theme_copy.dart';
 import 'package:soulfood_front/features/room/room_deep_link.dart';
 import 'package:soulfood_front/l10n/app_localizations.dart';
 import 'package:soulfood_front/pages/discover_page.dart';
@@ -52,22 +53,22 @@ class _RootPageState extends State<RootPage> {
           NavigationDestination(
             icon: const Icon(Icons.home_outlined),
             selectedIcon: const Icon(Icons.home_rounded),
-            label: l10n.tabHome,
+            label: ghoulThemedText(l10n.tabHome, ghoul: '今夜'),
           ),
           NavigationDestination(
             icon: const Icon(Icons.restaurant_outlined),
             selectedIcon: const Icon(Icons.restaurant_rounded),
-            label: l10n.tabDiscover,
+            label: ghoulThemedText(l10n.tabDiscover, ghoul: '猎食'),
           ),
           NavigationDestination(
             icon: const Icon(Icons.history_outlined),
             selectedIcon: const Icon(Icons.history_rounded),
-            label: l10n.tabRecords,
+            label: ghoulThemedText(l10n.tabRecords, ghoul: '喰迹'),
           ),
           NavigationDestination(
             icon: const Icon(Icons.person_outline_rounded),
             selectedIcon: const Icon(Icons.person_rounded),
-            label: l10n.tabMine,
+            label: ghoulThemedText(l10n.tabMine, ghoul: '档案'),
           ),
         ],
       ),
