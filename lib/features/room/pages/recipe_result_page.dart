@@ -7,7 +7,10 @@ import 'package:soulfood_front/features/favorite/favorite_repository.dart';
 import 'package:soulfood_front/features/favorite/favorites_page.dart';
 import 'package:soulfood_front/features/order/order_repository.dart';
 import 'package:soulfood_front/features/preference/preference_repository.dart';
+import 'package:soulfood_front/core/theme/ghoul_theme_copy.dart';
 import 'package:soulfood_front/features/room/room_models.dart';
+import 'package:soulfood_front/features/room/share/vote_share_data.dart';
+import 'package:soulfood_front/features/room/share/vote_share_sheet.dart';
 import 'package:soulfood_front/features/room/widgets/vote_option_thumb.dart';
 
 /// 投票结果 + AI 菜谱推荐（支持投票进行中预览）
@@ -16,12 +19,14 @@ class RecipeResultPage extends StatefulWidget {
     super.key,
     required this.voteResult,
     this.roomCode,
+    this.roomTopic,
     this.preference,
     this.isPreview = false,
   });
 
   final RoomResult voteResult;
   final String? roomCode;
+  final String? roomTopic;
   final String? preference;
   /// 投票未结束时为 true，基于当前领先/已选项生成预览
   final bool isPreview;
@@ -178,6 +183,24 @@ class _RecipeResultPageState extends State<RecipeResultPage> {
     );
   }
 
+  void _openShareSheet() {
+    if (_loadingRecipes) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('菜谱加载中，请稍后再分享')),
+      );
+      return;
+    }
+    final data = VoteShareData(
+      voteResult: widget.voteResult,
+      roomCode: widget.roomCode,
+      roomTopic: widget.roomTopic,
+      recipes: _recipes,
+      preferenceText: _preferenceText,
+      ghoul: isGhoulTheme,
+    );
+    VoteShareSheet.show(context, data);
+  }
+
   @override
   Widget build(BuildContext context) {
     final previewLabel = widget.isPreview ? '（预览）' : '';
@@ -187,6 +210,14 @@ class _RecipeResultPageState extends State<RecipeResultPage> {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text('推荐菜谱$previewLabel'),
+        actions: [
+          if (!widget.isPreview)
+            IconButton(
+              onPressed: _openShareSheet,
+              tooltip: '分享结果',
+              icon: const Icon(Icons.ios_share_rounded),
+            ),
+        ],
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
@@ -310,6 +341,15 @@ class _RecipeResultPageState extends State<RecipeResultPage> {
             ),
           ],
           const SizedBox(height: 16),
+          if (!widget.isPreview) ...[
+            OutlinedButton.icon(
+              onPressed: _openShareSheet,
+              style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(48)),
+              icon: const Icon(Icons.card_giftcard_outlined),
+              label: Text(isGhoulTheme ? '生成喰迹分享卡' : '生成分享卡'),
+            ),
+            const SizedBox(height: 10),
+          ],
           Row(
             children: [
               Expanded(

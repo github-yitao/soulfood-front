@@ -254,6 +254,7 @@ class _VotePageState extends State<VotePage> {
           builder: (_) => RecipeResultPage(
             voteResult: result,
             roomCode: widget.roomCode,
+            roomTopic: _room?.topic,
           ),
         ),
       );
@@ -296,6 +297,7 @@ class _VotePageState extends State<VotePage> {
           builder: (_) => RecipeResultPage(
             voteResult: preview,
             roomCode: widget.roomCode,
+            roomTopic: room.topic,
             isPreview: !room.isClosed,
           ),
         ),
@@ -318,6 +320,7 @@ class _VotePageState extends State<VotePage> {
           builder: (_) => RecipeResultPage(
             voteResult: result,
             roomCode: widget.roomCode,
+            roomTopic: _room?.topic,
           ),
         ),
       );
