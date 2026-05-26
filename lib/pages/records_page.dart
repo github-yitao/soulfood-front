@@ -58,8 +58,21 @@ class _RecordsPageState extends State<RecordsPage> {
     );
   }
 
+  Future<void> _openRecentRecords(List<RecordItem> records) async {
+    await Navigator.push<void>(
+      context,
+      MaterialPageRoute<void>(
+        builder: (_) =>
+            _RecentRecordsPage(records: records, onTapRecord: _openDetail),
+      ),
+    );
+  }
+
   void _open(Widget page) {
-    Navigator.push<void>(context, MaterialPageRoute<void>(builder: (_) => page));
+    Navigator.push<void>(
+      context,
+      MaterialPageRoute<void>(builder: (_) => page),
+    );
   }
 
   Future<void> _openNotifications() async {
@@ -140,24 +153,40 @@ class _RecordsPageState extends State<RecordsPage> {
                     QuickAction(
                       icon: Icons.bookmark_outline,
                       label: '想去清单',
-                      onTap: () => Navigator.pushNamed(context, AppRoutes.wantedRestaurants),
+                      onTap: () => Navigator.pushNamed(
+                        context,
+                        AppRoutes.wantedRestaurants,
+                      ),
                     ),
                     QuickAction(
                       icon: Icons.notifications_outlined,
                       label: '消息通知',
-                      badge: _unreadNotifications > 0 ? '$_unreadNotifications' : null,
+                      badge: _unreadNotifications > 0
+                          ? '$_unreadNotifications'
+                          : null,
                       onTap: _openNotifications,
                     ),
                   ],
                 ),
                 const SizedBox(height: 28),
-                Text(
-                  ghoulThemedText('最近记录', ghoul: '最近喰迹'),
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w800,
-                    color: colors.textPrimary,
-                  ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        ghoulThemedText('最近记录', ghoul: '最近喰迹'),
+                        style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.w800,
+                          color: colors.textPrimary,
+                        ),
+                      ),
+                    ),
+                    if (data.records.length > 3)
+                      TextButton(
+                        onPressed: () => _openRecentRecords(data.records),
+                        child: const Text('更多'),
+                      ),
+                  ],
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -168,15 +197,17 @@ class _RecordsPageState extends State<RecordsPage> {
                 if (data.records.isEmpty)
                   const SizedBox(height: 120, child: _EmptyRecords())
                 else
-                  ...data.records.map(
-                    (record) => Padding(
-                      padding: const EdgeInsets.only(bottom: 14),
-                      child: _RecordItem(
-                        record: record,
-                        onTap: () => _openDetail(record),
+                  ...data.records
+                      .take(3)
+                      .map(
+                        (record) => Padding(
+                          padding: const EdgeInsets.only(bottom: 14),
+                          child: _RecordItem(
+                            record: record,
+                            onTap: () => _openDetail(record),
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
               ],
             ),
           );
@@ -197,47 +228,47 @@ class _StatsGrid extends StatelessWidget {
     return Wrap(
       spacing: 12,
       runSpacing: 12,
-      children: stats
-          .map(
-            (RecordStat stat) {
-              final style = recordStatStyle(context, stat.key);
-              return Container(
-                width: 112,
-                height: 100,
-                padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
-                decoration: BoxDecoration(
-                  color: style.background,
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(
-                    color: colors.cardBorder.withValues(alpha: Theme.of(context).brightness == Brightness.dark ? 0.6 : 0),
-                  ),
+      children: stats.map((RecordStat stat) {
+        final style = recordStatStyle(context, stat.key);
+        return Container(
+          width: 112,
+          height: 100,
+          padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+          decoration: BoxDecoration(
+            color: style.background,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: colors.cardBorder.withValues(
+                alpha: Theme.of(context).brightness == Brightness.dark
+                    ? 0.6
+                    : 0,
+              ),
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                stat.title,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: style.titleColor,
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      stat.title,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: style.titleColor,
-                      ),
-                    ),
-                    const Spacer(),
-                    Text(
-                      '${stat.count ?? 0}次',
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w800,
-                        color: colors.textPrimary,
-                      ),
-                    ),
-                  ],
+              ),
+              const Spacer(),
+              Text(
+                '${stat.count ?? 0}次',
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w800,
+                  color: colors.textPrimary,
                 ),
-              );
-            },
-          )
-          .toList(),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
     );
   }
 }
@@ -259,6 +290,48 @@ class _EmptyRecords extends StatelessWidget {
           fontSize: 16,
           fontWeight: FontWeight.w600,
           color: colors.textSecondary,
+        ),
+      ),
+    );
+  }
+}
+
+class _RecentRecordsPage extends StatelessWidget {
+  const _RecentRecordsPage({required this.records, required this.onTapRecord});
+
+  final List<RecordItem> records;
+  final ValueChanged<RecordItem> onTapRecord;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+    return Scaffold(
+      appBar: AppBar(title: const Text('最近记录')),
+      body: records.isEmpty
+          ? const Center(child: _EmptyRecords())
+          : ListView.builder(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+              itemCount: records.length,
+              itemBuilder: (context, index) {
+                final record = records[index];
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: _RecordItem(
+                    record: record,
+                    onTap: () => onTapRecord(record),
+                  ),
+                );
+              },
+            ),
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+          child: Text(
+            '共 ${records.length} 条记录',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 12, color: colors.textSecondary),
+          ),
         ),
       ),
     );

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:soulfood_front/core/api/api_client.dart';
 import 'package:soulfood_front/core/app_bootstrap.dart';
@@ -42,6 +44,7 @@ class _FriendChatPageState extends State<FriendChatPage> {
   String? _error;
   bool _wsConnected = false;
   final List<FriendChatMessage> _messages = [];
+  int _localMessageSeed = -1;
 
   @override
   void initState() {
@@ -65,9 +68,13 @@ class _FriendChatPageState extends State<FriendChatPage> {
       _error = null;
     });
     try {
-      final conversation = await _repo.openConversation(widget.args.friendUserId);
-      final messages = await _repo.listMessages(conversationId: conversation.conversationId);
-      await _repo.markRead(conversation.conversationId);
+      final conversation = await _repo.openConversation(
+        widget.args.friendUserId,
+      );
+      final messages = await _repo
+          .listMessages(conversationId: conversation.conversationId)
+          .timeout(const Duration(seconds: 6));
+      unawaited(_repo.markRead(conversation.conversationId));
       if (!mounted) return;
       setState(() {
         _conversationId = conversation.conversationId;
@@ -138,23 +145,49 @@ class _FriendChatPageState extends State<FriendChatPage> {
     final conversationId = _conversationId;
     if (text.isEmpty || conversationId == null || _sending) return;
 
+    final myId = AppServices.I.session.userId ?? 0;
+    final localId = _localMessageSeed--;
+    final optimistic = FriendChatMessage(
+      id: localId,
+      conversationId: conversationId,
+      senderId: myId,
+      messageType: 'text',
+      content: text,
+      createdAt: '发送中…',
+      mine: true,
+    );
+
     setState(() => _sending = true);
     _inputCtrl.clear();
+    setState(() => _messages.add(optimistic));
+    _scrollToBottom();
     try {
-      final message = await _repo.sendMessage(conversationId: conversationId, content: text);
+      final message = await _repo.sendMessage(
+        conversationId: conversationId,
+        content: text,
+      );
       if (!mounted) return;
-      if (!_messages.any((m) => m.id == message.id)) {
-        setState(() => _messages.add(message));
-      }
+      setState(() {
+        _messages.removeWhere((m) => m.id == localId);
+        if (!_messages.any((m) => m.id == message.id)) {
+          _messages.add(message);
+        }
+      });
       _scrollToBottom();
     } on ApiException catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+        setState(() => _messages.removeWhere((m) => m.id == localId));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.message)));
         _inputCtrl.text = text;
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+        setState(() => _messages.removeWhere((m) => m.id == localId));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$e')));
         _inputCtrl.text = text;
       }
     } finally {
@@ -183,13 +216,20 @@ class _FriendChatPageState extends State<FriendChatPage> {
             CircleAvatar(
               radius: 16,
               backgroundColor: colors.infoBackground,
-              backgroundImage: _peerAvatarUrl != null && _peerAvatarUrl!.isNotEmpty
+              backgroundImage:
+                  _peerAvatarUrl != null && _peerAvatarUrl!.isNotEmpty
                   ? NetworkImage(_peerAvatarUrl!)
                   : null,
               child: _peerAvatarUrl == null || _peerAvatarUrl!.isEmpty
                   ? Text(
-                      _peerNickname.isNotEmpty ? _peerNickname.substring(0, 1) : '?',
-                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: colors.infoText),
+                      _peerNickname.isNotEmpty
+                          ? _peerNickname.substring(0, 1)
+                          : '?',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: colors.infoText,
+                      ),
                     )
                   : null,
             ),
@@ -198,7 +238,13 @@ class _FriendChatPageState extends State<FriendChatPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(_peerNickname, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                  Text(
+                    _peerNickname,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                   Text(
                     _wsConnected ? '在线' : '连接中…',
                     style: TextStyle(fontSize: 11, color: colors.textSecondary),
@@ -215,35 +261,42 @@ class _FriendChatPageState extends State<FriendChatPage> {
             child: _loading
                 ? const Center(child: CircularProgressIndicator())
                 : _error != null
-                    ? Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(24),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(_error!, textAlign: TextAlign.center, style: TextStyle(color: colors.errorText)),
-                              const SizedBox(height: 12),
-                              OutlinedButton(onPressed: _bootstrap, child: const Text('重试')),
-                            ],
+                ? Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            _error!,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: colors.errorText),
                           ),
-                        ),
-                      )
-                    : _messages.isEmpty
-                        ? Center(
-                            child: Text(
-                              '和 $_peerNickname 打个招呼吧',
-                              style: TextStyle(color: colors.textSecondary),
-                            ),
-                          )
-                        : ListView.builder(
-                            controller: _scrollCtrl,
-                            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-                            itemCount: _messages.length,
-                            itemBuilder: (context, index) {
-                              final message = _messages[index];
-                              return _MessageBubble(message: message);
-                            },
+                          const SizedBox(height: 12),
+                          OutlinedButton(
+                            onPressed: _bootstrap,
+                            child: const Text('重试'),
                           ),
+                        ],
+                      ),
+                    ),
+                  )
+                : _messages.isEmpty
+                ? Center(
+                    child: Text(
+                      '和 $_peerNickname 打个招呼吧',
+                      style: TextStyle(color: colors.textSecondary),
+                    ),
+                  )
+                : ListView.builder(
+                    controller: _scrollCtrl,
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                    itemCount: _messages.length,
+                    itemBuilder: (context, index) {
+                      final message = _messages[index];
+                      return _MessageBubble(message: message);
+                    },
+                  ),
           ),
           _Composer(
             controller: _inputCtrl,
@@ -272,15 +325,22 @@ class _MessageBubble extends StatelessWidget {
       child: Align(
         alignment: isMine ? Alignment.centerRight : Alignment.centerLeft,
         child: Column(
-          crossAxisAlignment: isMine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+          crossAxisAlignment: isMine
+              ? CrossAxisAlignment.end
+              : CrossAxisAlignment.start,
           children: [
             if (message.isVoteShare)
               VoteShareChatBubble(payload: message.voteShare!, isMine: isMine)
             else
               ConstrainedBox(
-                constraints: BoxConstraints(maxWidth: MediaQuery.sizeOf(context).width * 0.78),
+                constraints: BoxConstraints(
+                  maxWidth: MediaQuery.sizeOf(context).width * 0.78,
+                ),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 10,
+                  ),
                   decoration: BoxDecoration(
                     color: isMine ? colors.accent : colors.cardBackground,
                     borderRadius: BorderRadius.only(
@@ -289,7 +349,9 @@ class _MessageBubble extends StatelessWidget {
                       bottomLeft: Radius.circular(isMine ? 16 : 4),
                       bottomRight: Radius.circular(isMine ? 4 : 16),
                     ),
-                    border: isMine ? null : Border.all(color: colors.cardBorder),
+                    border: isMine
+                        ? null
+                        : Border.all(color: colors.cardBorder),
                   ),
                   child: Text(
                     message.content,
@@ -361,7 +423,10 @@ class _Composer extends StatelessWidget {
                     borderRadius: BorderRadius.circular(22),
                     borderSide: BorderSide(color: colors.cardBorder),
                   ),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 10,
+                  ),
                 ),
               ),
             ),
@@ -377,7 +442,10 @@ class _Composer extends StatelessWidget {
                   ? SizedBox(
                       width: 18,
                       height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: colors.onAccent),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: colors.onAccent,
+                      ),
                     )
                   : Icon(Icons.send_rounded, color: colors.onAccent, size: 20),
             ),
