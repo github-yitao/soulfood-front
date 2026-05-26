@@ -30,6 +30,7 @@ import 'package:soulfood_front/features/recipe/cook_mode_page.dart';
 import 'package:soulfood_front/features/recipe/recipe_library_page.dart';
 import 'package:soulfood_front/features/room/pages/create_room_page.dart';
 import 'package:soulfood_front/features/friend/my_friends_page.dart';
+import 'package:soulfood_front/features/friend_chat/friend_chat_page.dart';
 import 'package:soulfood_front/features/room/pages/friends_page.dart';
 import 'package:soulfood_front/features/room/pages/join_room_page.dart';
 import 'package:soulfood_front/features/room/pages/scan_join_room_page.dart';
@@ -119,6 +120,18 @@ class _DecideMealAppState extends State<_DecideMealApp> {
         return MaterialPageRoute<void>(builder: (_) => const FriendsPage(), settings: settings);
       case AppRoutes.myFriends:
         return MaterialPageRoute<void>(builder: (_) => const MyFriendsPage(), settings: settings);
+      case AppRoutes.friendChat:
+        final args = settings.arguments;
+        if (args is FriendChatArgs) {
+          return MaterialPageRoute<void>(
+            builder: (_) => FriendChatPage(args: args),
+            settings: settings,
+          );
+        }
+        return MaterialPageRoute<void>(
+          builder: (_) => const Scaffold(body: Center(child: Text('缺少聊天对象'))),
+          settings: settings,
+        );
       case AppRoutes.createRoom:
         return MaterialPageRoute<void>(builder: (_) => const CreateRoomPage(), settings: settings);
       case AppRoutes.joinRoom:

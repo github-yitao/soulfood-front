@@ -3,6 +3,7 @@ import 'package:soulfood_front/core/api/api_client.dart';
 import 'package:soulfood_front/core/theme/app_semantic_colors.dart';
 import 'package:soulfood_front/core/theme/theme_widgets.dart';
 import 'package:soulfood_front/features/friend/friend_repository.dart';
+import 'package:soulfood_front/features/friend_chat/friend_chat_page.dart';
 import 'package:soulfood_front/features/room/room_models.dart';
 import 'package:soulfood_front/features/room/room_repository.dart';
 import 'package:soulfood_front/routing/app_routes.dart';
@@ -178,7 +179,18 @@ class _FriendsPageState extends State<FriendsPage> {
                 ..._friends.take(3).map(
                   (friend) => Padding(
                     padding: const EdgeInsets.only(bottom: 8),
-                    child: _FriendTile(friend: friend),
+                    child: _FriendTile(
+                      friend: friend,
+                      onTap: () => Navigator.pushNamed(
+                        context,
+                        AppRoutes.friendChat,
+                        arguments: FriendChatArgs(
+                          friendUserId: friend.userId,
+                          nickname: friend.nickname,
+                          avatarUrl: friend.avatarUrl,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
                 if (_friends.length > 3)
@@ -345,45 +357,54 @@ class _FriendRoomCard extends StatelessWidget {
 }
 
 class _FriendTile extends StatelessWidget {
-  const _FriendTile({required this.friend});
+  const _FriendTile({required this.friend, this.onTap});
 
   final FriendItem friend;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: appCardDecoration(context, radius: 14),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 22,
-            backgroundColor: colors.chipBackground,
-            backgroundImage: friend.avatarUrl != null && friend.avatarUrl!.isNotEmpty
-                ? NetworkImage(friend.avatarUrl!)
-                : null,
-            child: friend.avatarUrl == null || friend.avatarUrl!.isEmpty
-                ? Text(
-                    friend.nickname.isNotEmpty ? friend.nickname.substring(0, 1) : '?',
-                    style: TextStyle(fontWeight: FontWeight.w700, color: colors.textPrimary),
-                  )
-                : null,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(friend.nickname, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: colors.textPrimary)),
-                Text(
-                  '${friend.sourceLabel} · ${friend.addedAt}',
-                  style: TextStyle(color: colors.textSecondary, fontSize: 12),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          decoration: appCardDecoration(context, radius: 14),
+          child: Row(
+            children: [
+              CircleAvatar(
+                radius: 22,
+                backgroundColor: colors.chipBackground,
+                backgroundImage: friend.avatarUrl != null && friend.avatarUrl!.isNotEmpty
+                    ? NetworkImage(friend.avatarUrl!)
+                    : null,
+                child: friend.avatarUrl == null || friend.avatarUrl!.isEmpty
+                    ? Text(
+                        friend.nickname.isNotEmpty ? friend.nickname.substring(0, 1) : '?',
+                        style: TextStyle(fontWeight: FontWeight.w700, color: colors.textPrimary),
+                      )
+                    : null,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(friend.nickname, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: colors.textPrimary)),
+                    Text(
+                      '${friend.sourceLabel} · ${friend.addedAt}',
+                      style: TextStyle(color: colors.textSecondary, fontSize: 12),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+              Icon(Icons.chat_bubble_outline_rounded, size: 20, color: colors.textSecondary),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
