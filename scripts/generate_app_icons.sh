@@ -88,7 +88,7 @@ EOF
   cat >"$ANDROID_RES/values/ic_launcher_colors.xml" <<'EOF'
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="ic_launcher_classic_bg">#FFF6CF57</color>
+    <color name="ic_launcher_classic_bg">#FFF6CF57</color><!-- ClassicBrandPalette.launcherBackground -->
     <color name="ic_launcher_ghoul_bg">#FF1C1C1E</color>
 </resources>
 EOF

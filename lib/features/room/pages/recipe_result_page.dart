@@ -21,6 +21,7 @@ class RecipeResultPage extends StatefulWidget {
     this.roomCode,
     this.roomTopic,
     this.preference,
+    this.initialRecipes,
     this.isPreview = false,
   });
 
@@ -28,6 +29,8 @@ class RecipeResultPage extends StatefulWidget {
   final String? roomCode;
   final String? roomTopic;
   final String? preference;
+  /// 来自聊天分享卡等场景，跳过 AI 重新拉取
+  final List<RecipeItem>? initialRecipes;
   /// 投票未结束时为 true，基于当前领先/已选项生成预览
   final bool isPreview;
 
@@ -99,7 +102,15 @@ class _RecipeResultPageState extends State<RecipeResultPage> {
   @override
   void initState() {
     super.initState();
-    _loadRecipes();
+    final preset = widget.initialRecipes;
+    if (preset != null && preset.isNotEmpty) {
+      _preferenceText = widget.preference ?? _preferenceText;
+      _recipes = List.of(preset);
+      _loadingRecipes = false;
+      _sourceLine = '来自好友分享的投票结果';
+    } else {
+      _loadRecipes();
+    }
   }
 
   Future<void> _loadRecipes() async {

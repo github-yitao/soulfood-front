@@ -36,9 +36,14 @@ class VoteSharePayload {
       percent: (json['percent'] as num?)?.toInt() ?? 0,
       preferenceText: json['preferenceText'] as String?,
       ghoul: json['ghoul'] as bool? ?? false,
-      recipes: rawRecipes
-          .map((e) => RecipeItem.fromJson(e as Map<String, dynamic>))
-          .toList(),
+      recipes: rawRecipes.map((e) {
+        final m = e as Map<String, dynamic>;
+        return RecipeItem(
+          name: m['name'] as String? ?? '',
+          score: m['score']?.toString() ?? '4.5',
+          reason: m['reason'] as String? ?? '',
+        );
+      }).toList(),
     );
   }
 

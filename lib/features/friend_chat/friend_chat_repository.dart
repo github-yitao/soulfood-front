@@ -1,6 +1,7 @@
 import 'package:soulfood_front/core/api/api_client.dart';
 import 'package:soulfood_front/core/app_bootstrap.dart';
 import 'package:soulfood_front/features/friend_chat/friend_chat_models.dart';
+import 'package:soulfood_front/features/room/share/vote_share_payload.dart';
 
 class FriendChatRepository {
   FriendChatRepository() : _api = AppServices.I.api;
@@ -46,7 +47,25 @@ class FriendChatRepository {
   }) async {
     final data = await _api.postData<Map<String, dynamic>>(
       '/api/v1/friends/chat/conversations/$conversationId/messages',
-      data: {'content': content},
+      data: {
+        'messageType': 'text',
+        'content': content,
+      },
+      parser: (json) => json as Map<String, dynamic>,
+    );
+    return FriendChatMessage.fromJson(data);
+  }
+
+  Future<FriendChatMessage> sendVoteShare({
+    required int conversationId,
+    required VoteSharePayload payload,
+  }) async {
+    final data = await _api.postData<Map<String, dynamic>>(
+      '/api/v1/friends/chat/conversations/$conversationId/messages',
+      data: {
+        'messageType': 'vote_share',
+        'voteShare': payload.toJson(),
+      },
       parser: (json) => json as Map<String, dynamic>,
     );
     return FriendChatMessage.fromJson(data);

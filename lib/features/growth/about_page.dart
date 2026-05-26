@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:soulfood_front/core/theme/app_semantic_colors.dart';
+import 'package:soulfood_front/core/theme/classic_brand_mark.dart';
+import 'package:soulfood_front/core/theme/classic_brand_palette.dart';
+import 'package:soulfood_front/core/theme/ghoul_eye_mark.dart';
+import 'package:soulfood_front/core/theme/ghoul_theme_copy.dart';
 import 'package:soulfood_front/routing/app_routes.dart';
 
 class AboutPage extends StatelessWidget {
@@ -8,6 +12,7 @@ class AboutPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
+    final isGhoul = isGhoulTheme;
     return Scaffold(
       appBar: AppBar(title: const Text('关于我们')),
       body: ListView(
@@ -28,10 +33,19 @@ class AboutPage extends StatelessWidget {
                   width: 62,
                   height: 62,
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(colors: [colors.heroGradientStart, colors.accent]),
+                    gradient: LinearGradient(
+                      colors: isGhoul
+                          ? [colors.heroGradientStart, colors.heroGradientEnd]
+                          : ClassicBrandPalette.heroGradient,
+                    ),
                     borderRadius: BorderRadius.circular(18),
+                    border: isGhoul ? Border.all(color: colors.cardBorder) : null,
                   ),
-                  child: Icon(Icons.ramen_dining, color: colors.onAccent, size: 32),
+                  child: Center(
+                    child: isGhoul
+                        ? const GhoulEyeMark(size: 44, glow: false)
+                        : const ClassicBrandMark(size: 48, showPlate: false, glow: false),
+                  ),
                 ),
                 const SizedBox(height: 10),
                 const Text('DecideMeal', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),

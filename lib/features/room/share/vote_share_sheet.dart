@@ -7,6 +7,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:soulfood_front/core/theme/app_semantic_colors.dart';
 import 'package:soulfood_front/features/room/share/vote_share_card_widget.dart';
 import 'package:soulfood_front/features/room/share/vote_share_data.dart';
+import 'package:soulfood_front/features/room/share/vote_share_to_friend.dart';
 
 /// 投票结果分享：预览卡片、导出图片、复制文案。
 class VoteShareSheet {
@@ -72,6 +73,7 @@ class _VoteShareSheetBody extends StatefulWidget {
 
 class _VoteShareSheetBodyState extends State<_VoteShareSheetBody> {
   bool _sharingImage = false;
+  bool _sendingToFriend = false;
 
   Future<void> _copyText() async {
     await Clipboard.setData(ClipboardData(text: widget.data.buildShareText()));
@@ -79,6 +81,15 @@ class _VoteShareSheetBodyState extends State<_VoteShareSheetBody> {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('分享文案已复制')),
     );
+  }
+
+  Future<void> _sendToFriend() async {
+    setState(() => _sendingToFriend = true);
+    try {
+      await VoteShareToFriend.send(context, widget.data);
+    } finally {
+      if (mounted) setState(() => _sendingToFriend = false);
+    }
   }
 
   Future<void> _shareImage() async {
@@ -155,6 +166,21 @@ class _VoteShareSheetBodyState extends State<_VoteShareSheetBody> {
                 ),
               ),
               const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: _sendingToFriend ? null : _sendToFriend,
+                  icon: _sendingToFriend
+                      ? SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: colors.accent),
+                        )
+                      : const Icon(Icons.chat_bubble_outline_rounded, size: 18),
+                  label: const Text('发给好友'),
+                ),
+              ),
+              const SizedBox(height: 10),
               Row(
                 children: [
                   Expanded(

@@ -6,6 +6,8 @@ import 'package:soulfood_front/core/settings/appearance_store.dart';
 import 'package:soulfood_front/core/theme/app_semantic_colors.dart';
 import 'package:soulfood_front/core/theme/app_theme_l10n.dart';
 import 'package:soulfood_front/core/theme/app_theme_variant.dart';
+import 'package:soulfood_front/core/theme/classic_brand_mark.dart';
+import 'package:soulfood_front/core/theme/classic_brand_palette.dart';
 import 'package:soulfood_front/core/theme/ghoul_eye_mark.dart';
 import 'package:soulfood_front/l10n/app_localizations.dart';
 
@@ -243,13 +245,21 @@ class _ThemePreviewMini extends StatelessWidget {
       height: 56,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(14),
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [colors.accentSecondary, colors.accent],
+          colors: ClassicBrandPalette.heroGradient,
         ),
+        border: Border.all(color: const Color(0xFFFFC98A)),
+        boxShadow: [
+          BoxShadow(
+            color: ClassicBrandPalette.accent.withValues(alpha: 0.2),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
-      child: Icon(Icons.ramen_dining, color: colors.heroText),
+      child: const Center(child: ClassicBrandMark(size: 38, showPlate: false, glow: false)),
     );
   }
 }

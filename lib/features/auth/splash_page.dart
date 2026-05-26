@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:soulfood_front/core/app_bootstrap.dart';
 import 'package:soulfood_front/core/theme/app_semantic_colors.dart';
+import 'package:soulfood_front/core/theme/classic_brand_mark.dart';
+import 'package:soulfood_front/core/theme/classic_brand_palette.dart';
+import 'package:soulfood_front/core/theme/classic_theme_copy.dart';
 import 'package:soulfood_front/core/theme/ghoul_theme_copy.dart';
 import 'package:soulfood_front/core/theme/ghoul_eye_mark.dart';
 import 'package:soulfood_front/features/auth/login_page.dart';
@@ -48,7 +51,7 @@ class _SplashPageState extends State<SplashPage> {
     final isGhoul = isGhoulTheme;
 
     return Scaffold(
-      backgroundColor: isGhoul ? colors.heroGradientEnd : null,
+      backgroundColor: isGhoul ? colors.heroGradientEnd : ClassicBrandPalette.scaffoldLight,
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -57,22 +60,24 @@ class _SplashPageState extends State<SplashPage> {
               const GhoulEyeMark(size: 96)
             else
               Container(
-                width: 88,
-                height: 88,
+                width: 96,
+                height: 96,
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [colors.heroGradientStart, colors.accent],
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: ClassicBrandPalette.heroGradient,
                   ),
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: BorderRadius.circular(26),
                   boxShadow: [
                     BoxShadow(
-                      color: colors.splashGlow,
-                      blurRadius: 18,
-                      offset: const Offset(0, 8),
+                      color: ClassicBrandPalette.accent.withValues(alpha: 0.28),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
                     ),
                   ],
                 ),
-                child: Icon(Icons.ramen_dining, color: colors.onAccent, size: 44),
+                child: const ClassicBrandMark(size: 72, showPlate: false),
               ),
             const SizedBox(height: 16),
             Text(
@@ -86,7 +91,9 @@ class _SplashPageState extends State<SplashPage> {
             ),
             const SizedBox(height: 8),
             Text(
-              ghoulThemedText('帮你更快决定吃什么', ghoul: '在饥饿与纠结之间，选出今晚的归宿'),
+              isGhoul
+                  ? '在饥饿与纠结之间，选出今晚的归宿'
+                  : classicThemedText('帮你更快决定吃什么', warm: '一口暖食，告别纠结'),
               style: TextStyle(color: colors.textSecondary),
             ),
           ],

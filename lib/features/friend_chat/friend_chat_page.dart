@@ -5,6 +5,7 @@ import 'package:soulfood_front/core/theme/app_semantic_colors.dart';
 import 'package:soulfood_front/features/friend_chat/friend_chat_models.dart';
 import 'package:soulfood_front/features/friend_chat/friend_chat_repository.dart';
 import 'package:soulfood_front/features/friend_chat/friend_chat_websocket.dart';
+import 'package:soulfood_front/features/friend_chat/vote_share_chat_bubble.dart';
 
 class FriendChatArgs {
   const FriendChatArgs({
@@ -115,9 +116,11 @@ class _FriendChatPageState extends State<FriendChatPage> {
       id: message.id,
       conversationId: message.conversationId,
       senderId: message.senderId,
+      messageType: message.messageType,
       content: message.content,
       createdAt: message.createdAt,
       mine: myId != null && message.senderId == myId,
+      voteShare: message.voteShare,
     );
     if (_messages.any((m) => m.id == normalized.id)) return;
     setState(() {
@@ -263,47 +266,49 @@ class _MessageBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.appColors;
     final isMine = message.mine;
-    final maxWidth = MediaQuery.sizeOf(context).width * 0.78;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Align(
         alignment: isMine ? Alignment.centerRight : Alignment.centerLeft,
-        child: ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: maxWidth),
-          child: Column(
-            crossAxisAlignment: isMine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                decoration: BoxDecoration(
-                  color: isMine ? colors.accent : colors.cardBackground,
-                  borderRadius: BorderRadius.only(
-                    topLeft: const Radius.circular(16),
-                    topRight: const Radius.circular(16),
-                    bottomLeft: Radius.circular(isMine ? 16 : 4),
-                    bottomRight: Radius.circular(isMine ? 4 : 16),
+        child: Column(
+          crossAxisAlignment: isMine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+          children: [
+            if (message.isVoteShare)
+              VoteShareChatBubble(payload: message.voteShare!, isMine: isMine)
+            else
+              ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: MediaQuery.sizeOf(context).width * 0.78),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: isMine ? colors.accent : colors.cardBackground,
+                    borderRadius: BorderRadius.only(
+                      topLeft: const Radius.circular(16),
+                      topRight: const Radius.circular(16),
+                      bottomLeft: Radius.circular(isMine ? 16 : 4),
+                      bottomRight: Radius.circular(isMine ? 4 : 16),
+                    ),
+                    border: isMine ? null : Border.all(color: colors.cardBorder),
                   ),
-                  border: isMine ? null : Border.all(color: colors.cardBorder),
-                ),
-                child: Text(
-                  message.content,
-                  style: TextStyle(
-                    color: isMine ? colors.onAccent : colors.textPrimary,
-                    fontSize: 15,
-                    height: 1.45,
+                  child: Text(
+                    message.content,
+                    style: TextStyle(
+                      color: isMine ? colors.onAccent : colors.textPrimary,
+                      fontSize: 15,
+                      height: 1.45,
+                    ),
                   ),
                 ),
               ),
-              if (message.createdAt.isNotEmpty) ...[
-                const SizedBox(height: 4),
-                Text(
-                  message.createdAt,
-                  style: TextStyle(fontSize: 11, color: colors.textSecondary),
-                ),
-              ],
+            if (message.createdAt.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Text(
+                message.createdAt,
+                style: TextStyle(fontSize: 11, color: colors.textSecondary),
+              ),
             ],
-          ),
+          ],
         ),
       ),
     );

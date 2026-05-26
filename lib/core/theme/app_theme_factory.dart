@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:soulfood_front/core/settings/appearance_store.dart';
 import 'package:soulfood_front/core/theme/app_semantic_colors.dart';
 import 'package:soulfood_front/core/theme/app_theme_variant.dart';
+import 'package:soulfood_front/core/theme/classic_brand_palette.dart';
 
 class AppThemeFactory {
   AppThemeFactory._();
@@ -11,15 +12,15 @@ class AppThemeFactory {
   static ThemeData classicLight() => _build(
         brightness: Brightness.light,
         semantic: AppSemanticColors.classicLight,
-        scaffold: const Color(0xFFF5F6F8),
-        seed: const Color(0xFFFFD966),
+        scaffold: ClassicBrandPalette.scaffoldLight,
+        seed: ClassicBrandPalette.gold,
       );
 
   static ThemeData classicDark() => _build(
         brightness: Brightness.dark,
         semantic: AppSemanticColors.classicDark,
-        scaffold: const Color(0xFF121316),
-        seed: const Color(0xFFFFD966),
+        scaffold: ClassicBrandPalette.scaffoldDark,
+        seed: ClassicBrandPalette.gold,
       );
 
   static ThemeData ghoul() => _build(

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:soulfood_front/core/app_bootstrap.dart';
 import 'package:soulfood_front/core/theme/app_semantic_colors.dart';
+import 'package:soulfood_front/core/theme/classic_brand_mark.dart';
+import 'package:soulfood_front/core/theme/classic_theme_copy.dart';
 import 'package:soulfood_front/core/theme/ghoul_theme_copy.dart';
 import 'package:soulfood_front/core/theme/ghoul_eye_mark.dart';
 import 'package:soulfood_front/features/notification/notification_repository.dart';
@@ -251,10 +253,12 @@ class _HomeHeroState extends State<_HomeHero> {
                 if (isGhoul)
                   const GhoulEyeMark(size: 80, glow: true)
                 else
-                  const Text('🍜', style: TextStyle(fontSize: 44)),
+                  const ClassicBrandMark(size: 64, showPlate: false),
                 SizedBox(height: isGhoul ? 8 : 10),
                 Text(
-                  ghoulThemedText('帮我决定\n吃什么', ghoul: '今夜喰\n什么'),
+                  isGhoul
+                      ? '今夜喰\n什么'
+                      : classicThemedText('帮我决定\n吃什么', warm: '今晚吃\n什么'),
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: isGhoul ? 24 : 28,

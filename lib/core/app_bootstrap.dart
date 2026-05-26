@@ -58,7 +58,10 @@ class AppServices {
   }
 
   Future<void> setThemeVariant(AppThemeVariant variant) async {
+    final icon = variant == AppThemeVariant.ghoul ? AppIconVariant.ghoul : AppIconVariant.classic;
     await appearance.saveVariant(variant);
+    await appearance.saveAppIcon(icon);
+    await AppIconService.apply(icon);
     appearanceNotifier.value = appearance.settings;
   }
 
