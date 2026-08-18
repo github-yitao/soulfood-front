@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:soulfood_front/core/api/api_client.dart';
 import 'package:soulfood_front/core/session/session_store.dart';
@@ -52,7 +54,7 @@ class AppServices {
         appearance.settings,
       ),
     );
-    await AppIconService.apply(appearance.settings.appIcon);
+    unawaited(AppIconService.apply(appearance.settings.appIcon));
   }
 
   Future<void> setThemeMode(AppThemeMode mode) async {

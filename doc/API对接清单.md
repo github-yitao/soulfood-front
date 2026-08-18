@@ -21,25 +21,52 @@
 | 方法 | 路径 | Flutter |
 |------|------|---------|
 | POST | `/ai/chat` | `AiChatPage` |
+| POST | `/ai/chat/stream` | `AiChatPage` 流式（NDJSON） |
+| GET | `/ai/chat/stream` | 预留 SSE，仅 chunk 文本 |
 | DELETE | `/ai/chat/{conversationId}` | `AiChatPage` 清空对话 |
 | POST | `/ai/recommend/recipes` | `RecipeResultPage` / `AiQuickPage` |
 | POST | `/ai/suggest-options` | `VotePage` |
 | POST | `/ai/random-pick` | `NearbyPage` |
-| GET | `/ai/chat/stream` | 预留流式 |
+| POST | `/ai/rag/ingest` | **开发调试**，App 不要调 |
+| GET | `/ai/rag/search?q=&limit=` | **开发调试**，App 不要调 |
 
 `POST /ai/chat` 请求体：
 
 ```json
-{ "message": "今晚吃什么", "conversationId": "optional-uuid" }
+{
+  "message": "今晚吃什么",
+  "conversationId": "optional-uuid",
+  "lat": 30.65,
+  "lng": 104.06,
+  "imageBase64": "optional",
+  "imageMimeType": "image/jpeg"
+}
 ```
 
-对话上下文持久化在 PostgreSQL（`sf_ai_conversation` / `sf_ai_chat_message`），保留最近 20 条消息窗口；重启后端不会丢失。
+知识类问题（怎么做、加入房间、隔夜菜等）走 RAG 直出，不走工具循环。其它问题仍走 Tool Calling（含 `searchKnowledge`）。
 
-响应：
+非流式响应：
 
 ```json
-{ "conversationId": "uuid", "reply": "..." }
+{ "conversationId": "uuid", "reply": "...", "cards": [] }
 ```
+
+`POST /ai/chat/stream` 产出 NDJSON，每行一个 JSON。旧客户端只处理 `chunk` / `done`；不认识的 `type` 应忽略。
+
+| type | 字段 | 说明 |
+|------|------|------|
+| `workflow` | `runId`, `title`, `status` | 流程总状态：`running` / `done` / `failed` |
+| `step` | `runId`, `id`, `title`, `status`, `summary?` | 步骤：`pending` / `running` / `done` / `failed` / `waiting` |
+| `chunk` | `text` | 增量正文 |
+| `cards` | `items` | 中间结果卡（P0 知识检索通常不发，终态在 `done`） |
+| `done` | `conversationId`, `cards` | 结束；`cards` 与旧结果卡兼容：`recipe` / `restaurant` / `vote_room` |
+
+P0 知识检索流示例：`workflow` → `step(running)` → `step(done)` → 若干 `chunk` → `done`。
+
+`POST /ai/rag/ingest` 响应 `data`：`{ "seedsUpserted": n, "recipesUpserted": n }`（内容未变则为 0）。  
+`GET /ai/rag/search` 返回命中列表：`sourceType` / `sourceKey` / `title` / `content` / `distance`。
+
+对话上下文持久化在 PostgreSQL（`sf_ai_conversation` / `sf_ai_chat_message`）；知识向量在 `sf_rag_chunk`。
 
 ## 业务 / P1 / P2
 

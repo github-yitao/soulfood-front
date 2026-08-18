@@ -1,3 +1,7 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
+
 class AppConfig {
   AppConfig._();
 
@@ -14,7 +18,11 @@ class AppConfig {
       return fromEnv;
     }
     // 默认走 Cloudflare 隧道，确保真机/模拟器可直接联调。
-    return 'https://fever-arbitration-randy-assistant.trycloudflare.com/soulfood';
+    // return 'https://prep-river-textile-colleague.trycloudflare.com/soulfood';
+    if (!kIsWeb && Platform.isAndroid) {
+      return 'http://10.0.2.2:8080/soulfood';
+    }
+    return 'http://127.0.0.1:8080/soulfood';
   }
 
   static String get wsBaseUrl {
