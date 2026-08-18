@@ -43,7 +43,9 @@
 }
 ```
 
-知识类问题（怎么做、加入房间、隔夜菜等）走 RAG 直出，不走工具循环。其它问题仍走 Tool Calling（含 `searchKnowledge`）。
+知识类问题（怎么做、加入房间、隔夜菜等）走 RAG + 本地 `qwen3.5:2b`。闲聊同样走本地 Ollama。附近餐厅 / 组局投票 / 收藏等需要工具的 ReAct 走智谱 `glm-4.7-flash`。识图仍用 `glm-4v-flash`。
+
+向量检索使用本地 Ollama `qwen3-embedding:0.6b`（1024 维），`app.ai.rag.mode=embedding`。Ollama 需本机 `11434` 已启动且已 pull 上述模型。
 
 非流式响应：
 
