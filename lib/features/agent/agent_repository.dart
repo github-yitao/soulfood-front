@@ -84,25 +84,125 @@ class ChatActionCard {
   }
 }
 
+class WorkflowStep {
+  WorkflowStep({
+    required this.id,
+    required this.title,
+    required this.status,
+    this.summary,
+  });
+
+  final String id;
+  final String title;
+  final String status;
+  final String? summary;
+
+  factory WorkflowStep.fromJson(Map<String, dynamic> json) {
+    return WorkflowStep(
+      id: json['id'] as String? ?? '',
+      title: json['title'] as String? ?? '',
+      status: json['status'] as String? ?? 'pending',
+      summary: json['summary'] as String?,
+    );
+  }
+}
+
+class WorkflowSnapshot {
+  WorkflowSnapshot({
+    required this.runId,
+    required this.title,
+    required this.status,
+    this.steps = const [],
+  });
+
+  final String runId;
+  final String title;
+  final String status;
+  final List<WorkflowStep> steps;
+
+  factory WorkflowSnapshot.fromJson(Map<String, dynamic> json) {
+    final rawSteps = json['steps'] as List<dynamic>? ?? [];
+    return WorkflowSnapshot(
+      runId: json['runId'] as String? ?? '',
+      title: json['title'] as String? ?? '',
+      status: json['status'] as String? ?? 'running',
+      steps: rawSteps
+          .map((e) => WorkflowStep.fromJson(e as Map<String, dynamic>))
+          .toList(),
+    );
+  }
+
+  static WorkflowSnapshot? merge(
+    WorkflowSnapshot? current,
+    Map<String, dynamic> event,
+  ) {
+    final type = event['type'] as String? ?? '';
+    if (type != 'workflow' && type != 'step') {
+      return current;
+    }
+    final base =
+        current ??
+        WorkflowSnapshot(
+          runId: event['runId'] as String? ?? '',
+          title: event['title'] as String? ?? '',
+          status: 'running',
+        );
+    if (type == 'workflow') {
+      return WorkflowSnapshot(
+        runId: event['runId'] as String? ?? base.runId,
+        title: event['title'] as String? ?? base.title,
+        status: event['status'] as String? ?? base.status,
+        steps: base.steps,
+      );
+    }
+    final id = event['id'] as String? ?? '';
+    final next = List<WorkflowStep>.from(base.steps);
+    final step = WorkflowStep(
+      id: id,
+      title: event['title'] as String? ?? id,
+      status: event['status'] as String? ?? 'running',
+      summary: event['summary'] as String?,
+    );
+    final index = next.indexWhere((item) => item.id == id);
+    if (index >= 0) {
+      next[index] = step;
+    } else {
+      next.add(step);
+    }
+    return WorkflowSnapshot(
+      runId: event['runId'] as String? ?? base.runId,
+      title: base.title,
+      status: base.status,
+      steps: next,
+    );
+  }
+}
+
 class ChatReply {
   ChatReply({
     required this.conversationId,
     required this.reply,
     this.cards = const [],
+    this.workflow,
   });
 
   final String conversationId;
   final String reply;
   final List<ChatActionCard> cards;
+  final WorkflowSnapshot? workflow;
 
   factory ChatReply.fromJson(Map<String, dynamic> json) {
     final rawCards = json['cards'] as List<dynamic>? ?? [];
+    final rawWorkflow = json['workflow'];
     return ChatReply(
       conversationId: json['conversationId'] as String? ?? '',
       reply: json['reply'] as String? ?? '',
       cards: rawCards
           .map((e) => ChatActionCard.fromJson(e as Map<String, dynamic>))
           .toList(),
+      workflow: rawWorkflow is Map<String, dynamic>
+          ? WorkflowSnapshot.fromJson(rawWorkflow)
+          : null,
     );
   }
 }
@@ -170,20 +270,26 @@ class ChatHistoryMessage {
     required this.role,
     required this.content,
     this.cards = const [],
+    this.workflow,
   });
 
   final String role;
   final String content;
   final List<ChatActionCard> cards;
+  final WorkflowSnapshot? workflow;
 
   factory ChatHistoryMessage.fromJson(Map<String, dynamic> json) {
     final rawCards = json['cards'] as List<dynamic>? ?? [];
+    final rawWorkflow = json['workflow'];
     return ChatHistoryMessage(
       role: json['role'] as String? ?? 'assistant',
       content: json['content'] as String? ?? '',
       cards: rawCards
           .map((e) => ChatActionCard.fromJson(e as Map<String, dynamic>))
           .toList(),
+      workflow: rawWorkflow is Map<String, dynamic>
+          ? WorkflowSnapshot.fromJson(rawWorkflow)
+          : null,
     );
   }
 }
@@ -250,6 +356,30 @@ class AgentRepository {
           'conversationId': conversationId,
         if (lat != null) 'lat': lat,
         if (lng != null) 'lng': lng,
+        if (imageBase64 != null && imageBase64.isNotEmpty)
+          'imageBase64': imageBase64,
+        if (imageMimeType != null && imageMimeType.isNotEmpty)
+          'imageMimeType': imageMimeType,
+      },
+    );
+  }
+
+  Stream<Map<String, dynamic>> continueWorkflow({
+    required String runId,
+    required String conversationId,
+    required String stepId,
+    String? message,
+    List<String>? options,
+    String? imageBase64,
+    String? imageMimeType,
+  }) {
+    return _api.postNdjsonStream(
+      '/ai/workflow/$runId/continue',
+      data: {
+        'conversationId': conversationId,
+        'stepId': stepId,
+        if (message != null && message.isNotEmpty) 'message': message,
+        if (options != null && options.isNotEmpty) 'options': options,
         if (imageBase64 != null && imageBase64.isNotEmpty)
           'imageBase64': imageBase64,
         if (imageMimeType != null && imageMimeType.isNotEmpty)

@@ -4,12 +4,13 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
-import 'package:soulfood_front/core/theme/app_semantic_colors.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:soulfood_front/core/location/location_service.dart';
+import 'package:soulfood_front/core/theme/app_semantic_colors.dart';
 import 'package:soulfood_front/features/agent/agent_repository.dart';
 import 'package:soulfood_front/features/agent/ai_conversations_page.dart';
 import 'package:soulfood_front/features/agent/ai_memory_page.dart';
+import 'package:soulfood_front/features/agent/workflow_card.dart';
 import 'package:soulfood_front/features/favorite/favorite_repository.dart';
 import 'package:soulfood_front/features/nearby/nearby_repository.dart';
 import 'package:soulfood_front/features/nearby/restaurant_detail_page.dart';
@@ -25,6 +26,7 @@ class ChatMessage {
     this.thinkingSeconds,
     this.favorited = false,
     this.cards = const [],
+    this.workflow,
     this.streaming = false,
     this.imagePath,
   });
@@ -34,6 +36,7 @@ class ChatMessage {
   final double? thinkingSeconds;
   final bool favorited;
   final List<ChatActionCard> cards;
+  final WorkflowSnapshot? workflow;
   final bool streaming;
   final String? imagePath;
 }
@@ -146,6 +149,7 @@ class _AiChatPageState extends State<AiChatPage> {
                 text: m.content,
                 isUser: m.role == 'user',
                 cards: m.cards,
+                workflow: m.workflow,
               ),
             ),
           );
@@ -181,6 +185,7 @@ class _AiChatPageState extends State<AiChatPage> {
               text: m.content,
               isUser: m.role == 'user',
               cards: m.cards,
+              workflow: m.workflow,
             ),
           )
           .toList();
@@ -277,6 +282,7 @@ class _AiChatPageState extends State<AiChatPage> {
     try {
       var replyText = '';
       var cards = <ChatActionCard>[];
+      WorkflowSnapshot? workflow;
       await for (final event in _agent.chatStream(
         message: text,
         conversationId: _conversationId,
@@ -286,7 +292,20 @@ class _AiChatPageState extends State<AiChatPage> {
         imageMimeType: imageMimeType,
       )) {
         final type = event['type'] as String? ?? '';
-        if (type == 'chunk') {
+        if (type == 'workflow' || type == 'step') {
+          workflow = WorkflowSnapshot.merge(workflow, event);
+          if (mounted) {
+            setState(() {
+              _messages[assistantIndex] = ChatMessage(
+                text: replyText,
+                isUser: false,
+                streaming: true,
+                cards: cards,
+                workflow: workflow,
+              );
+            });
+          }
+        } else if (type == 'chunk') {
           final piece = event['text'] as String? ?? '';
           if (piece.isEmpty) continue;
           replyText += piece;
@@ -297,17 +316,37 @@ class _AiChatPageState extends State<AiChatPage> {
                 text: replyText,
                 isUser: false,
                 streaming: true,
+                cards: cards,
+                workflow: workflow,
               );
             });
             _scrollToBottom();
+          }
+        } else if (type == 'cards') {
+          final rawCards = event['items'] as List<dynamic>? ?? [];
+          cards = rawCards
+              .map((e) => ChatActionCard.fromJson(e as Map<String, dynamic>))
+              .toList();
+          if (mounted) {
+            setState(() {
+              _messages[assistantIndex] = ChatMessage(
+                text: replyText,
+                isUser: false,
+                streaming: true,
+                cards: cards,
+                workflow: workflow,
+              );
+            });
           }
         } else if (type == 'done') {
           _conversationId =
               event['conversationId'] as String? ?? _conversationId;
           final rawCards = event['cards'] as List<dynamic>? ?? [];
-          cards = rawCards
-              .map((e) => ChatActionCard.fromJson(e as Map<String, dynamic>))
-              .toList();
+          if (rawCards.isNotEmpty) {
+            cards = rawCards
+                .map((e) => ChatActionCard.fromJson(e as Map<String, dynamic>))
+                .toList();
+          }
         }
       }
 
@@ -316,10 +355,11 @@ class _AiChatPageState extends State<AiChatPage> {
       if (!mounted) return;
       setState(() {
         _messages[assistantIndex] = ChatMessage(
-          text: replyText.isEmpty ? '暂无回复' : replyText,
+          text: replyText.isEmpty && workflow == null ? '暂无回复' : replyText,
           isUser: false,
           thinkingSeconds: thinkingSeconds,
           cards: cards,
+          workflow: workflow,
         );
       });
       if (_conversationId != null &&
@@ -382,6 +422,7 @@ class _AiChatPageState extends State<AiChatPage> {
             thinkingSeconds: msg.thinkingSeconds,
             favorited: true,
             cards: msg.cards,
+            workflow: msg.workflow,
           );
         });
         ScaffoldMessenger.of(
@@ -441,6 +482,141 @@ class _AiChatPageState extends State<AiChatPage> {
       context,
       MaterialPageRoute<void>(builder: (_) => const AiMemoryPage()),
     );
+  }
+
+  Future<void> _continueWorkflow(ChatMessage msg) async {
+    final workflow = msg.workflow;
+    final conversationId = _conversationId;
+    if (workflow == null || conversationId == null || conversationId.isEmpty) {
+      return;
+    }
+    WorkflowStep? waiting;
+    for (final step in workflow.steps) {
+      if (step.status == 'waiting') {
+        waiting = step;
+        break;
+      }
+    }
+    if (waiting == null || _sending) return;
+
+    String? imageBase64;
+    String? imageMimeType;
+    String? imagePath;
+    if (waiting.id == 'vision') {
+      try {
+        final file = await _imagePicker.pickImage(
+          source: ImageSource.gallery,
+          maxWidth: 1280,
+          imageQuality: 85,
+        );
+        if (file == null) return;
+        imagePath = file.path;
+        imageBase64 = base64Encode(await file.readAsBytes());
+        imageMimeType = file.mimeType ?? 'image/jpeg';
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('选图失败：$e')));
+        }
+        return;
+      }
+    }
+
+    setState(() => _sending = true);
+    final displayText = waiting.id == 'vision' ? '[图片] 继续冰箱做菜' : '确认这些选项并开房';
+    setState(() {
+      _messages.add(
+        ChatMessage(text: displayText, isUser: true, imagePath: imagePath),
+      );
+      _messages.add(ChatMessage(text: '', isUser: false, streaming: true));
+    });
+    final assistantIndex = _messages.length - 1;
+    final stopwatch = Stopwatch()..start();
+    _startThinkingTimer(stopwatch);
+    _scrollToBottom();
+
+    try {
+      var replyText = '';
+      var cards = <ChatActionCard>[];
+      WorkflowSnapshot? nextWorkflow;
+      await for (final event in _agent.continueWorkflow(
+        runId: workflow.runId,
+        conversationId: conversationId,
+        stepId: waiting.id,
+        imageBase64: imageBase64,
+        imageMimeType: imageMimeType,
+      )) {
+        final type = event['type'] as String? ?? '';
+        if (type == 'workflow' || type == 'step') {
+          nextWorkflow = WorkflowSnapshot.merge(nextWorkflow, event);
+          if (mounted) {
+            setState(() {
+              _messages[assistantIndex] = ChatMessage(
+                text: replyText,
+                isUser: false,
+                streaming: true,
+                cards: cards,
+                workflow: nextWorkflow,
+              );
+            });
+          }
+        } else if (type == 'chunk') {
+          final piece = event['text'] as String? ?? '';
+          if (piece.isEmpty) continue;
+          replyText += piece;
+          if (mounted) {
+            setState(() {
+              _messages[assistantIndex] = ChatMessage(
+                text: replyText,
+                isUser: false,
+                streaming: true,
+                cards: cards,
+                workflow: nextWorkflow,
+              );
+            });
+            _scrollToBottom();
+          }
+        } else if (type == 'cards') {
+          final rawCards = event['items'] as List<dynamic>? ?? [];
+          cards = rawCards
+              .map((e) => ChatActionCard.fromJson(e as Map<String, dynamic>))
+              .toList();
+        } else if (type == 'done') {
+          final rawCards = event['cards'] as List<dynamic>? ?? [];
+          if (rawCards.isNotEmpty) {
+            cards = rawCards
+                .map((e) => ChatActionCard.fromJson(e as Map<String, dynamic>))
+                .toList();
+          }
+        }
+      }
+      stopwatch.stop();
+      if (!mounted) return;
+      setState(() {
+        _messages[assistantIndex] = ChatMessage(
+          text: replyText,
+          isUser: false,
+          thinkingSeconds: stopwatch.elapsedMilliseconds / 1000,
+          cards: cards,
+          workflow: nextWorkflow,
+        );
+      });
+    } catch (e) {
+      stopwatch.stop();
+      if (mounted) {
+        setState(() {
+          _messages[assistantIndex] = ChatMessage(
+            text: '续跑失败：$e',
+            isUser: false,
+            thinkingSeconds: stopwatch.elapsedMilliseconds / 1000,
+          );
+        });
+      }
+    } finally {
+      _stopThinkingTimer();
+      if (mounted) setState(() => _sending = false);
+    }
   }
 
   Future<void> _pickImage() async {
@@ -637,7 +813,9 @@ class _AiChatPageState extends State<AiChatPage> {
                 final msg = _messages[messageIndex];
                 return _Bubble(
                   message: msg,
-                  thinkingElapsed: msg.streaming && msg.text.isEmpty
+                  thinkingElapsed: msg.streaming &&
+                          msg.text.isEmpty &&
+                          msg.workflow == null
                       ? _thinkingElapsed
                       : null,
                   onFavorite: !msg.isUser && !msg.streaming
@@ -649,6 +827,13 @@ class _AiChatPageState extends State<AiChatPage> {
                   onContinueAsk: _continueAsk,
                   onStartVote: !msg.isUser && !msg.streaming
                       ? () => _startVoteFromCards(msg.cards)
+                      : null,
+                  onContinueWorkflow:
+                      !msg.isUser &&
+                          !msg.streaming &&
+                          !_sending &&
+                          msg.workflow?.status == 'waiting'
+                      ? () => _continueWorkflow(msg)
                       : null,
                 );
               },
@@ -771,6 +956,7 @@ class _Bubble extends StatelessWidget {
     this.onFavoriteItem,
     this.onContinueAsk,
     this.onStartVote,
+    this.onContinueWorkflow,
   });
 
   final ChatMessage message;
@@ -781,12 +967,16 @@ class _Bubble extends StatelessWidget {
   final Future<void> Function(ChatActionCard card)? onFavoriteItem;
   final void Function(ChatActionCard card)? onContinueAsk;
   final VoidCallback? onStartVote;
+  final VoidCallback? onContinueWorkflow;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
     final isUser = message.isUser;
-    if (!isUser && message.streaming && message.text.isEmpty) {
+    if (!isUser &&
+        message.streaming &&
+        message.text.isEmpty &&
+        message.workflow == null) {
       return _ThinkingBubble(elapsed: thinkingElapsed ?? 0);
     }
     final maxWidth = MediaQuery.sizeOf(context).width * (isUser ? 0.78 : 0.92);
@@ -833,12 +1023,21 @@ class _Bubble extends StatelessWidget {
                   message.text,
                   style: TextStyle(color: colors.onAccent, height: 1.45),
                 ),
-            ] else
-              MarkdownBody(
-                data: message.text.isEmpty ? '…' : message.text,
-                selectable: true,
-                styleSheet: _assistantMarkdownStyle(colors),
-              ),
+            ] else ...[
+              if (message.workflow != null) ...[
+                WorkflowCard(
+                  snapshot: message.workflow!,
+                  onContinue: onContinueWorkflow,
+                ),
+                if (message.text.isNotEmpty) const SizedBox(height: 8),
+              ],
+              if (message.text.isNotEmpty || message.workflow == null)
+                MarkdownBody(
+                  data: message.text.isEmpty ? '…' : message.text,
+                  selectable: true,
+                  styleSheet: _assistantMarkdownStyle(colors),
+                ),
+            ],
             if (!isUser && message.cards.isNotEmpty) ...[
               const SizedBox(height: 10),
               ...message.cards.map(
