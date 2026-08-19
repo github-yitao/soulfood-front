@@ -287,7 +287,10 @@ class _AiChatPageState extends State<AiChatPage> {
       )) {
         final type = event['type'] as String? ?? '';
         if (type == 'chunk') {
-          replyText += event['text'] as String? ?? '';
+          final piece = event['text'] as String? ?? '';
+          if (piece.isEmpty) continue;
+          replyText += piece;
+          replyText = _stripReplayedPrevious(replyText, assistantIndex);
           if (mounted) {
             setState(() {
               _messages[assistantIndex] = ChatMessage(
@@ -342,6 +345,25 @@ class _AiChatPageState extends State<AiChatPage> {
       _stopThinkingTimer();
       if (mounted) setState(() => _sending = false);
     }
+  }
+
+  String _stripReplayedPrevious(String reply, int assistantIndex) {
+    ChatMessage? previous;
+    for (var i = assistantIndex - 1; i >= 0; i--) {
+      final msg = _messages[i];
+      if (!msg.isUser && !msg.streaming && msg.text.trim().isNotEmpty) {
+        previous = msg;
+        break;
+      }
+    }
+    if (previous == null) return reply;
+    final previousText = previous.text.trim();
+    if (previousText.length < 16) return reply;
+    final current = reply.trimLeft();
+    if (current.startsWith(previousText)) {
+      return current.substring(previousText.length).trimLeft();
+    }
+    return reply;
   }
 
   Future<void> _favoriteReply(int index) async {
