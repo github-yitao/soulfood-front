@@ -43,9 +43,7 @@
 }
 ```
 
-知识类问题（怎么做、加入房间、隔夜菜等）走 RAG + 本地 `qwen3.5:2b`。闲聊同样走本地 Ollama。附近餐厅 / 组局投票 / 收藏等需要工具的 ReAct 走智谱 `glm-4.7-flash`。识图仍用 `glm-4v-flash`。
-
-向量检索使用本地 Ollama `qwen3-embedding:0.6b`（1024 维），`app.ai.rag.mode=embedding`。Ollama 需本机 `11434` 已启动且已 pull 上述模型。
+闲聊、知识问答（RAG 生成）和需要工具的 ReAct 都走智谱 `glm-4.7-flash`。识图仍用 `glm-4v-flash`。本地 Ollama 只负责向量：`qwen3-embedding:0.6b`（1024 维），`app.ai.rag.mode=embedding`。Ollama 需本机 `11434` 已启动且已 pull embedding 模型。
 
 非流式响应：
 

@@ -230,15 +230,28 @@ class _AiChatPageState extends State<AiChatPage> {
     final text = (preset ?? _inputCtrl.text).trim();
     final pendingImage = _pendingImage;
     if ((text.isEmpty && pendingImage == null) || _sending) return;
+    _sending = true;
 
     String? imageBase64;
     String? imageMimeType;
     String? imagePath;
     if (pendingImage != null) {
-      imagePath = pendingImage.path;
-      final bytes = await pendingImage.readAsBytes();
-      imageBase64 = base64Encode(bytes);
-      imageMimeType = pendingImage.mimeType ?? 'image/jpeg';
+      try {
+        imagePath = pendingImage.path;
+        final bytes = await pendingImage.readAsBytes();
+        imageBase64 = base64Encode(bytes);
+        imageMimeType = pendingImage.mimeType ?? 'image/jpeg';
+      } catch (e) {
+        if (mounted) {
+          setState(() => _sending = false);
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('读图失败：$e')));
+        } else {
+          _sending = false;
+        }
+        return;
+      }
     }
 
     if (preset == null) {
@@ -251,7 +264,6 @@ class _AiChatPageState extends State<AiChatPage> {
         : (pendingImage != null ? '[图片] 请识别并推荐' : '');
 
     setState(() {
-      _sending = true;
       _messages.add(
         ChatMessage(text: displayText, isUser: true, imagePath: imagePath),
       );
