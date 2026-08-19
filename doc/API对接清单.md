@@ -85,13 +85,13 @@
 |------|------|
 | `recipe_rag` | 知识检索 + 生成（P0） |
 | `nearby_eat` | 固定流程：定位 → 附近搜店 → 口味过滤 → 餐厅结果卡（P1，`AiChatPage` 流程卡） |
-| `cook_from_fridge` | 识图 → 检索菜谱 → 菜谱结果卡；无图时 `vision=waiting`，前端点流程卡续跑 |
+| `cook_from_fridge` | 冰箱做菜 / 看图做菜 / 按食材做菜 / 菜单图。识图或文字食材 → 检索菜谱 → 结果卡。无图可说「不拍图」 |
 | `vote_room` | 收集选项 → 创建投票房；选项不足时 `collect_options=waiting`，确认后开房 |
 | `open_react` / 闲聊 | 智谱 tools（最多 5 次）或闲聊 |
 
 P0 知识检索流示例：`workflow` → `step(running)` → `step(done)` → 若干 `chunk` → `done`。  
 P1 附近觅食流示例：`workflow` → `step(locate)` → `step(nearby_search)` → `step(preference_filter)` → `step(present_options)` → `cards` → `chunk` → `done`。无定位时 `locate=failed` 并提示去授权。  
-P2 冰箱做菜：有图则 `vision` → `rag_recipes` → `present_options`；无图则 `vision=waiting`。  
+P2 看图 / 冰箱 / 按食材：有图则 `vision` → `rag_recipes` → `present_options`；无图可 waiting，或直接说「不拍图」「按食材做菜」。  
 P2 组局：说清「火锅还是烤肉」会直接开房；只说「组局」则流程卡等待确认默认选项。
 
 `POST /ai/rag/ingest` 响应 `data`：`{ "seedsUpserted": n, "recipesUpserted": n }`（内容未变则为 0）。  

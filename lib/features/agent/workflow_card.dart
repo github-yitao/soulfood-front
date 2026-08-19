@@ -7,10 +7,12 @@ class WorkflowCard extends StatelessWidget {
     super.key,
     required this.snapshot,
     this.onContinue,
+    this.onSkip,
   });
 
   final WorkflowSnapshot snapshot;
   final VoidCallback? onContinue;
+  final VoidCallback? onSkip;
 
   @override
   Widget build(BuildContext context) {
@@ -56,16 +58,31 @@ class WorkflowCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           ...snapshot.steps.map((step) => _StepRow(step: step)),
-          if (onContinue != null && snapshot.status == 'waiting')
+          if ((onContinue != null || onSkip != null) &&
+              snapshot.status == 'waiting')
             Padding(
               padding: const EdgeInsets.only(top: 4),
-              child: FilledButton.tonal(
-                onPressed: onContinue,
-                style: FilledButton.styleFrom(
-                  visualDensity: VisualDensity.compact,
-                  minimumSize: const Size.fromHeight(36),
-                ),
-                child: Text(_continueLabel(snapshot)),
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 6,
+                children: [
+                  if (onContinue != null)
+                    FilledButton.tonal(
+                      onPressed: onContinue,
+                      style: FilledButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                      ),
+                      child: Text(_continueLabel(snapshot)),
+                    ),
+                  if (onSkip != null)
+                    OutlinedButton(
+                      onPressed: onSkip,
+                      style: OutlinedButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                      ),
+                      child: const Text('不拍图 / 按食材'),
+                    ),
+                ],
               ),
             ),
         ],
@@ -86,7 +103,7 @@ class WorkflowCard extends StatelessWidget {
     final waiting = snapshot.steps.where((step) => step.status == 'waiting');
     final id = waiting.isEmpty ? '' : waiting.first.id;
     return switch (id) {
-      'vision' => '拍照后继续',
+      'vision' => '拍照 / 看图继续',
       'collect_options' => '确认并创建房间',
       _ => '继续流程',
     };

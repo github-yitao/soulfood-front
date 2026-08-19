@@ -171,7 +171,7 @@ CREATE INDEX idx_sf_rag_chunk_type ON sf_rag_chunk (source_type);
 | id | 场景 | 节点 |
 |----|------|------|
 | `nearby_eat` | 今晚吃什么 | locate → nearby_search → preference_filter → present_options |
-| `cook_from_fridge` | 冰箱 / 菜单图 | vision → rag_recipes → present_options |
+| `cook_from_fridge` | 冰箱 / 菜单图 / 看图做菜 / 按食材做菜 | vision → rag_recipes → present_options |
 | `vote_room` | 组局 | collect_options → create_room |
 
 每个节点结束 `emit(step)`；需要人确认时 `status=waiting`，前端按钮回调带 `workflowRunId + stepId` 续跑。

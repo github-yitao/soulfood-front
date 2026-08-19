@@ -484,7 +484,7 @@ class _AiChatPageState extends State<AiChatPage> {
     );
   }
 
-  Future<void> _continueWorkflow(ChatMessage msg) async {
+  Future<void> _continueWorkflow(ChatMessage msg, {bool skipPhoto = false}) async {
     final workflow = msg.workflow;
     final conversationId = _conversationId;
     if (workflow == null || conversationId == null || conversationId.isEmpty) {
@@ -502,7 +502,7 @@ class _AiChatPageState extends State<AiChatPage> {
     String? imageBase64;
     String? imageMimeType;
     String? imagePath;
-    if (waiting.id == 'vision') {
+    if (waiting.id == 'vision' && !skipPhoto) {
       try {
         final file = await _imagePicker.pickImage(
           source: ImageSource.gallery,
@@ -524,7 +524,9 @@ class _AiChatPageState extends State<AiChatPage> {
     }
 
     setState(() => _sending = true);
-    final displayText = waiting.id == 'vision' ? '[图片] 继续冰箱做菜' : '确认这些选项并开房';
+    final displayText = waiting.id == 'vision'
+        ? (skipPhoto ? '不拍图，按食材做菜' : '[图片] 继续看图做菜')
+        : '确认这些选项并开房';
     setState(() {
       _messages.add(
         ChatMessage(text: displayText, isUser: true, imagePath: imagePath),
@@ -544,6 +546,7 @@ class _AiChatPageState extends State<AiChatPage> {
         runId: workflow.runId,
         conversationId: conversationId,
         stepId: waiting.id,
+        message: skipPhoto ? '不拍图' : null,
         imageBase64: imageBase64,
         imageMimeType: imageMimeType,
       )) {
@@ -835,6 +838,17 @@ class _AiChatPageState extends State<AiChatPage> {
                           msg.workflow?.status == 'waiting'
                       ? () => _continueWorkflow(msg)
                       : null,
+                  onSkipPhoto:
+                      !msg.isUser &&
+                          !msg.streaming &&
+                          !_sending &&
+                          msg.workflow?.status == 'waiting' &&
+                          msg.workflow!.steps.any(
+                            (step) =>
+                                step.id == 'vision' && step.status == 'waiting',
+                          )
+                      ? () => _continueWorkflow(msg, skipPhoto: true)
+                      : null,
                 );
               },
             ),
@@ -957,6 +971,7 @@ class _Bubble extends StatelessWidget {
     this.onContinueAsk,
     this.onStartVote,
     this.onContinueWorkflow,
+    this.onSkipPhoto,
   });
 
   final ChatMessage message;
@@ -968,6 +983,7 @@ class _Bubble extends StatelessWidget {
   final void Function(ChatActionCard card)? onContinueAsk;
   final VoidCallback? onStartVote;
   final VoidCallback? onContinueWorkflow;
+  final VoidCallback? onSkipPhoto;
 
   @override
   Widget build(BuildContext context) {
@@ -1028,6 +1044,7 @@ class _Bubble extends StatelessWidget {
                 WorkflowCard(
                   snapshot: message.workflow!,
                   onContinue: onContinueWorkflow,
+                  onSkip: onSkipPhoto,
                 ),
                 if (message.text.isNotEmpty) const SizedBox(height: 8),
               ],
