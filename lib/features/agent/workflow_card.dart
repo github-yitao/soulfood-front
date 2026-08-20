@@ -104,6 +104,7 @@ class WorkflowCard extends StatelessWidget {
     final id = waiting.isEmpty ? '' : waiting.first.id;
     return switch (id) {
       'vision' => '拍照 / 看图继续',
+      'locate' => '已开启定位，继续',
       'collect_options' => '确认并创建房间',
       _ => '继续流程',
     };

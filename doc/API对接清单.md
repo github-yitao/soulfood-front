@@ -59,15 +59,17 @@
 ```json
 {
   "conversationId": "uuid",
-  "stepId": "collect_options | vision",
-  "message": "可选补充",
+  "stepId": "collect_options | vision | locate",
+  "message": "可选。组局可说「确认」；看图可说「不拍图」",
   "options": ["火锅", "烧烤"],
-  "imageBase64": "冰箱续跑时必填",
-  "imageMimeType": "image/jpeg"
+  "imageBase64": "看图续跑可选",
+  "imageMimeType": "image/jpeg",
+  "lat": 30.65,
+  "lng": 104.06
 }
 ```
 
-响应与 `POST /ai/chat/stream` 相同的 NDJSON。`runId` 在服务端缓存约 30 分钟。
+响应与 `POST /ai/chat/stream` 相同的 NDJSON。待确认流程写入 `sf_ai_workflow_pending`（约 7 天），内存缓存 30 分钟。组局 waiting 也可在对话里直接说「确认」或再报两个选项。无定位的附近觅食为 `locate=waiting`，授权后点流程卡或再说「附近吃什么」。ReAct 工具最多 5 次，超时 8s，失败以 JSON observation 回给模型。
 
 `POST /ai/chat/stream` 产出 NDJSON，每行一个 JSON。旧客户端只处理 `chunk` / `done`；不认识的 `type` 应忽略。
 
@@ -90,7 +92,7 @@
 | `open_react` / 闲聊 | 智谱 tools（最多 5 次）或闲聊 |
 
 P0 知识检索流示例：`workflow` → `step(running)` → `step(done)` → 若干 `chunk` → `done`。  
-P1 附近觅食流示例：`workflow` → `step(locate)` → `step(nearby_search)` → `step(preference_filter)` → `step(present_options)` → `cards` → `chunk` → `done`。无定位时 `locate=failed` 并提示去授权。  
+P1 附近觅食流示例：`workflow` → `step(locate)` → …；无定位时 `locate=waiting`（可续跑）。  
 P2 看图 / 冰箱 / 按食材：有图则 `vision` → `rag_recipes` → `present_options`；无图可 waiting，或直接说「不拍图」「按食材做菜」。  
 P2 组局：说清「火锅还是烤肉」会直接开房；只说「组局」则流程卡等待确认默认选项。
 

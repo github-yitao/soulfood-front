@@ -372,6 +372,8 @@ class AgentRepository {
     List<String>? options,
     String? imageBase64,
     String? imageMimeType,
+    double? lat,
+    double? lng,
   }) {
     return _api.postNdjsonStream(
       '/ai/workflow/$runId/continue',
@@ -384,6 +386,8 @@ class AgentRepository {
           'imageBase64': imageBase64,
         if (imageMimeType != null && imageMimeType.isNotEmpty)
           'imageMimeType': imageMimeType,
+        if (lat != null) 'lat': lat,
+        if (lng != null) 'lng': lng,
       },
     );
   }

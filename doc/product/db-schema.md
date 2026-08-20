@@ -300,6 +300,21 @@
 
 第一期 RAG **不**把本表写入向量；Agent 仍按用户 + 类型拉取后拼 prompt。
 
+### `sf_ai_workflow_pending` 待确认工作流（V18）
+
+聊天流程停在 `waiting` 时写入，供续跑接口与下一轮对话恢复。过期约 7 天。
+
+| 字段 | 含义 |
+|------|------|
+| run_id | 流程 runId，主键 |
+| conversation_id | 所属会话 |
+| user_id | 用户，可空 |
+| kind | `NEARBY_EAT` / `COOK_FROM_FRIDGE` / `VOTE_ROOM` |
+| waiting_step_id | 等待中的步骤，如 `locate` / `vision` / `collect_options` |
+| payload_json | 会话快照：文案、选项、坐标、workflow 步骤 |
+| expires_at | 过期时间 |
+| created_at | 写入时间 |
+
 ---
 
 ## 7. `sf_rag_chunk` RAG 知识切片（V16）
@@ -331,7 +346,8 @@ sf_user
   ├─ sf_room (owner) ── sf_room_option ── sf_vote
   ├─ sf_restaurant_want ── sf_restaurant
   └─ sf_ai_conversation ── sf_ai_chat_message
-       └─ sf_ai_user_memory
+       ├─ sf_ai_user_memory
+       └─ sf_ai_workflow_pending（waiting 续跑，V18）
 
 sf_recipe  ──(P0 ingest)──►  sf_rag_chunk (source_type=recipe)
 种子 FAQ/常识 ──(P0 ingest)──►  sf_rag_chunk (faq | common)

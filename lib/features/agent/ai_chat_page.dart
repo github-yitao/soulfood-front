@@ -10,6 +10,7 @@ import 'package:soulfood_front/core/theme/app_semantic_colors.dart';
 import 'package:soulfood_front/features/agent/agent_repository.dart';
 import 'package:soulfood_front/features/agent/ai_conversations_page.dart';
 import 'package:soulfood_front/features/agent/ai_memory_page.dart';
+import 'package:soulfood_front/features/agent/chat_stream_event.dart';
 import 'package:soulfood_front/features/agent/workflow_card.dart';
 import 'package:soulfood_front/features/favorite/favorite_repository.dart';
 import 'package:soulfood_front/features/nearby/nearby_repository.dart';
@@ -280,9 +281,7 @@ class _AiChatPageState extends State<AiChatPage> {
     _scrollToBottom();
 
     try {
-      var replyText = '';
-      var cards = <ChatActionCard>[];
-      WorkflowSnapshot? workflow;
+      final acc = ChatStreamAccumulator();
       await for (final event in _agent.chatStream(
         message: text,
         conversationId: _conversationId,
@@ -291,75 +290,40 @@ class _AiChatPageState extends State<AiChatPage> {
         imageBase64: imageBase64,
         imageMimeType: imageMimeType,
       )) {
-        final type = event['type'] as String? ?? '';
-        if (type == 'workflow' || type == 'step') {
-          workflow = WorkflowSnapshot.merge(workflow, event);
-          if (mounted) {
-            setState(() {
-              _messages[assistantIndex] = ChatMessage(
-                text: replyText,
-                isUser: false,
-                streaming: true,
-                cards: cards,
-                workflow: workflow,
-              );
-            });
-          }
-        } else if (type == 'chunk') {
-          final piece = event['text'] as String? ?? '';
-          if (piece.isEmpty) continue;
-          replyText += piece;
-          replyText = _stripReplayedPrevious(replyText, assistantIndex);
-          if (mounted) {
-            setState(() {
-              _messages[assistantIndex] = ChatMessage(
-                text: replyText,
-                isUser: false,
-                streaming: true,
-                cards: cards,
-                workflow: workflow,
-              );
-            });
-            _scrollToBottom();
-          }
-        } else if (type == 'cards') {
-          final rawCards = event['items'] as List<dynamic>? ?? [];
-          cards = rawCards
-              .map((e) => ChatActionCard.fromJson(e as Map<String, dynamic>))
-              .toList();
-          if (mounted) {
-            setState(() {
-              _messages[assistantIndex] = ChatMessage(
-                text: replyText,
-                isUser: false,
-                streaming: true,
-                cards: cards,
-                workflow: workflow,
-              );
-            });
-          }
-        } else if (type == 'done') {
-          _conversationId =
-              event['conversationId'] as String? ?? _conversationId;
-          final rawCards = event['cards'] as List<dynamic>? ?? [];
-          if (rawCards.isNotEmpty) {
-            cards = rawCards
-                .map((e) => ChatActionCard.fromJson(e as Map<String, dynamic>))
-                .toList();
-          }
+        acc.apply(
+          event,
+          rewriteReply: (current) => _stripReplayedPrevious(current, assistantIndex),
+        );
+        if (!mounted) return;
+        setState(() {
+          _messages[assistantIndex] = ChatMessage(
+            text: acc.replyText,
+            isUser: false,
+            streaming: true,
+            cards: acc.cards,
+            workflow: acc.workflow,
+          );
+        });
+        if ((event['type'] as String?) == 'chunk') {
+          _scrollToBottom();
         }
       }
 
       stopwatch.stop();
       final thinkingSeconds = stopwatch.elapsedMilliseconds / 1000;
       if (!mounted) return;
+      if (acc.conversationId != null && acc.conversationId!.isNotEmpty) {
+        _conversationId = acc.conversationId;
+      }
       setState(() {
         _messages[assistantIndex] = ChatMessage(
-          text: replyText.isEmpty && workflow == null ? '暂无回复' : replyText,
+          text: acc.replyText.isEmpty && acc.workflow == null
+              ? '暂无回复'
+              : acc.replyText,
           isUser: false,
           thinkingSeconds: thinkingSeconds,
-          cards: cards,
-          workflow: workflow,
+          cards: acc.cards,
+          workflow: acc.workflow,
         );
       });
       if (_conversationId != null &&
@@ -502,6 +466,8 @@ class _AiChatPageState extends State<AiChatPage> {
     String? imageBase64;
     String? imageMimeType;
     String? imagePath;
+    double? continueLat;
+    double? continueLng;
     if (waiting.id == 'vision' && !skipPhoto) {
       try {
         final file = await _imagePicker.pickImage(
@@ -522,11 +488,36 @@ class _AiChatPageState extends State<AiChatPage> {
         return;
       }
     }
+    if (waiting.id == 'locate') {
+      try {
+        final loc = await LocationService.current();
+        continueLat = loc?.lat;
+        continueLng = loc?.lng;
+        _location = loc;
+        if (continueLat == null || continueLng == null) {
+          if (mounted) {
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(const SnackBar(content: Text('还没有定位，请先授权位置')));
+          }
+          return;
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('定位失败：$e')));
+        }
+        return;
+      }
+    }
 
     setState(() => _sending = true);
-    final displayText = waiting.id == 'vision'
-        ? (skipPhoto ? '不拍图，按食材做菜' : '[图片] 继续看图做菜')
-        : '确认这些选项并开房';
+    final displayText = switch (waiting.id) {
+      'vision' => skipPhoto ? '不拍图，按食材做菜' : '[图片] 继续看图做菜',
+      'locate' => '已开启定位，继续',
+      _ => '确认这些选项并开房',
+    };
     setState(() {
       _messages.add(
         ChatMessage(text: displayText, isUser: true, imagePath: imagePath),
@@ -539,70 +530,43 @@ class _AiChatPageState extends State<AiChatPage> {
     _scrollToBottom();
 
     try {
-      var replyText = '';
-      var cards = <ChatActionCard>[];
-      WorkflowSnapshot? nextWorkflow;
+      final acc = ChatStreamAccumulator();
       await for (final event in _agent.continueWorkflow(
         runId: workflow.runId,
         conversationId: conversationId,
         stepId: waiting.id,
-        message: skipPhoto ? '不拍图' : null,
+        message: skipPhoto
+            ? '不拍图'
+            : (waiting.id == 'locate' ? '已定位，继续' : null),
         imageBase64: imageBase64,
         imageMimeType: imageMimeType,
+        lat: continueLat,
+        lng: continueLng,
       )) {
-        final type = event['type'] as String? ?? '';
-        if (type == 'workflow' || type == 'step') {
-          nextWorkflow = WorkflowSnapshot.merge(nextWorkflow, event);
-          if (mounted) {
-            setState(() {
-              _messages[assistantIndex] = ChatMessage(
-                text: replyText,
-                isUser: false,
-                streaming: true,
-                cards: cards,
-                workflow: nextWorkflow,
-              );
-            });
-          }
-        } else if (type == 'chunk') {
-          final piece = event['text'] as String? ?? '';
-          if (piece.isEmpty) continue;
-          replyText += piece;
-          if (mounted) {
-            setState(() {
-              _messages[assistantIndex] = ChatMessage(
-                text: replyText,
-                isUser: false,
-                streaming: true,
-                cards: cards,
-                workflow: nextWorkflow,
-              );
-            });
-            _scrollToBottom();
-          }
-        } else if (type == 'cards') {
-          final rawCards = event['items'] as List<dynamic>? ?? [];
-          cards = rawCards
-              .map((e) => ChatActionCard.fromJson(e as Map<String, dynamic>))
-              .toList();
-        } else if (type == 'done') {
-          final rawCards = event['cards'] as List<dynamic>? ?? [];
-          if (rawCards.isNotEmpty) {
-            cards = rawCards
-                .map((e) => ChatActionCard.fromJson(e as Map<String, dynamic>))
-                .toList();
-          }
+        acc.apply(event);
+        if (!mounted) return;
+        setState(() {
+          _messages[assistantIndex] = ChatMessage(
+            text: acc.replyText,
+            isUser: false,
+            streaming: true,
+            cards: acc.cards,
+            workflow: acc.workflow,
+          );
+        });
+        if ((event['type'] as String?) == 'chunk') {
+          _scrollToBottom();
         }
       }
       stopwatch.stop();
       if (!mounted) return;
       setState(() {
         _messages[assistantIndex] = ChatMessage(
-          text: replyText,
+          text: acc.replyText,
           isUser: false,
           thinkingSeconds: stopwatch.elapsedMilliseconds / 1000,
-          cards: cards,
-          workflow: nextWorkflow,
+          cards: acc.cards,
+          workflow: acc.workflow,
         );
       });
     } catch (e) {
