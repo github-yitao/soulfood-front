@@ -304,9 +304,7 @@ class _AiChatPageState extends State<AiChatPage> {
             workflow: acc.workflow,
           );
         });
-        if ((event['type'] as String?) == 'chunk') {
-          _scrollToBottom();
-        }
+        _scrollToBottom();
       }
 
       stopwatch.stop();
@@ -554,9 +552,7 @@ class _AiChatPageState extends State<AiChatPage> {
             workflow: acc.workflow,
           );
         });
-        if ((event['type'] as String?) == 'chunk') {
-          _scrollToBottom();
-        }
+        _scrollToBottom();
       }
       stopwatch.stop();
       if (!mounted) return;
@@ -719,13 +715,16 @@ class _AiChatPageState extends State<AiChatPage> {
   }
 
   void _scrollToBottom() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    void jump() {
       if (!_scrollCtrl.hasClients) return;
-      _scrollCtrl.animateTo(
-        _scrollCtrl.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 250),
-        curve: Curves.easeOut,
-      );
+      final target = _scrollCtrl.position.maxScrollExtent;
+      if ((_scrollCtrl.position.pixels - target).abs() < 1) return;
+      _scrollCtrl.jumpTo(target);
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      jump();
+      WidgetsBinding.instance.addPostFrameCallback((_) => jump());
     });
   }
 

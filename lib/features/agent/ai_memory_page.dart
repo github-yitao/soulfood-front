@@ -136,37 +136,39 @@ class _AiMemoryPageState extends State<AiMemoryPage> {
             ),
             const SizedBox(height: 8),
             SizedBox(
-              height: 44,
-              child: ListView(
+              height: 48,
+              child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
-                children: [
-                  AppFilterChip(
-                    label: '全部',
-                    selected: _filterType == null,
-                    onSelected: (_) {
-                      setState(() => _filterType = null);
-                      _load();
-                    },
-                  ),
-                  const SizedBox(width: 8),
-                  AppFilterChip(
-                    label: '长期记忆',
-                    selected: _filterType == 'long_term',
-                    onSelected: (_) {
-                      setState(() => _filterType = 'long_term');
-                      _load();
-                    },
-                  ),
-                  const SizedBox(width: 8),
-                  AppFilterChip(
-                    label: '近期经历',
-                    selected: _filterType == 'episodic',
-                    onSelected: (_) {
-                      setState(() => _filterType = 'episodic');
-                      _load();
-                    },
-                  ),
-                ],
+                child: Row(
+                  children: [
+                    AppFilterChip(
+                      label: '全部',
+                      selected: _filterType == null,
+                      onSelected: (_) {
+                        setState(() => _filterType = null);
+                        _load();
+                      },
+                    ),
+                    const SizedBox(width: 8),
+                    AppFilterChip(
+                      label: '长期记忆',
+                      selected: _filterType == 'long_term',
+                      onSelected: (_) {
+                        setState(() => _filterType = 'long_term');
+                        _load();
+                      },
+                    ),
+                    const SizedBox(width: 8),
+                    AppFilterChip(
+                      label: '近期经历',
+                      selected: _filterType == 'episodic',
+                      onSelected: (_) {
+                        setState(() => _filterType = 'episodic');
+                        _load();
+                      },
+                    ),
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 8),
@@ -227,7 +229,13 @@ class _AiMemoryPageState extends State<AiMemoryPage> {
                 ),
               ),
               const SizedBox(width: 8),
-              FilledButton(onPressed: _addMemory, child: const Text('添加')),
+              FilledButton(
+                onPressed: _addMemory,
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size(64, 48),
+                ),
+                child: const Text('添加'),
+              ),
             ],
           ),
         ),
