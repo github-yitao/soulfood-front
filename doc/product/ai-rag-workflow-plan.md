@@ -269,7 +269,9 @@ ai/
 
 ### P3 — 按需
 
-用户记忆向量化、混合检索、Graph 引擎、流程评测集。**默认不做。**
+用户记忆向量化、混合检索、Graph 引擎、LLM 循环选下一跳。**默认不做。**
+
+离线路由 / RAG 关键词 / waiting 文案黄金集已落地：`soulfood-backed/src/test/resources/ai-eval/golden-eval.json`，由 `GoldenEvalTest` 跑，不打 LLM、不连库。不在生产消息里记 intent/tools 来代替评测。
 
 ---
 
