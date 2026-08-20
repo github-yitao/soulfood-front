@@ -329,6 +329,7 @@
 | source_key | 稳定键，唯一。FAQ 如 `faq.room.join`，菜谱如 `recipe.1` |
 | title | 标题 |
 | content | 可检索正文 |
+| search_text | 生成列：title + content，供 pg_trgm（V19） |
 | embedding | `vector(1024)`，与 `qwen3-embedding:0.6b` 维度锁定 |
 | created_at | 写入时间 |
 
