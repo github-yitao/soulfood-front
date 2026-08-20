@@ -44,7 +44,7 @@
 }
 ```
 
-闲聊、知识问答（RAG 生成）和需要工具的 ReAct 都走智谱 `glm-4.7-flash`。识图仍用 `glm-4v-flash`。本地 Ollama 只负责向量：`qwen3-embedding:0.6b`（1024 维），`app.ai.rag.mode=embedding`。Ollama 需本机 `11434` 已启动且已 pull embedding 模型。
+闲聊、知识问答（RAG 生成）和需要工具的 ReAct 都走智谱 `glm-4.7-flash`。识图仍用 `glm-4v-flash`。本地 Ollama 只负责向量：`qwen3-embedding:0.6b`（1024 维），`app.ai.rag.mode=hybrid`（关键词 + pgvector RRF）。Ollama 需本机 `11434` 已启动且已 pull embedding 模型。
 
 非流式响应：
 

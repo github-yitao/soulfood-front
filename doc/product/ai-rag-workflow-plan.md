@@ -143,7 +143,7 @@ CREATE INDEX idx_sf_rag_chunk_type ON sf_rag_chunk (source_type);
 
 - `EmbeddingClient`：智谱 embedding（如 `embedding-3`），与 chat 的 `base-url` 共用，路径单独配。
 - `RagIngestService`：种子 upsert + 菜谱切块（300～500 字）。
-- `RagSearchService`：问题 embedding → `ORDER BY embedding <=> :q LIMIT 5`。
+- `RagSearchService`：`hybrid` 为默认——关键词排序与 `embedding <=>` 各取一池，RRF 融合；可切 `lexical` / `embedding`。不走 Spring AI `VectorStore`。
 - 暴露为 Tool：`searchKnowledge(query)`，ReAct 与 Workflow 节点共用。
 - MyBatis 写向量用 `PGobject` / `'[0.1,0.2,...]'`，不引入 LangChain。
 
@@ -269,7 +269,7 @@ ai/
 
 ### P3 — 按需
 
-用户记忆向量化、混合检索、Graph 引擎、LLM 循环选下一跳。**默认不做。**
+用户记忆向量化、Graph 引擎、LLM 循环选下一跳。**默认不做。** 混合检索（关键词 + 向量 RRF）已做。
 
 离线路由 / RAG 关键词 / waiting 文案黄金集已落地：`soulfood-backed/src/test/resources/ai-eval/golden-eval.json`，由 `GoldenEvalTest` 跑，不打 LLM、不连库。不在生产消息里记 intent/tools 来代替评测。
 
